@@ -7,6 +7,9 @@
 
 require_once __DIR__ . '/vendor/autoload.php';
 
+use App\Database;
+use App\YouTubeService;
+
 // Load environment variables from .env file
 if (file_exists(__DIR__ . '/.env')) {
     $lines = file(__DIR__ . '/.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
@@ -16,9 +19,6 @@ if (file_exists(__DIR__ . '/.env')) {
         putenv(trim($key) . '=' . trim($value));
     }
 }
-
-use App\Database;
-use App\YouTubeService;
 
 try {
     $maxResults = isset($argv[1]) ? (int)$argv[1] : 10;
