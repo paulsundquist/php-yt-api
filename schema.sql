@@ -4,40 +4,46 @@ CREATE DATABASE IF NOT EXISTS youtube_api CHARACTER SET utf8mb4 COLLATE utf8mb4_
 USE youtube_api;
 
 -- Channels table
-CREATE TABLE IF NOT EXISTS channels (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    channel_id VARCHAR(255) NOT NULL UNIQUE,
-    channel_name VARCHAR(255) NOT NULL,
-    is_active TINYINT(1) DEFAULT 1,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_channel_id (channel_id),
-    INDEX idx_is_active (is_active)
+CREATE TABLE `channels` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `channel_id` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `channel_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `uploads_playlist_id` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `channel_id` (`channel_id`),
+  KEY `idx_channel_id` (`channel_id`),
+  KEY `idx_is_active` (`is_active`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Videos table
-CREATE TABLE IF NOT EXISTS videos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    video_id VARCHAR(255) NOT NULL UNIQUE,
-    channel_id VARCHAR(255) NOT NULL,
-    title VARCHAR(500) NOT NULL,
-    description TEXT,
-    published_at DATETIME NOT NULL,
-    thumbnail_url VARCHAR(500),
-    view_count BIGINT DEFAULT 0,
-    like_count BIGINT DEFAULT 0,
-    comment_count BIGINT DEFAULT 0,
-    duration VARCHAR(50),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_video_id (video_id),
-    INDEX idx_channel_id (channel_id),
-    INDEX idx_published_at (published_at),
-    FOREIGN KEY (channel_id) REFERENCES channels(channel_id) ON DELETE CASCADE
+CREATE TABLE `videos` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `video_id` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `channel_id` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `title` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `published_at` datetime NOT NULL,
+  `thumbnail_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `view_count` bigint DEFAULT '0',
+  `like_count` bigint DEFAULT '0',
+  `comment_count` bigint DEFAULT '0',
+  `duration` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `video_id` (`video_id`),
+  KEY `idx_video_id` (`video_id`),
+  KEY `idx_channel_id` (`channel_id`),
+  KEY `idx_published_at` (`published_at`),
+  CONSTRAINT `videos_ibfk_1` FOREIGN KEY (`channel_id`) REFERENCES `channels` (`channel_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Sample data for testing
 INSERT INTO channels (channel_id, channel_name) VALUES
 ('UCXuqSBlHAE6Xw-yeJA0Tunw', 'Linus Tech Tips'),
-('UC8butISFwT-Wl7EV0hUK0BQ', 'freeCodeCamp.org')
+('UC8butISFwT-Wl7EV0hUK0BQ', 'freeCodeCamp.org'),
+('UCX6OQ3DkcsbYNE6H8uQQuVA', 'MrBeast')
 ON DUPLICATE KEY UPDATE channel_name=VALUES(channel_name);
