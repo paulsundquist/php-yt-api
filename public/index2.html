@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Channels</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f9fafb;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: white;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            padding: 20px 0;
+        }
+
+        .sidebar h2 {
+            padding: 0 20px;
+            color: #1f2937;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        .channel-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: background 0.2s;
+            color: #374151;
+            font-size: 15px;
+        }
+
+        .channel-item:hover {
+            background: #f3f4f6;
+        }
+
+        .channel-item.active {
+            background: #dbeafe;
+            color: #1e40af;
+            border-left: 3px solid #2563eb;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        header {
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #1f2937;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            font-size: 16px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #2563eb;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Channels</h2>
+        <div id="channels-list">
+            <div class="loading">
+                <div class="spinner"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <header>
+            <h1>YouTube Channel Viewer</h1>
+            <p class="subtitle">Select a channel to view details</p>
+        </header>
+
+        <div id="content-area">
+            <p style="color: #6b7280;">Select a channel from the sidebar</p>
+        </div>
+    </div>
+
+    <script>
+        let channels = [];
+
+        async function loadChannels() {
+            try {
+                const response = await fetch('/channels');
+                const data = await response.json();
+
+                const container = document.getElementById('channels-list');
+
+                if (!data.channels || data.channels.length === 0) {
+                    container.innerHTML = '<p style="padding: 0 20px; color: #6b7280;">No channels found</p>';
+                    return;
+                }
+
+                channels = data.channels;
+
+                const channelsHTML = channels.map((channel, index) => `
+                    <div class="channel-item" onclick="selectChannel(${index})">
+                        ${escapeHtml(channel.channel_name)}
+                    </div>
+                `).join('');
+
+                container.innerHTML = channelsHTML;
+
+            } catch (error) {
+                console.error('Error loading channels:', error);
+                document.getElementById('channels-list').innerHTML =
+                    '<p style="padding: 0 20px; color: #991b1b;">Failed to load channels</p>';
+            }
+        }
+
+        async function selectChannel(index) {
+            // Remove active class from all items
+            document.querySelectorAll('.channel-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            // Add active class to selected item
+            document.querySelectorAll('.channel-item')[index].classList.add('active');
+
+            const channel = channels[index];
+            const contentArea = document.getElementById('content-area');
+
+            // Show loading
+            contentArea.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading videos...</p>
+                </div>
+            `;
+
+            try {
+                const response = await fetch(`/videos?channel_id=${encodeURIComponent(channel.channel_id)}`);
+                const data = await response.json();
+
+                if (!data.videos || data.videos.length === 0) {
+                    contentArea.innerHTML = `
+                        <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                            <h2 style="color: #1f2937; margin-bottom: 20px;">${escapeHtml(channel.channel_name)}</h2>
+                            <p style="color: #6b7280;">No videos found for this channel</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const videosHTML = data.videos.map(video => `
+                    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 15px;">
+                        <div style="display: flex; gap: 15px;">
+                            ${video.thumbnail_url ? `
+                                <img src="${escapeHtml(video.thumbnail_url)}"
+                                     alt="Thumbnail"
+                                     style="width: 160px; height: 90px; object-fit: cover; border-radius: 6px;">
+                            ` : ''}
+                            <div style="flex: 1;">
+                                <h3 style="color: #1f2937; margin-bottom: 8px; font-size: 16px;">
+                                    <a href="https://www.youtube.com/watch?v=${escapeHtml(video.video_id)}"
+                                       target="_blank"
+                                       style="color: #1f2937; text-decoration: none;">
+                                        ${escapeHtml(video.title)}
+                                    </a>
+                                </h3>
+                                <div style="color: #6b7280; font-size: 13px; margin-bottom: 8px;">
+                                    Published: ${formatDate(video.published_at)}
+                                </div>
+                                ${video.description ? `
+                                    <p style="color: #6b7280; font-size: 14px; line-height: 1.5;">
+                                        ${escapeHtml(video.description.substring(0, 150))}${video.description.length > 150 ? '...' : ''}
+                                    </p>
+                                ` : ''}
+                                <div style="color: #6b7280; font-size: 13px; margin-top: 8px;">
+                                    ${video.view_count ? `👁️ ${formatNumber(video.view_count)} views` : ''}
+                                    ${video.like_count ? ` • 👍 ${formatNumber(video.like_count)}` : ''}
+                                    ${video.duration ? ` • ⏱️ ${video.duration}` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+                contentArea.innerHTML = `
+                    <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px;">
+                        <h2 style="color: #1f2937; margin-bottom: 10px;">${escapeHtml(channel.channel_name)}</h2>
+                        <div style="color: #6b7280; font-size: 14px;">
+                            ${data.count} video${data.count !== 1 ? 's' : ''}
+                        </div>
+                    </div>
+                    <div>
+                        ${videosHTML}
+                    </div>
+                `;
+
+            } catch (error) {
+                console.error('Error loading videos:', error);
+                contentArea.innerHTML = `
+                    <div class="error">Failed to load videos. Please try again.</div>
+                `;
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'M';
+            }
+            if (num >= 1000) {
+                return (num / 1000).toFixed(1) + 'K';
+            }
+            return num.toString();
+        }
+
+        loadChannels();
+    </script>
+</body>
+</html>
