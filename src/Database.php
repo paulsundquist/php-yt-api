@@ -1,0 +1,114 @@
+<?php
+
+namespace App;
+
+use PDO;
+use PDOException;
+
+class Database
+{
+    private static $instance = null;
+    private $connection;
+
+    private function __construct()
+    {
+        $host = getenv('DB_HOST') ?: 'localhost';
+        $dbname = getenv('DB_NAME') ?: 'youtube_api';
+        $username = getenv('DB_USER') ?: 'root';
+        $password = getenv('DB_PASS') ?: '';
+
+        try {
+            $this->connection = new PDO(
+                "mysql:host={$host};dbname={$dbname};charset=utf8mb4",
+                $username,
+                $password,
+                [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                    PDO::ATTR_EMULATE_PREPARES => false,
+                ]
+            );
+        } catch (PDOException $e) {
+            throw new \Exception("Database connection failed: " . $e->getMessage());
+        }
+    }
+
+    public static function getInstance()
+    {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+
+    public function getConnection()
+    {
+        return $this->connection;
+    }
+
+    public function getActiveChannels()
+    {
+        $stmt = $this->connection->prepare(
+            "SELECT channel_id, channel_name, uploads_playlist_id, updated_at FROM channels WHERE is_active = 1"
+        );
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    public function updateChannelPlaylistId($channelId, $playlistId)
+    {
+        $stmt = $this->connection->prepare(
+            "UPDATE channels SET uploads_playlist_id = :playlist_id WHERE channel_id = :channel_id"
+        );
+        return $stmt->execute([
+            ':playlist_id' => $playlistId,
+            ':channel_id' => $channelId
+        ]);
+    }
+
+    public function insertOrUpdateVideo($videoData)
+    {
+        $sql = "INSERT INTO videos
+                (video_id, channel_id, title, description, published_at, thumbnail_url,
+                 view_count, like_count, comment_count, duration)
+                VALUES
+                (:video_id, :channel_id, :title, :description, :published_at, :thumbnail_url,
+                 :view_count, :like_count, :comment_count, :duration)
+                ON DUPLICATE KEY UPDATE
+                title = VALUES(title),
+                description = VALUES(description),
+                view_count = VALUES(view_count),
+                like_count = VALUES(like_count),
+                comment_count = VALUES(comment_count),
+                thumbnail_url = VALUES(thumbnail_url),
+                duration = VALUES(duration)";
+
+        $stmt = $this->connection->prepare($sql);
+        return $stmt->execute($videoData);
+    }
+
+    public function getVideos($limit = 50, $offset = 0, $channelId = null)
+    {
+        $sql = "SELECT v.*, c.channel_name
+                FROM videos v
+                JOIN channels c ON v.channel_id = c.channel_id";
+
+        if ($channelId) {
+            $sql .= " WHERE v.channel_id = :channel_id";
+        }
+
+        $sql .= " ORDER BY v.published_at DESC LIMIT :limit OFFSET :offset";
+
+        $stmt = $this->connection->prepare($sql);
+
+        if ($channelId) {
+            $stmt->bindValue(':channel_id', $channelId, PDO::PARAM_STR);
+        }
+
+        $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
+}

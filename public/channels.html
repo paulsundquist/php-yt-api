@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Channels</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f9fafb;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #1f2937;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            font-size: 16px;
+        }
+
+        .channels-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .channel-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .channel-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .channel-name {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 12px;
+        }
+
+        .channel-id {
+            font-size: 13px;
+            color: #6b7280;
+            font-family: monospace;
+            background: #f3f4f6;
+            padding: 6px 10px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            word-break: break-all;
+        }
+
+        .channel-link {
+            display: inline-block;
+            color: #2563eb;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            margin-top: 8px;
+        }
+
+        .channel-link:hover {
+            text-decoration: underline;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 12px;
+        }
+
+        .status.active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status.inactive {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #2563eb;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>YouTube Channels</h1>
+            <p class="subtitle">Channels being monitored for new videos</p>
+        </header>
+
+        <div id="channels-container">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Loading channels...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadChannels() {
+            try {
+                const response = await fetch('/channels');
+                const data = await response.json();
+
+                const container = document.getElementById('channels-container');
+
+                if (!data.channels || data.channels.length === 0) {
+                    container.innerHTML = '<div class="loading"><p>No channels found</p></div>';
+                    return;
+                }
+
+                const channelsHTML = data.channels.map(channel => `
+                    <div class="channel-card">
+                        <div class="channel-name">${escapeHtml(channel.channel_name)}</div>
+                        <div class="channel-id">${escapeHtml(channel.channel_id)}</div>
+                        <div style="color: #6b7280; font-size: 14px; margin-top: 12px;">
+                            Last updated: ${formatDate(channel.updated_at)}
+                        </div>
+                        <a href="https://www.youtube.com/channel/${escapeHtml(channel.channel_id)}"
+                           target="_blank"
+                           class="channel-link">View on YouTube →</a>
+                    </div>
+                `).join('');
+
+                container.innerHTML = `<div class="channels-grid">${channelsHTML}</div>`;
+
+            } catch (error) {
+                console.error('Error loading channels:', error);
+                document.getElementById('channels-container').innerHTML =
+                    '<div class="error">Failed to load channels. Please try again.</div>';
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        loadChannels();
+    </script>
+</body>
+</html>
