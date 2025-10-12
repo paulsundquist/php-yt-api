@@ -7,5 +7,7 @@
     # Route API endpoints to index.php
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^(channels|videos|fetch)$ index.php [QSA,L]
+
+    # make sure the target location includes a slash
+    RewriteRule ^(channels|videos|fetch)$ /index.php [QSA,L]
 </IfModule>
