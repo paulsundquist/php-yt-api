@@ -1,7 +1,11 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
-    # Redirect all requests to public directory
-    RewriteCond %{REQUEST_URI} !^/public/
-    RewriteRule ^(.*)$ /public/index.php [QSA,L]
+    # Set index.html as directory index
+    DirectoryIndex index.html
+
+    # Route API endpoints to index.php
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(channels|videos|fetch)$ index.php [QSA,L]
 </IfModule>
