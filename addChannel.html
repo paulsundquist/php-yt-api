@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add YouTube Channel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f9fafb;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 40px;
+        }
+
+        h1 {
+            color: #1f2937;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            color: #374151;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .help-text {
+            color: #6b7280;
+            font-size: 12px;
+            margin-top: 6px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-primary:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .alert {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ffffff;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .example {
+            background: #f3f4f6;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+
+        .example h3 {
+            color: #374151;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .example p {
+            color: #6b7280;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .example code {
+            background: #e5e7eb;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Add YouTube Channel</h1>
+        <p class="subtitle">Add a new YouTube channel to track and aggregate videos</p>
+
+        <div id="message-area"></div>
+
+        <form id="channel-form">
+            <div class="form-group">
+                <label for="channel_id">Channel ID or Handle *</label>
+                <input
+                    type="text"
+                    id="channel_id"
+                    name="channel_id"
+                    placeholder="@LinusTechTips or UCXuqSBlHAE6Xw-yeJA0Tunw"
+                    required
+                >
+                <p class="help-text">YouTube handle (e.g., @LinusTechTips) or Channel ID (starts with UC)</p>
+            </div>
+
+            <div class="form-group">
+                <label for="channel_name">Channel Name</label>
+                <input
+                    type="text"
+                    id="channel_name"
+                    name="channel_name"
+                    placeholder="Linus Tech Tips (optional for handles)"
+                >
+                <p class="help-text">Optional - will be fetched from YouTube if using a handle</p>
+            </div>
+
+            <div class="button-group">
+                <button type="button" class="btn-secondary" onclick="window.location.href='/'">
+                    Cancel
+                </button>
+                <button type="submit" class="btn-primary" id="submit-btn">
+                    Add Channel
+                </button>
+            </div>
+        </form>
+
+        <div class="example">
+            <h3>How to add a channel:</h3>
+            <p>
+                <strong>Method 1 - Using Handle (Easiest):</strong><br>
+                Enter the channel's @ handle (e.g., <code>@LinusTechTips</code>)<br>
+                The channel name will be automatically fetched from YouTube<br><br>
+
+                <strong>Method 2 - Using Channel ID:</strong><br>
+                1. Go to the YouTube channel page<br>
+                2. Click on any video from the channel<br>
+                3. Look at the URL - the channel ID is after <code>/channel/</code><br>
+                Example: <code>youtube.com/channel/UCXuqSBlHAE6Xw-yeJA0Tunw</code>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('channel-form');
+        const messageArea = document.getElementById('message-area');
+        const submitBtn = document.getElementById('submit-btn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const channelId = document.getElementById('channel_id').value.trim();
+            const channelName = document.getElementById('channel_name').value.trim();
+
+            // Validation
+            if (!channelId) {
+                showMessage('Please enter a channel ID or handle', 'error');
+                return;
+            }
+
+            // Validate format - either @ handle or UC channel ID
+            const isHandle = channelId.startsWith('@');
+            const isChannelId = channelId.startsWith('UC');
+
+            if (!isHandle && !isChannelId) {
+                showMessage('Channel must be a handle (starting with @) or Channel ID (starting with UC)', 'error');
+                return;
+            }
+
+            // If using channel ID, require channel name
+            if (isChannelId && !channelName) {
+                showMessage('Channel name is required when using Channel ID', 'error');
+                return;
+            }
+
+            // Disable button and show loading
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner"></span>Adding Channel & Fetching Videos...';
+
+            try {
+                const response = await fetch('/channels', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        channel_id: channelId,
+                        channel_name: channelName,
+                        fetch_videos: true
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    let successMsg = 'Channel added successfully!';
+                    if (data.video_stats && data.video_stats.videos_fetched) {
+                        successMsg += ` Fetched ${data.video_stats.videos_fetched} videos.`;
+                    }
+                    successMsg += ' Redirecting...';
+
+                    showMessage(successMsg, 'success');
+                    form.reset();
+
+                    // Redirect after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 2000);
+                } else {
+                    showMessage(data.error || 'Failed to add channel', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'Add Channel';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('Network error. Please try again.', 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Add Channel';
+            }
+        });
+
+        function showMessage(message, type) {
+            const alertClass = type === 'success' ? 'alert-success' :
+                              type === 'error' ? 'alert-error' : 'alert-info';
+
+            messageArea.innerHTML = `
+                <div class="alert ${alertClass}">
+                    ${message}
+                </div>
+            `;
+
+            // Auto-hide success messages after 5 seconds
+            if (type === 'success') {
+                setTimeout(() => {
+                    messageArea.innerHTML = '';
+                }, 5000);
+            }
+        }
+    </script>
+</body>
+</html>

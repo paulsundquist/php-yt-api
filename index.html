@@ -123,6 +123,31 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        .video-item {
+            position: relative;
+        }
+
+        .video-item.watched {
+            opacity: 0.6;
+        }
+
+        .video-item.watched::after {
+            content: '✓ Watched';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(37, 99, 235, 0.9);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .video-item.watched img {
+            filter: grayscale(50%);
+        }
     </style>
 </head>
 <body>
@@ -150,6 +175,25 @@
     <script>
         let channels = [];
         let player;
+
+        // Watch history management
+        const WATCH_HISTORY_KEY = 'youtube_watched_videos';
+
+        function getWatchedVideos() {
+            const watched = localStorage.getItem(WATCH_HISTORY_KEY);
+            return watched ? JSON.parse(watched) : {};
+        }
+
+        function markVideoAsWatched(videoId) {
+            const watched = getWatchedVideos();
+            watched[videoId] = new Date().toISOString();
+            localStorage.setItem(WATCH_HISTORY_KEY, JSON.stringify(watched));
+        }
+
+        function isVideoWatched(videoId) {
+            const watched = getWatchedVideos();
+            return !!watched[videoId];
+        }
 
         async function loadChannels() {
             try {
@@ -214,8 +258,13 @@
                     return;
                 }
 
-                const videosHTML = data.videos.map((video, idx) => `
-                    <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 15px; cursor: pointer;"
+                const videosHTML = data.videos.map((video, idx) => {
+                    const watched = isVideoWatched(video.video_id);
+                    const watchedClass = watched ? ' watched' : '';
+                    return `
+                    <div class="video-item${watchedClass}"
+                         data-video-id="${escapeHtml(video.video_id)}"
+                         style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 15px; cursor: pointer;"
                          onclick="playVideo('${escapeHtml(video.video_id)}', '${escapeHtml(video.title).replace(/'/g, "\\'")}', ${idx})">
                         ${video.thumbnail_url ? `
                             <img src="${escapeHtml(video.thumbnail_url)}"
@@ -229,7 +278,8 @@
                             ${getTimeAgo(video.published_at)}
                         </div>
                     </div>
-                `).join('');
+                `;
+                }).join('');
 
                 contentArea.innerHTML = videosHTML;
 
@@ -315,8 +365,48 @@
         function playVideo(videoId, title, index) {
             if (player && player.loadVideoById) {
                 player.loadVideoById(videoId);
+
+                // Mark video as watched
+                markVideoAsWatched(videoId);
+
+                // Update the UI to show watched status
+                updateVideoWatchedStatus(videoId);
             }
         }
+
+        function updateVideoWatchedStatus(videoId) {
+            // Find all video elements with this video ID and update their appearance
+            const videoElements = document.querySelectorAll(`[data-video-id="${videoId}"]`);
+            videoElements.forEach(el => {
+                el.classList.add('watched');
+            });
+        }
+
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            // Check if spacebar was pressed
+            if (e.code === 'Space' || e.keyCode === 32) {
+                // Don't trigger if user is typing in an input field
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                    return;
+                }
+
+                // Prevent default spacebar behavior (page scroll)
+                e.preventDefault();
+
+                // Toggle play/pause on the YouTube player
+                if (player && player.getPlayerState) {
+                    const state = player.getPlayerState();
+                    // 1 = playing, 2 = paused
+                    if (state === 1) {
+                        player.pauseVideo();
+                    } else if (state === 2 || state === -1 || state === 5) {
+                        // Paused, unstarted, or cued
+                        player.playVideo();
+                    }
+                }
+            }
+        });
 
         loadChannels();
     </script>

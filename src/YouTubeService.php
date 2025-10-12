@@ -21,6 +21,44 @@ class YouTubeService
     }
 
     /**
+     * Get channel info by handle (@ username)
+     *
+     * @param string $handle YouTube handle (with or without @)
+     * @return array|null Channel info with id and name
+     */
+    public function getChannelByHandle($handle)
+    {
+        try {
+            // Remove @ if present
+            $handle = ltrim($handle, '@');
+
+            $response = $this->client->request('GET', 'channels', [
+                'query' => [
+                    'key' => $this->apiKey,
+                    'forHandle' => $handle,
+                    'part' => 'snippet,contentDetails'
+                ]
+            ]);
+
+            $data = json_decode($response->getBody(), true);
+
+            if (empty($data['items'])) {
+                return null;
+            }
+
+            $channel = $data['items'][0];
+            return [
+                'channel_id' => $channel['id'],
+                'channel_name' => $channel['snippet']['title'],
+                'uploads_playlist_id' => $channel['contentDetails']['relatedPlaylists']['uploads'] ?? null
+            ];
+
+        } catch (GuzzleException $e) {
+            throw new \Exception("Failed to get channel by handle: " . $e->getMessage());
+        }
+    }
+
+    /**
      * Get uploads playlist ID for a channel
      *
      * @param string $channelId YouTube channel ID

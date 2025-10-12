@@ -55,6 +55,21 @@ class Database
         return $stmt->fetchAll();
     }
 
+    public function addChannel($channelId, $channelName)
+    {
+        $stmt = $this->connection->prepare(
+            "INSERT INTO channels (channel_id, channel_name, is_active)
+             VALUES (:channel_id, :channel_name, 1)
+             ON DUPLICATE KEY UPDATE
+             channel_name = VALUES(channel_name),
+             is_active = 1"
+        );
+        return $stmt->execute([
+            ':channel_id' => $channelId,
+            ':channel_name' => $channelName
+        ]);
+    }
+
     public function updateChannelPlaylistId($channelId, $playlistId)
     {
         $stmt = $this->connection->prepare(
