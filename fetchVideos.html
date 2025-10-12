@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fetch Videos</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f9fafb;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 40px;
+        }
+
+        h1 {
+            color: #1f2937;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            color: #374151;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #d946ef;
+            box-shadow: 0 0 0 3px rgba(217, 70, 239, 0.1);
+        }
+
+        .help-text {
+            color: #6b7280;
+            font-size: 12px;
+            margin-top: 6px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-primary {
+            background: #d946ef;
+            color: white;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            background: #c026d3;
+        }
+
+        .btn-primary:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .alert {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ffffff;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .stats {
+            background: #f9fafb;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .stats h3 {
+            color: #374151;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            color: #6b7280;
+            font-size: 13px;
+            padding: 6px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .info-box {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 12px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+
+        .info-box p {
+            color: #92400e;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Fetch Videos</h1>
+        <p class="subtitle">Fetch the latest videos from all active YouTube channels</p>
+
+        <div id="message-area"></div>
+
+        <form id="fetch-form">
+            <div class="form-group">
+                <label for="max_results">Videos per Channel</label>
+                <input
+                    type="number"
+                    id="max_results"
+                    name="max_results"
+                    value="10"
+                    min="1"
+                    max="50"
+                >
+                <p class="help-text">Number of recent videos to fetch per channel (1-50)</p>
+            </div>
+
+            <div class="button-group">
+                <button type="button" class="btn-secondary" onclick="window.location.href='/'">
+                    Back to Home
+                </button>
+                <button type="submit" class="btn-primary" id="submit-btn">
+                    Fetch Videos
+                </button>
+            </div>
+        </form>
+
+        <div id="stats-area"></div>
+
+        <div class="info-box">
+            <p>
+                <strong>Note:</strong> This will fetch videos from all active channels in your database.
+                The process may take a few moments depending on the number of channels.
+                Each fetch uses YouTube API quota.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('fetch-form');
+        const messageArea = document.getElementById('message-area');
+        const statsArea = document.getElementById('stats-area');
+        const submitBtn = document.getElementById('submit-btn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const maxResults = document.getElementById('max_results').value;
+
+            // Disable button and show loading
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner"></span>Fetching Videos...';
+            messageArea.innerHTML = '';
+            statsArea.innerHTML = '';
+
+            try {
+                const response = await fetch(`/fetch?max_results=${maxResults}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage('Videos fetched successfully!', 'success');
+                    displayStats(data.stats);
+                } else {
+                    showMessage(data.error || 'Failed to fetch videos', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('Network error. Please try again.', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Fetch Videos';
+            }
+        });
+
+        function showMessage(message, type) {
+            const alertClass = type === 'success' ? 'alert-success' :
+                              type === 'error' ? 'alert-error' : 'alert-info';
+
+            messageArea.innerHTML = `
+                <div class="alert ${alertClass}">
+                    ${message}
+                </div>
+            `;
+        }
+
+        function displayStats(stats) {
+            if (!stats) return;
+
+            let statsHTML = '<div class="stats"><h3>Fetch Results</h3>';
+
+            statsHTML += `
+                <div class="stat-item">
+                    <span>Channels Processed:</span>
+                    <span class="stat-value">${stats.channels_processed || 0}</span>
+                </div>
+                <div class="stat-item">
+                    <span>Videos Added/Updated:</span>
+                    <span class="stat-value">${stats.videos_added || 0}</span>
+                </div>
+            `;
+
+            if (stats.errors && stats.errors.length > 0) {
+                statsHTML += `
+                    <div class="stat-item">
+                        <span>Errors:</span>
+                        <span class="stat-value" style="color: #991b1b;">${stats.errors.length}</span>
+                    </div>
+                `;
+            }
+
+            statsHTML += '</div>';
+
+            if (stats.errors && stats.errors.length > 0) {
+                statsHTML += '<div class="alert alert-error" style="margin-top: 16px;">';
+                statsHTML += '<strong>Errors:</strong><ul style="margin-top: 8px; padding-left: 20px;">';
+                stats.errors.forEach(error => {
+                    statsHTML += `<li style="margin-bottom: 4px;">${escapeHtml(error)}</li>`;
+                });
+                statsHTML += '</ul></div>';
+            }
+
+            statsArea.innerHTML = statsHTML;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

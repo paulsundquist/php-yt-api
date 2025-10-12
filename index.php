@@ -170,13 +170,15 @@ try {
             break;
 
         case '/fetch':
-            if ($method !== 'POST') {
+            if ($method !== 'POST' && $method !== 'GET') {
                 http_response_code(405);
                 echo json_encode(['error' => 'Method not allowed']);
                 break;
             }
 
-            $maxResults = isset($_POST['max_results']) ? (int)$_POST['max_results'] : 10;
+            $maxResults = $method === 'POST'
+                ? (isset($_POST['max_results']) ? (int)$_POST['max_results'] : 10)
+                : (isset($_GET['max_results']) ? (int)$_GET['max_results'] : 10);
 
             $youtubeService = new YouTubeService();
             $stats = $youtubeService->fetchAndStoreVideos($db, $maxResults);
