@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Background circle -->
+  <circle cx="50" cy="50" r="48" fill="#2563eb"/>
+
+  <!-- Play button triangle -->
+  <path d="M 38 30 L 38 70 L 70 50 Z" fill="white"/>
+
+  <!-- Small circles representing multiple channels/videos -->
+  <circle cx="25" cy="20" r="4" fill="white" opacity="0.7"/>
+  <circle cx="75" cy="20" r="4" fill="white" opacity="0.7"/>
+  <circle cx="25" cy="80" r="4" fill="white" opacity="0.7"/>
+  <circle cx="75" cy="80" r="4" fill="white" opacity="0.7"/>
+</svg>
