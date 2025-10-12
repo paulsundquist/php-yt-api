@@ -385,13 +385,13 @@
 
         // Keyboard controls
         document.addEventListener('keydown', (e) => {
-            // Check if spacebar was pressed
-            if (e.code === 'Space' || e.keyCode === 32) {
-                // Don't trigger if user is typing in an input field
-                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-                    return;
-                }
+            // Don't trigger if user is typing in an input field
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                return;
+            }
 
+            // Spacebar - play/pause
+            if (e.code === 'Space' || e.keyCode === 32) {
                 // Prevent default spacebar behavior (page scroll)
                 e.preventDefault();
 
@@ -404,6 +404,26 @@
                     } else if (state === 2 || state === -1 || state === 5) {
                         // Paused, unstarted, or cued
                         player.playVideo();
+                    }
+                }
+            }
+
+            // F key - fullscreen
+            if (e.code === 'KeyF' || e.keyCode === 70) {
+                e.preventDefault();
+
+                // Get the iframe element
+                const iframe = document.getElementById('youtube-player');
+                if (iframe) {
+                    // Request fullscreen on the iframe
+                    if (iframe.requestFullscreen) {
+                        iframe.requestFullscreen();
+                    } else if (iframe.webkitRequestFullscreen) {
+                        iframe.webkitRequestFullscreen();
+                    } else if (iframe.mozRequestFullScreen) {
+                        iframe.mozRequestFullScreen();
+                    } else if (iframe.msRequestFullscreen) {
+                        iframe.msRequestFullscreen();
                     }
                 }
             }
