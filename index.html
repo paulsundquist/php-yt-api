@@ -176,6 +176,8 @@
     <script>
         let channels = [];
         let player;
+        let currentVideos = [];
+        let currentVideoIndex = -1;
 
         // Watch history management
         const WATCH_HISTORY_KEY = 'youtube_watched_videos';
@@ -258,6 +260,9 @@
                     `;
                     return;
                 }
+
+                // Store videos for navigation
+                currentVideos = data.videos;
 
                 const videosHTML = data.videos.map((video, idx) => {
                     const watched = isVideoWatched(video.video_id);
@@ -367,11 +372,26 @@
             if (player && player.loadVideoById) {
                 player.loadVideoById(videoId);
 
+                // Store current video index
+                currentVideoIndex = index;
+
                 // Mark video as watched
                 markVideoAsWatched(videoId);
 
                 // Update the UI to show watched status
                 updateVideoWatchedStatus(videoId);
+            }
+        }
+
+        function playNextVideo() {
+            if (currentVideos.length === 0) {
+                return;
+            }
+
+            const nextIndex = currentVideoIndex + 1;
+            if (nextIndex < currentVideos.length) {
+                const nextVideo = currentVideos[nextIndex];
+                playVideo(nextVideo.video_id, nextVideo.title, nextIndex);
             }
         }
 
@@ -408,24 +428,48 @@
                 }
             }
 
-            // F key - fullscreen
+            // F key - toggle fullscreen
             if (e.code === 'KeyF' || e.keyCode === 70) {
                 e.preventDefault();
 
-                // Get the iframe element
-                const iframe = document.getElementById('youtube-player');
-                if (iframe) {
-                    // Request fullscreen on the iframe
-                    if (iframe.requestFullscreen) {
-                        iframe.requestFullscreen();
-                    } else if (iframe.webkitRequestFullscreen) {
-                        iframe.webkitRequestFullscreen();
-                    } else if (iframe.mozRequestFullScreen) {
-                        iframe.mozRequestFullScreen();
-                    } else if (iframe.msRequestFullscreen) {
-                        iframe.msRequestFullscreen();
+                // Check if already in fullscreen
+                const isFullscreen = document.fullscreenElement ||
+                                    document.webkitFullscreenElement ||
+                                    document.mozFullScreenElement ||
+                                    document.msFullscreenElement;
+
+                if (isFullscreen) {
+                    // Exit fullscreen
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    } else if (document.webkitExitFullscreen) {
+                        document.webkitExitFullscreen();
+                    } else if (document.mozCancelFullScreen) {
+                        document.mozCancelFullScreen();
+                    } else if (document.msExitFullscreen) {
+                        document.msExitFullscreen();
+                    }
+                } else {
+                    // Enter fullscreen
+                    const iframe = document.getElementById('youtube-player');
+                    if (iframe) {
+                        if (iframe.requestFullscreen) {
+                            iframe.requestFullscreen();
+                        } else if (iframe.webkitRequestFullscreen) {
+                            iframe.webkitRequestFullscreen();
+                        } else if (iframe.mozRequestFullScreen) {
+                            iframe.mozRequestFullScreen();
+                        } else if (iframe.msRequestFullscreen) {
+                            iframe.msRequestFullscreen();
+                        }
                     }
                 }
+            }
+
+            // N key - next video
+            if (e.code === 'KeyN' || e.keyCode === 78) {
+                e.preventDefault();
+                playNextVideo();
             }
         });
 
