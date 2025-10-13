@@ -51,7 +51,7 @@ try {
                 break;
             }
 
-            $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
+            $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 20;
             $offset = isset($_GET['offset']) ? (int)$_GET['offset'] : 0;
             $channelId = $_GET['channel_id'] ?? null;
 
