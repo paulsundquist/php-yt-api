@@ -280,8 +280,11 @@
                         <h3 style="color: #1f2937; font-size: 14px; line-height: 1.4; margin: 0 0 5px 0;">
                             ${escapeHtml(video.title)}
                         </h3>
-                        <div style="color: #6b7280; font-size: 12px;">
+                        <div style="color: #6b7280; font-size: 12px; margin-bottom: 3px;">
                             ${getTimeAgo(video.published_at)}
+                        </div>
+                        <div style="color: #9ca3af; font-size: 11px;">
+                            ${formatDate(video.published_at)}
                         </div>
                     </div>
                 `;
