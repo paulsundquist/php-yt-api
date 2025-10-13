@@ -409,8 +409,12 @@
         }
 
         let playerReady = false;
+        let initAttempted = false;
 
-        function onYouTubeIframeAPIReady() {
+        function initializePlayer() {
+            if (initAttempted) return;
+            initAttempted = true;
+
             console.log('YouTube API ready, initializing player...');
             player = new YT.Player('youtube-player', {
                 height: '100%',
@@ -427,6 +431,24 @@
                 }
             });
         }
+
+        function onYouTubeIframeAPIReady() {
+            initializePlayer();
+        }
+
+        // Fallback: Check if API is already loaded (for cached loads)
+        function checkYouTubeAPI() {
+            if (typeof YT !== 'undefined' && YT.Player) {
+                console.log('YouTube API already loaded, initializing...');
+                initializePlayer();
+            } else {
+                // Retry after a short delay
+                setTimeout(checkYouTubeAPI, 100);
+            }
+        }
+
+        // Start checking for YouTube API after a brief delay
+        setTimeout(checkYouTubeAPI, 500);
 
         function onPlayerReady(event) {
             console.log('Player is ready!');
