@@ -150,6 +150,29 @@
         .video-item.watched img {
             filter: grayscale(50%);
         }
+
+        .speed-notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 20px 40px;
+            border-radius: 8px;
+            font-size: 24px;
+            font-weight: 600;
+            z-index: 10000;
+            pointer-events: none;
+            animation: fadeInOut 1s ease-in-out;
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { opacity: 0; }
+        }
     </style>
 </head>
 <body>
@@ -494,6 +517,25 @@
             });
         }
 
+        function showSpeedNotification(speed) {
+            // Remove existing notification if any
+            const existing = document.querySelector('.speed-notification');
+            if (existing) {
+                existing.remove();
+            }
+
+            // Create notification
+            const notification = document.createElement('div');
+            notification.className = 'speed-notification';
+            notification.textContent = `${speed}x`;
+            document.body.appendChild(notification);
+
+            // Remove after 1 second
+            setTimeout(() => {
+                notification.remove();
+            }, 1000);
+        }
+
         // Keyboard controls
         document.addEventListener('keydown', (e) => {
             // Don't trigger if user is typing in an input field
@@ -561,6 +603,38 @@
             if (e.code === 'KeyN' || e.keyCode === 78) {
                 e.preventDefault();
                 playNextVideo();
+            }
+
+            // > key - increase playback speed
+            if (e.key === '>' || e.key === '.') {
+                e.preventDefault();
+                if (player && player.getPlaybackRate && player.setPlaybackRate) {
+                    const currentRate = player.getPlaybackRate();
+                    const rates = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+                    const currentIndex = rates.indexOf(currentRate);
+                    if (currentIndex < rates.length - 1) {
+                        const newRate = rates[currentIndex + 1];
+                        player.setPlaybackRate(newRate);
+                        showSpeedNotification(newRate);
+                        console.log('Playback speed:', newRate);
+                    }
+                }
+            }
+
+            // < key - decrease playback speed
+            if (e.key === '<' || e.key === ',') {
+                e.preventDefault();
+                if (player && player.getPlaybackRate && player.setPlaybackRate) {
+                    const currentRate = player.getPlaybackRate();
+                    const rates = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+                    const currentIndex = rates.indexOf(currentRate);
+                    if (currentIndex > 0) {
+                        const newRate = rates[currentIndex - 1];
+                        player.setPlaybackRate(newRate);
+                        showSpeedNotification(newRate);
+                        console.log('Playback speed:', newRate);
+                    }
+                }
             }
         });
 
