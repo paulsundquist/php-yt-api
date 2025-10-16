@@ -163,6 +163,45 @@ class YouTubeService
     }
 
     /**
+     * Get all available video categories for a region
+     *
+     * @param string $regionCode Region code (e.g., 'US', 'GB', default: 'US')
+     * @return array List of video categories
+     */
+    public function getVideoCategories($regionCode = 'US')
+    {
+        try {
+            $response = $this->client->request('GET', 'videoCategories', [
+                'query' => [
+                    'key' => $this->apiKey,
+                    'part' => 'snippet',
+                    'regionCode' => $regionCode
+                ]
+            ]);
+
+            $data = json_decode($response->getBody(), true);
+
+            if (empty($data['items'])) {
+                return [];
+            }
+
+            $categories = [];
+            foreach ($data['items'] as $item) {
+                $categories[] = [
+                    'id' => $item['id'],
+                    'title' => $item['snippet']['title'],
+                    'assignable' => $item['snippet']['assignable'] ?? true
+                ];
+            }
+
+            return $categories;
+
+        } catch (GuzzleException $e) {
+            throw new \Exception("Failed to get video categories: " . $e->getMessage());
+        }
+    }
+
+    /**
      * Fetch and store videos for all active channels
      *
      * @param Database $db

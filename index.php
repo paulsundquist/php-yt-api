@@ -39,7 +39,8 @@ try {
                     'GET /videos?channel_id={id}' => 'Get videos from specific channel',
                     'GET /videos?limit={n}&offset={n}' => 'Paginate videos',
                     'POST /fetch' => 'Fetch latest videos from YouTube',
-                    'GET /channels' => 'Get all active channels'
+                    'GET /channels' => 'Get all active channels',
+                    'GET /categories' => 'Get YouTube video categories'
                 ]
             ]);
             break;
@@ -187,6 +188,25 @@ try {
                 'success' => true,
                 'message' => 'Videos fetched and stored successfully',
                 'stats' => $stats
+            ]);
+            break;
+
+        case '/categories':
+            if ($method !== 'GET') {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+                break;
+            }
+
+            $regionCode = $_GET['region'] ?? 'US';
+            $youtubeService = new YouTubeService();
+            $categories = $youtubeService->getVideoCategories($regionCode);
+
+            echo json_encode([
+                'success' => true,
+                'region' => $regionCode,
+                'count' => count($categories),
+                'categories' => $categories
             ]);
             break;
 
