@@ -339,7 +339,7 @@
             return !!watched[videoId];
         }
 
-        async function loadChannels(filterToDefault = true) {
+        async function loadChannels(showChannels = false) {
             try {
                 const response = await fetch('/channels');
                 const data = await response.json();
@@ -353,23 +353,18 @@
 
                 channels = data.channels;
 
-                // Filter to just "ONE Media" by default if no group is selected
-                let displayChannels = channels;
-                if (filterToDefault) {
-                    const oneMedia = channels.find(c => c.channel_name === 'ONE Media');
-                    if (oneMedia) {
-                        displayChannels = [oneMedia];
-                    }
+                // Don't show any channels if no group is selected
+                if (!showChannels) {
+                    container.innerHTML = '<p style="padding: 0 20px; color: #6b7280;">Select a group to view channels</p>';
+                    return;
                 }
 
-                const channelsHTML = displayChannels.map((channel) => {
-                    const channelData = JSON.stringify(channel).replace(/"/g, '&quot;');
-                    return `
-                        <div class="channel-item" onclick='selectChannelByData(${channelData})'>
-                            ${escapeHtml(channel.channel_name)}
-                        </div>
-                    `;
-                }).join('');
+                // Show all channels
+                const channelsHTML = channels.map((channel, index) => `
+                    <div class="channel-item" onclick="selectChannel(${index})">
+                        ${escapeHtml(channel.channel_name)}
+                    </div>
+                `).join('');
 
                 container.innerHTML = channelsHTML;
 
@@ -767,7 +762,7 @@
             }
         });
 
-        function loadGroupsDropdown() {
+        async function loadGroupsDropdown() {
             const groups = JSON.parse(localStorage.getItem('channelGroups') || '{}');
             const selectEl = document.getElementById('groups-select');
             const lastGroup = localStorage.getItem('lastSelectedGroup');
@@ -783,14 +778,14 @@
                 selectEl.appendChild(option);
             });
 
+            // First load all channels data
+            await loadChannels(false);
+
             // Restore last selected group if it exists
             if (lastGroup && groups[lastGroup]) {
                 selectEl.value = lastGroup;
                 // Trigger the filter without saving again
                 selectGroup(lastGroup, false);
-            } else {
-                // No group selected, loadChannels will default to ONE Media
-                loadChannels(true);
             }
         }
 
@@ -798,9 +793,9 @@
             const groupName = selectEl.value;
 
             if (!groupName) {
-                // Reset to show default channel (ONE Media)
+                // Reset to show no channels
                 localStorage.removeItem('lastSelectedGroup');
-                loadChannels(true);
+                loadChannels(false);
                 return;
             }
 
