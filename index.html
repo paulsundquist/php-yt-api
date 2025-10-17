@@ -54,6 +54,25 @@
             background: #2563eb;
         }
 
+        .groups-dropdown-container {
+            position: relative;
+        }
+
+        .groups-select {
+            padding: 8px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: white;
+            color: #374151;
+            font-size: 14px;
+            cursor: pointer;
+            min-width: 150px;
+        }
+
+        .groups-select:hover {
+            border-color: #2563eb;
+        }
+
         #channels-list {
             flex: 1;
         }
@@ -264,6 +283,11 @@
             <span></span>
             <span></span>
         </div>
+        <div class="groups-dropdown-container">
+            <select id="groups-select" class="groups-select" onchange="handleGroupChange(this)">
+                <option value="">Select a group...</option>
+            </select>
+        </div>
         <div id="channels-list">
             <div class="loading">
                 <div class="spinner"></div>
@@ -272,9 +296,7 @@
     </div>
 
     <div id="menu-dropdown" class="menu-dropdown">
-        <div class="menu-header">Groups</div>
-        <div id="menu-groups"></div>
-        <div class="menu-item" onclick="window.location.href='groupChannels.html'" style="border-top: 1px solid #e5e7eb; font-weight: 500; color: #2563eb;">
+        <div class="menu-item" onclick="window.location.href='groupChannels.html'" style="font-weight: 500; color: #2563eb;">
             Manage Groups →
         </div>
     </div>
@@ -317,7 +339,7 @@
             return !!watched[videoId];
         }
 
-        async function loadChannels() {
+        async function loadChannels(filterToDefault = true) {
             try {
                 const response = await fetch('/channels');
                 const data = await response.json();
@@ -331,11 +353,23 @@
 
                 channels = data.channels;
 
-                const channelsHTML = channels.map((channel, index) => `
-                    <div class="channel-item" onclick="selectChannel(${index})">
-                        ${escapeHtml(channel.channel_name)}
-                    </div>
-                `).join('');
+                // Filter to just "ONE Media" by default if no group is selected
+                let displayChannels = channels;
+                if (filterToDefault) {
+                    const oneMedia = channels.find(c => c.channel_name === 'ONE Media');
+                    if (oneMedia) {
+                        displayChannels = [oneMedia];
+                    }
+                }
+
+                const channelsHTML = displayChannels.map((channel) => {
+                    const channelData = JSON.stringify(channel).replace(/"/g, '&quot;');
+                    return `
+                        <div class="channel-item" onclick='selectChannelByData(${channelData})'>
+                            ${escapeHtml(channel.channel_name)}
+                        </div>
+                    `;
+                }).join('');
 
                 container.innerHTML = channelsHTML;
 
@@ -733,22 +767,44 @@
             }
         });
 
-        function loadMenuGroups() {
+        function loadGroupsDropdown() {
             const groups = JSON.parse(localStorage.getItem('channelGroups') || '{}');
-            const menuGroupsEl = document.getElementById('menu-groups');
+            const selectEl = document.getElementById('groups-select');
+            const lastGroup = localStorage.getItem('lastSelectedGroup');
 
-            if (Object.keys(groups).length === 0) {
-                menuGroupsEl.innerHTML = '<div class="menu-item no-groups">No groups saved</div>';
+            // Clear existing options except the first one
+            selectEl.innerHTML = '<option value="">Select a group...</option>';
+
+            // Add options for each group
+            Object.values(groups).forEach(group => {
+                const option = document.createElement('option');
+                option.value = group.name;
+                option.textContent = `${group.name} (${group.channels.length})`;
+                selectEl.appendChild(option);
+            });
+
+            // Restore last selected group if it exists
+            if (lastGroup && groups[lastGroup]) {
+                selectEl.value = lastGroup;
+                // Trigger the filter without saving again
+                selectGroup(lastGroup, false);
+            } else {
+                // No group selected, loadChannels will default to ONE Media
+                loadChannels(true);
+            }
+        }
+
+        function handleGroupChange(selectEl) {
+            const groupName = selectEl.value;
+
+            if (!groupName) {
+                // Reset to show default channel (ONE Media)
+                localStorage.removeItem('lastSelectedGroup');
+                loadChannels(true);
                 return;
             }
 
-            const groupsHTML = Object.values(groups).map(group => `
-                <div class="menu-item" onclick="selectGroup('${escapeHtml(group.name)}')">
-                    ${escapeHtml(group.name)} (${group.channels.length})
-                </div>
-            `).join('');
-
-            menuGroupsEl.innerHTML = groupsHTML;
+            selectGroup(groupName, true);
         }
 
         function toggleMenu() {
@@ -758,18 +814,22 @@
             if (isShown) {
                 dropdown.classList.remove('show');
             } else {
-                loadMenuGroups();
                 dropdown.classList.add('show');
             }
         }
 
-        function selectGroup(groupName) {
+        function selectGroup(groupName, saveSelection = true) {
             const groups = JSON.parse(localStorage.getItem('channelGroups') || '{}');
             const group = groups[groupName];
 
             if (!group) {
                 alert('Group not found');
                 return;
+            }
+
+            // Save last selected group
+            if (saveSelection) {
+                localStorage.setItem('lastSelectedGroup', groupName);
             }
 
             // Close menu
@@ -879,7 +939,9 @@
             }
         });
 
-        loadChannels();
+        // Load channels first (will be filtered by loadGroupsDropdown if needed)
+        channels = [];
+        loadGroupsDropdown();
     </script>
 </body>
 </html>
