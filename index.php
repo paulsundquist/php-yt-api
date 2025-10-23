@@ -40,6 +40,9 @@ try {
                     'GET /videos?limit={n}&offset={n}' => 'Paginate videos',
                     'POST /fetch' => 'Fetch latest videos from YouTube',
                     'GET /channels' => 'Get all active channels',
+                    'POST /channels' => 'Add a new channel',
+                    'GET /channels/export' => 'Export all channels as JSON',
+                    'POST /channels/import' => 'Import channels from JSON',
                     'GET /categories' => 'Get YouTube video categories'
                 ]
             ]);
@@ -77,6 +80,7 @@ try {
 
                 $channelId = $input['channel_id'] ?? '';
                 $channelName = $input['channel_name'] ?? '';
+                $channelCategory = $input['channel_category'] ?? null;
                 $fetchVideos = $input['fetch_videos'] ?? true;
                 $playlistId = null;
 
@@ -113,7 +117,7 @@ try {
                 }
 
                 // Add the channel to database
-                $result = $db->addChannel($channelId, $channelName);
+                $result = $db->addChannel($channelId, $channelName, $channelCategory);
 
                 if (!$result) {
                     http_response_code(500);
@@ -164,6 +168,100 @@ try {
                     'channel_name' => $channelName,
                     'video_stats' => $videoStats
                 ]);
+            } else {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+            }
+            break;
+
+        case '/channels/export':
+            if ($method === 'GET') {
+                $channels = $db->getActiveChannels();
+
+                // Format for export
+                $exportData = [
+                    'version' => '1.0',
+                    'exported_at' => date('Y-m-d H:i:s'),
+                    'count' => count($channels),
+                    'channels' => array_map(function($channel) {
+                        return [
+                            'channel_id' => $channel['channel_id'],
+                            'channel_name' => $channel['channel_name'],
+                            'channel_category' => $channel['channel_category'] ?? null,
+                            'uploads_playlist_id' => $channel['uploads_playlist_id'] ?? null
+                        ];
+                    }, $channels)
+                ];
+
+                echo json_encode($exportData, JSON_PRETTY_PRINT);
+            } else {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+            }
+            break;
+
+        case '/channels/import':
+            if ($method === 'POST') {
+                $input = json_decode(file_get_contents('php://input'), true);
+
+                if (!isset($input['channels']) || !is_array($input['channels'])) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'Invalid import format. Expected "channels" array']);
+                    break;
+                }
+
+                $results = [
+                    'success' => true,
+                    'total' => count($input['channels']),
+                    'imported' => 0,
+                    'skipped' => 0,
+                    'errors' => []
+                ];
+
+                foreach ($input['channels'] as $index => $channel) {
+                    $channelId = $channel['channel_id'] ?? '';
+                    $channelName = $channel['channel_name'] ?? '';
+                    $channelCategory = $channel['channel_category'] ?? null;
+                    $playlistId = $channel['uploads_playlist_id'] ?? null;
+
+                    if (empty($channelId) || empty($channelName)) {
+                        $results['skipped']++;
+                        $results['errors'][] = [
+                            'index' => $index,
+                            'error' => 'Missing channel_id or channel_name'
+                        ];
+                        continue;
+                    }
+
+                    try {
+                        $result = $db->addChannel($channelId, $channelName, $channelCategory);
+
+                        if ($result) {
+                            // Update playlist ID if provided
+                            if ($playlistId) {
+                                $db->updateChannelPlaylistId($channelId, $playlistId);
+                            }
+                            $results['imported']++;
+                        } else {
+                            $results['skipped']++;
+                            $results['errors'][] = [
+                                'index' => $index,
+                                'channel_id' => $channelId,
+                                'error' => 'Failed to add channel (may already exist)'
+                            ];
+                        }
+                    } catch (\Exception $e) {
+                        $results['skipped']++;
+                        $results['errors'][] = [
+                            'index' => $index,
+                            'channel_id' => $channelId,
+                            'error' => $e->getMessage()
+                        ];
+                    }
+                }
+
+                http_response_code(200);
+                echo json_encode($results);
             } else {
                 http_response_code(405);
                 echo json_encode(['error' => 'Method not allowed']);
