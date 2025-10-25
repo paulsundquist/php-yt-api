@@ -850,6 +850,25 @@
                     showVolumeNotification(newVolume);
                 }
             }
+
+            // Arrow Right - forward 5 seconds
+            if (e.code === 'ArrowRight' || e.keyCode === 39) {
+                e.preventDefault();
+                if (player && player.getCurrentTime && player.seekTo && player.getDuration) {
+                    const currentTime = player.getCurrentTime();
+                    const duration = player.getDuration();
+                    player.seekTo(Math.min(duration, currentTime + 5), true);
+                }
+            }
+
+            // Arrow Left - rewind 5 seconds
+            if (e.code === 'ArrowLeft' || e.keyCode === 37) {
+                e.preventDefault();
+                if (player && player.getCurrentTime && player.seekTo) {
+                    const currentTime = player.getCurrentTime();
+                    player.seekTo(Math.max(0, currentTime - 5), true);
+                }
+            }
         });
 
         async function loadGroupsDropdown() {
