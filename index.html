@@ -615,9 +615,25 @@
                 // Update the UI to show watched status
                 updateVideoWatchedStatus(videoId);
 
+                // Scroll the video into view
+                scrollToCurrentVideo(videoId);
+
                 console.log('Video loaded successfully');
             } catch (error) {
                 console.error('Error playing video:', error);
+            }
+        }
+
+        function scrollToCurrentVideo(videoId) {
+            // Find the video element
+            const videoElement = document.querySelector(`[data-video-id="${videoId}"]`);
+            if (videoElement) {
+                // Scroll into view with smooth behavior
+                videoElement.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center',
+                    inline: 'nearest'
+                });
             }
         }
 
