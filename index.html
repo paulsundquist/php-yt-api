@@ -275,9 +275,177 @@
             80% { opacity: 1; }
             100% { opacity: 0; }
         }
+
+        .shortcuts-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 10001;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .shortcuts-modal.show {
+            display: flex;
+        }
+
+        .shortcuts-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .shortcuts-header {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .shortcuts-section {
+            margin-bottom: 20px;
+        }
+
+        .shortcuts-section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .shortcut-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+        }
+
+        .shortcut-key {
+            background: #f3f4f6;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+            border: 1px solid #d1d5db;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .shortcut-description {
+            color: #6b7280;
+            font-size: 14px;
+            flex: 1;
+            margin-left: 16px;
+        }
+
+        .shortcuts-close {
+            margin-top: 20px;
+            width: 100%;
+            padding: 10px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .shortcuts-close:hover {
+            background: #1d4ed8;
+        }
     </style>
 </head>
 <body>
+    <!-- Keyboard Shortcuts Modal -->
+    <div id="shortcuts-modal" class="shortcuts-modal" onclick="hideShortcuts()">
+        <div class="shortcuts-content" onclick="event.stopPropagation()">
+            <div class="shortcuts-header">Keyboard Shortcuts</div>
+
+            <div class="shortcuts-section">
+                <div class="shortcuts-section-title">Playback Control</div>
+                <div class="shortcut-item">
+                    <span class="shortcut-key">Space / K</span>
+                    <span class="shortcut-description">Play/Pause</span>
+                </div>
+                <div class="shortcut-item">
+                    <span class="shortcut-key">N</span>
+                    <span class="shortcut-description">Next video</span>
+                </div>
+            </div>
+
+            <div class="shortcuts-section">
+                <div class="shortcuts-section-title">Seeking</div>
+                <div class="shortcut-item">
+                    <span class="shortcut-key">J</span>
+                    <span class="shortcut-description">Rewind 10 seconds</span>
+                </div>
+                <div class="shortcut-item">
+                    <span class="shortcut-key">L</span>
+                    <span class="shortcut-description">Forward 10 seconds</span>
+                </div>
+                <div class="shortcut-item">
+                    <span class="shortcut-key">← Left Arrow</span>
+                    <span class="shortcut-description">Rewind 5 seconds</span>
+                </div>
+                <div class="shortcut-item">
+                    <span class="shortcut-key">→ Right Arrow</span>
+                    <span class="shortcut-description">Forward 5 seconds</span>
+                </div>
+            </div>
+
+            <div class="shortcuts-section">
+                <div class="shortcuts-section-title">Volume</div>
+                <div class="shortcut-item">
+                    <span class="shortcut-key">↑ Up Arrow</span>
+                    <span class="shortcut-description">Increase volume by 5%</span>
+                </div>
+                <div class="shortcut-item">
+                    <span class="shortcut-key">↓ Down Arrow</span>
+                    <span class="shortcut-description">Decrease volume by 5%</span>
+                </div>
+            </div>
+
+            <div class="shortcuts-section">
+                <div class="shortcuts-section-title">Playback Speed</div>
+                <div class="shortcut-item">
+                    <span class="shortcut-key">&gt; or .</span>
+                    <span class="shortcut-description">Increase speed</span>
+                </div>
+                <div class="shortcut-item">
+                    <span class="shortcut-key">&lt; or ,</span>
+                    <span class="shortcut-description">Decrease speed</span>
+                </div>
+            </div>
+
+            <div class="shortcuts-section">
+                <div class="shortcuts-section-title">Other</div>
+                <div class="shortcut-item">
+                    <span class="shortcut-key">F</span>
+                    <span class="shortcut-description">Toggle fullscreen</span>
+                </div>
+                <div class="shortcut-item">
+                    <span class="shortcut-key">?</span>
+                    <span class="shortcut-description">Show this help</span>
+                </div>
+            </div>
+
+            <button class="shortcuts-close" onclick="hideShortcuts()">Close</button>
+        </div>
+    </div>
+
     <div class="top-section">
         <div class="hamburger" onclick="toggleMenu()">
             <span></span>
@@ -703,8 +871,20 @@
                 return;
             }
 
+            // Track if we handle this key
+            let keyHandled = false;
+
+            // ? key - show shortcuts
+            if (e.key === '?' || (e.shiftKey && e.key === '/')) {
+                e.preventDefault();
+                showShortcuts();
+                keyHandled = true;
+                return;
+            }
+
             // Spacebar - play/pause
             if (e.code === 'Space' || e.keyCode === 32) {
+                keyHandled = true;
                 // Prevent default spacebar behavior (page scroll)
                 e.preventDefault();
 
@@ -723,6 +903,7 @@
 
             // F key - toggle fullscreen
             if (e.code === 'KeyF' || e.keyCode === 70) {
+                keyHandled = true;
                 e.preventDefault();
 
                 // Check if already in fullscreen
@@ -761,12 +942,14 @@
 
             // N key - next video
             if (e.code === 'KeyN' || e.keyCode === 78) {
+                keyHandled = true;
                 e.preventDefault();
                 playNextVideo();
             }
 
             // > key - increase playback speed
             if (e.key === '>' || e.key === '.') {
+                keyHandled = true;
                 e.preventDefault();
                 if (player && player.getPlaybackRate && player.setPlaybackRate) {
                     const currentRate = player.getPlaybackRate();
@@ -783,6 +966,7 @@
 
             // < key - decrease playback speed
             if (e.key === '<' || e.key === ',') {
+                keyHandled = true;
                 e.preventDefault();
                 if (player && player.getPlaybackRate && player.setPlaybackRate) {
                     const currentRate = player.getPlaybackRate();
@@ -799,6 +983,7 @@
 
             // J key - rewind 10 seconds
             if (e.code === 'KeyJ' || e.keyCode === 74) {
+                keyHandled = true;
                 e.preventDefault();
                 if (player && player.getCurrentTime && player.seekTo) {
                     const currentTime = player.getCurrentTime();
@@ -808,6 +993,7 @@
 
             // K key - play/pause (YouTube standard)
             if (e.code === 'KeyK' || e.keyCode === 75) {
+                keyHandled = true;
                 e.preventDefault();
                 if (player && player.getPlayerState) {
                     const state = player.getPlayerState();
@@ -821,6 +1007,7 @@
 
             // L key - forward 10 seconds
             if (e.code === 'KeyL' || e.keyCode === 76) {
+                keyHandled = true;
                 e.preventDefault();
                 if (player && player.getCurrentTime && player.seekTo && player.getDuration) {
                     const currentTime = player.getCurrentTime();
@@ -831,6 +1018,7 @@
 
             // Arrow Up - increase volume
             if (e.code === 'ArrowUp' || e.keyCode === 38) {
+                keyHandled = true;
                 e.preventDefault();
                 if (player && player.getVolume && player.setVolume) {
                     const currentVolume = player.getVolume();
@@ -842,6 +1030,7 @@
 
             // Arrow Down - decrease volume
             if (e.code === 'ArrowDown' || e.keyCode === 40) {
+                keyHandled = true;
                 e.preventDefault();
                 if (player && player.getVolume && player.setVolume) {
                     const currentVolume = player.getVolume();
@@ -853,6 +1042,7 @@
 
             // Arrow Right - forward 5 seconds
             if (e.code === 'ArrowRight' || e.keyCode === 39) {
+                keyHandled = true;
                 e.preventDefault();
                 if (player && player.getCurrentTime && player.seekTo && player.getDuration) {
                     const currentTime = player.getCurrentTime();
@@ -863,13 +1053,30 @@
 
             // Arrow Left - rewind 5 seconds
             if (e.code === 'ArrowLeft' || e.keyCode === 37) {
+                keyHandled = true;
                 e.preventDefault();
                 if (player && player.getCurrentTime && player.seekTo) {
                     const currentTime = player.getCurrentTime();
                     player.seekTo(Math.max(0, currentTime - 5), true);
                 }
             }
+
+            // If key wasn't handled, show shortcuts help
+            if (!keyHandled && e.key && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                // Only show for single character keys (not modifiers, function keys, etc.)
+                showShortcuts();
+            }
         });
+
+        function showShortcuts() {
+            const modal = document.getElementById('shortcuts-modal');
+            modal.classList.add('show');
+        }
+
+        function hideShortcuts() {
+            const modal = document.getElementById('shortcuts-modal');
+            modal.classList.remove('show');
+        }
 
         async function loadGroupsDropdown() {
             const userGroups = JSON.parse(localStorage.getItem('channelGroups') || '{}');
