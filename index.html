@@ -760,6 +760,38 @@
                     }
                 }
             }
+
+            // J key - rewind 10 seconds
+            if (e.code === 'KeyJ' || e.keyCode === 74) {
+                e.preventDefault();
+                if (player && player.getCurrentTime && player.seekTo) {
+                    const currentTime = player.getCurrentTime();
+                    player.seekTo(Math.max(0, currentTime - 10), true);
+                }
+            }
+
+            // K key - play/pause (YouTube standard)
+            if (e.code === 'KeyK' || e.keyCode === 75) {
+                e.preventDefault();
+                if (player && player.getPlayerState) {
+                    const state = player.getPlayerState();
+                    if (state === 1) {
+                        player.pauseVideo();
+                    } else if (state === 2 || state === -1 || state === 5) {
+                        player.playVideo();
+                    }
+                }
+            }
+
+            // L key - forward 10 seconds
+            if (e.code === 'KeyL' || e.keyCode === 76) {
+                e.preventDefault();
+                if (player && player.getCurrentTime && player.seekTo && player.getDuration) {
+                    const currentTime = player.getCurrentTime();
+                    const duration = player.getDuration();
+                    player.seekTo(Math.min(duration, currentTime + 10), true);
+                }
+            }
         });
 
         async function loadGroupsDropdown() {
