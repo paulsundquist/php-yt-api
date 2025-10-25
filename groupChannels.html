@@ -46,6 +46,19 @@
             border-radius: 12px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             overflow: hidden;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            max-width: 100%;
+        }
+
+        @media (min-width: 1400px) {
+            .channels-list {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .category-section {
+            display: contents;
         }
 
         .channel-item {
@@ -78,9 +91,28 @@
             flex: 1;
         }
 
-        .last-updated {
+        .channel-details {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .channel-category {
             color: #6b7280;
+            font-size: 13px;
+            font-style: italic;
+        }
+
+        .category-header {
+            background: #f3f4f6;
+            padding: 12px 16px;
+            font-weight: 600;
             font-size: 14px;
+            color: #374151;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #d1d5db;
+            grid-column: 1 / -1;
         }
 
         .channel-checkbox {
@@ -130,19 +162,6 @@
             color: #6b7280;
             font-size: 14px;
             font-style: italic;
-        }
-
-        .channel-link {
-            display: inline-block;
-            color: #2563eb;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            margin-top: 8px;
-        }
-
-        .channel-link:hover {
-            text-decoration: underline;
         }
 
         .status {
@@ -244,20 +263,47 @@
                     return;
                 }
 
-                const channelsHTML = data.channels.map(channel => `
-                    <div class="channel-item">
-                        <input type="checkbox" class="channel-checkbox"
-                               data-channel-id="${escapeHtml(channel.channel_id)}"
-                               data-channel-name="${escapeHtml(channel.channel_name)}">
-                        <div class="channel-info">
-                            <div class="channel-name">${escapeHtml(channel.channel_name)}</div>
-                            <div class="last-updated">Last updated: ${formatDate(channel.updated_at)}</div>
+                // Sort channels by category (nulls/empty at the end), then by name
+                const sortedChannels = data.channels.sort((a, b) => {
+                    const categoryA = (a.channel_category || '').toLowerCase();
+                    const categoryB = (b.channel_category || '').toLowerCase();
+
+                    // Put channels without category at the end
+                    if (!categoryA && categoryB) return 1;
+                    if (categoryA && !categoryB) return -1;
+
+                    // Sort by category, then by name
+                    if (categoryA !== categoryB) {
+                        return categoryA.localeCompare(categoryB);
+                    }
+                    return a.channel_name.localeCompare(b.channel_name);
+                });
+
+                // Group channels by category and create HTML with headers
+                let channelsHTML = '';
+                let currentCategory = null;
+
+                sortedChannels.forEach(channel => {
+                    const category = channel.channel_category || 'Uncategorized';
+
+                    // Add category header if this is a new category
+                    if (category !== currentCategory) {
+                        channelsHTML += `<div class="category-header">${escapeHtml(category)}</div>`;
+                        currentCategory = category;
+                    }
+
+                    // Add channel item
+                    channelsHTML += `
+                        <div class="channel-item">
+                            <input type="checkbox" class="channel-checkbox"
+                                   data-channel-id="${escapeHtml(channel.channel_id)}"
+                                   data-channel-name="${escapeHtml(channel.channel_name)}">
+                            <div class="channel-info">
+                                <div class="channel-name">${escapeHtml(channel.channel_name)}</div>
+                            </div>
                         </div>
-                        <a href="https://www.youtube.com/channel/${escapeHtml(channel.channel_id)}"
-                           target="_blank"
-                           class="channel-link">View on YouTube →</a>
-                    </div>
-                `).join('');
+                    `;
+                });
 
                 container.innerHTML = `<div class="channels-list">${channelsHTML}</div>`;
 
@@ -285,24 +331,60 @@
             });
         }
 
-        function loadSavedGroups() {
-            const groups = JSON.parse(localStorage.getItem('channelGroups') || '{}');
+        async function loadSavedGroups() {
+            const userGroups = JSON.parse(localStorage.getItem('channelGroups') || '{}');
+
+            // Fetch default groups from API
+            let defaultGroups = {};
+            try {
+                const response = await fetch('/groups/default');
+                const data = await response.json();
+                if (data.success && data.groups) {
+                    defaultGroups = data.groups;
+                }
+            } catch (error) {
+                console.error('Error loading default groups:', error);
+            }
+
             const listEl = document.getElementById('saved-groups-list');
 
-            if (Object.keys(groups).length === 0) {
+            if (Object.keys(userGroups).length === 0 && Object.keys(defaultGroups).length === 0) {
                 listEl.innerHTML = '<div class="no-groups">No groups saved yet</div>';
                 return;
             }
 
-            const groupsHTML = Object.values(groups).map(group => `
-                <div class="group-item">
-                    <div>
-                        <div class="group-name">${escapeHtml(group.name)}</div>
-                        <div class="group-channels">${group.channels.length} channel(s): ${group.channels.map(c => escapeHtml(c.channel_name)).join(', ')}</div>
+            let groupsHTML = '';
+
+            // Show default groups first (read-only)
+            if (Object.keys(defaultGroups).length > 0) {
+                groupsHTML += '<div style="font-weight: 600; color: #6b7280; font-size: 12px; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px;">Default Groups</div>';
+                groupsHTML += Object.values(defaultGroups).map(group => `
+                    <div class="group-item" style="background: #f9fafb;">
+                        <div>
+                            <div class="group-name">⭐ ${escapeHtml(group.name)}</div>
+                            <div class="group-channels">${group.channels.length} channel(s): ${group.channels.map(c => escapeHtml(c.channel_name)).join(', ')}</div>
+                            ${group.description ? `<div style="color: #9ca3af; font-size: 12px; margin-top: 4px;">${escapeHtml(group.description)}</div>` : ''}
+                        </div>
+                        <div style="padding: 6px 16px; background: #e5e7eb; color: #6b7280; border-radius: 6px; font-size: 14px; font-weight: 500;">Default</div>
                     </div>
-                    <button class="delete-group" onclick="deleteGroup('${escapeHtml(group.name)}')">Delete</button>
-                </div>
-            `).join('');
+                `).join('');
+            }
+
+            // Show user groups
+            if (Object.keys(userGroups).length > 0) {
+                if (Object.keys(defaultGroups).length > 0) {
+                    groupsHTML += '<div style="font-weight: 600; color: #6b7280; font-size: 12px; text-transform: uppercase; margin: 16px 0 8px 0; letter-spacing: 0.5px;">Your Groups</div>';
+                }
+                groupsHTML += Object.values(userGroups).map(group => `
+                    <div class="group-item">
+                        <div>
+                            <div class="group-name">${escapeHtml(group.name)}</div>
+                            <div class="group-channels">${group.channels.length} channel(s): ${group.channels.map(c => escapeHtml(c.channel_name)).join(', ')}</div>
+                        </div>
+                        <button class="delete-group" onclick="deleteGroup('${escapeHtml(group.name)}')">Delete</button>
+                    </div>
+                `).join('');
+            }
 
             listEl.innerHTML = groupsHTML;
         }

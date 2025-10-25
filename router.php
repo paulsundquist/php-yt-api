@@ -4,7 +4,7 @@
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
 // API endpoints
-if (preg_match('#^/(channels|videos|fetch|categories)#', $uri)) {
+if (preg_match('#^/(channels|videos|fetch|categories|groups)#', $uri)) {
     require __DIR__ . '/index.php';
     return true;
 }

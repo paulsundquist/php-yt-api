@@ -49,24 +49,26 @@ class Database
     public function getActiveChannels()
     {
         $stmt = $this->connection->prepare(
-            "SELECT channel_id, channel_name, uploads_playlist_id, updated_at FROM channels WHERE is_active = 1"
+            "SELECT id, channel_id, channel_name, channel_category, uploads_playlist_id, updated_at FROM channels WHERE is_active = 1"
         );
         $stmt->execute();
         return $stmt->fetchAll();
     }
 
-    public function addChannel($channelId, $channelName)
+    public function addChannel($channelId, $channelName, $channelCategory = null)
     {
         $stmt = $this->connection->prepare(
-            "INSERT INTO channels (channel_id, channel_name, is_active)
-             VALUES (:channel_id, :channel_name, 1)
+            "INSERT INTO channels (channel_id, channel_name, channel_category, is_active)
+             VALUES (:channel_id, :channel_name, :channel_category, 1)
              ON DUPLICATE KEY UPDATE
              channel_name = VALUES(channel_name),
+             channel_category = VALUES(channel_category),
              is_active = 1"
         );
         return $stmt->execute([
             ':channel_id' => $channelId,
-            ':channel_name' => $channelName
+            ':channel_name' => $channelName,
+            ':channel_category' => $channelCategory
         ]);
     }
 

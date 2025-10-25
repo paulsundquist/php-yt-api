@@ -1,0 +1,8 @@
+{
+  "Fun": {
+    "name": "Fun",
+    "description": "Default fun channels group",
+    "channel_ids": [9, 11],
+    "is_default": true
+  }
+}

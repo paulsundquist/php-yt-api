@@ -43,6 +43,7 @@ try {
                     'POST /channels' => 'Add a new channel',
                     'GET /channels/export' => 'Export all channels as JSON',
                     'POST /channels/import' => 'Import channels from JSON',
+                    'GET /groups/default' => 'Get default channel groups',
                     'GET /categories' => 'Get YouTube video categories'
                 ]
             ]);
@@ -286,6 +287,60 @@ try {
                 'success' => true,
                 'message' => 'Videos fetched and stored successfully',
                 'stats' => $stats
+            ]);
+            break;
+
+        case '/groups/default':
+            if ($method !== 'GET') {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+                break;
+            }
+
+            $configFile = __DIR__ . '/config/default_groups.json';
+            if (!file_exists($configFile)) {
+                echo json_encode([
+                    'success' => true,
+                    'groups' => []
+                ]);
+                break;
+            }
+
+            $defaultGroupsConfig = json_decode(file_get_contents($configFile), true);
+            $allChannels = $db->getActiveChannels();
+
+            // Build a map of channel id (auto-increment) to channel data
+            $channelMap = [];
+            foreach ($allChannels as $channel) {
+                $channelMap[$channel['id']] = $channel;
+            }
+
+            // Process default groups
+            $defaultGroups = [];
+            foreach ($defaultGroupsConfig as $groupKey => $groupConfig) {
+                $channels = [];
+                foreach ($groupConfig['channel_ids'] as $channelId) {
+                    if (isset($channelMap[$channelId])) {
+                        $channels[] = [
+                            'channel_id' => $channelMap[$channelId]['channel_id'],
+                            'channel_name' => $channelMap[$channelId]['channel_name']
+                        ];
+                    }
+                }
+
+                if (!empty($channels)) {
+                    $defaultGroups[$groupKey] = [
+                        'name' => $groupConfig['name'],
+                        'description' => $groupConfig['description'] ?? '',
+                        'channels' => $channels,
+                        'is_default' => true
+                    ];
+                }
+            }
+
+            echo json_encode([
+                'success' => true,
+                'groups' => $defaultGroups
             ]);
             break;
 
