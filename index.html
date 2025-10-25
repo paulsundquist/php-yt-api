@@ -592,6 +592,7 @@
                         ${video.thumbnail_url ? `
                             <img src="${escapeHtml(video.thumbnail_url)}"
                                  alt="Thumbnail"
+                                 loading="lazy"
                                  style="width: 100%; height: auto; object-fit: cover; border-radius: 6px; margin-bottom: 10px;">
                         ` : ''}
                         <h3 style="color: #1f2937; font-size: 14px; line-height: 1.4; margin: 0 0 5px 0;">
@@ -1250,6 +1251,7 @@
                             ${video.thumbnail_url ? `
                                 <img src="${escapeHtml(video.thumbnail_url)}"
                                      alt="Thumbnail"
+                                     loading="lazy"
                                      style="width: 100%; height: auto; object-fit: cover; border-radius: 6px; margin-bottom: 10px;">
                             ` : ''}
                             <h3 style="color: #1f2937; font-size: 14px; line-height: 1.4; margin: 0 0 5px 0;">
