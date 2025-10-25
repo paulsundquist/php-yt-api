@@ -1078,6 +1078,17 @@
             modal.classList.remove('show');
         }
 
+        // Close shortcuts modal with Escape or Enter
+        document.addEventListener('keydown', (e) => {
+            const modal = document.getElementById('shortcuts-modal');
+            if (modal.classList.contains('show')) {
+                if (e.key === 'Escape' || e.key === 'Enter') {
+                    e.preventDefault();
+                    hideShortcuts();
+                }
+            }
+        });
+
         async function loadGroupsDropdown() {
             const userGroups = JSON.parse(localStorage.getItem('channelGroups') || '{}');
 
