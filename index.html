@@ -252,7 +252,8 @@
             filter: grayscale(50%);
         }
 
-        .speed-notification {
+        .speed-notification,
+        .volume-notification {
             position: fixed;
             top: 50%;
             left: 50%;
@@ -676,6 +677,25 @@
             }, 1000);
         }
 
+        function showVolumeNotification(volume) {
+            // Remove existing notification if any
+            const existing = document.querySelector('.volume-notification');
+            if (existing) {
+                existing.remove();
+            }
+
+            // Create notification
+            const notification = document.createElement('div');
+            notification.className = 'volume-notification';
+            notification.textContent = `Volume: ${Math.round(volume)}%`;
+            document.body.appendChild(notification);
+
+            // Remove after 1 second
+            setTimeout(() => {
+                notification.remove();
+            }, 1000);
+        }
+
         // Keyboard controls
         document.addEventListener('keydown', (e) => {
             // Don't trigger if user is typing in an input field
@@ -806,6 +826,28 @@
                     const currentTime = player.getCurrentTime();
                     const duration = player.getDuration();
                     player.seekTo(Math.min(duration, currentTime + 10), true);
+                }
+            }
+
+            // Arrow Up - increase volume
+            if (e.code === 'ArrowUp' || e.keyCode === 38) {
+                e.preventDefault();
+                if (player && player.getVolume && player.setVolume) {
+                    const currentVolume = player.getVolume();
+                    const newVolume = Math.min(100, currentVolume + 5);
+                    player.setVolume(newVolume);
+                    showVolumeNotification(newVolume);
+                }
+            }
+
+            // Arrow Down - decrease volume
+            if (e.code === 'ArrowDown' || e.keyCode === 40) {
+                e.preventDefault();
+                if (player && player.getVolume && player.setVolume) {
+                    const currentVolume = player.getVolume();
+                    const newVolume = Math.max(0, currentVolume - 5);
+                    player.setVolume(newVolume);
+                    showVolumeNotification(newVolume);
                 }
             }
         });
