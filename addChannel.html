@@ -181,7 +181,12 @@
 </head>
 <body>
     <div class="container">
-        <h1>Add YouTube Channel</h1>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h1>Add YouTube Channel</h1>
+            <a href="index.html" style="padding: 10px 20px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 500;">
+                ← Back to Viewer
+            </a>
+        </div>
         <p class="subtitle">Add a new YouTube channel to track and aggregate videos</p>
 
         <div id="message-area"></div>
@@ -208,6 +213,17 @@
                     placeholder="Linus Tech Tips (optional for handles)"
                 >
                 <p class="help-text">Optional - will be fetched from YouTube if using a handle</p>
+            </div>
+
+            <div class="form-group">
+                <label for="channel_category">Channel Category</label>
+                <input
+                    type="text"
+                    id="channel_category"
+                    name="channel_category"
+                    placeholder="Entertainment, News, Technology, etc."
+                >
+                <p class="help-text">Optional - categorize the channel for organization</p>
             </div>
 
             <div class="button-group">
@@ -246,6 +262,7 @@
 
             const channelId = document.getElementById('channel_id').value.trim();
             const channelName = document.getElementById('channel_name').value.trim();
+            const channelCategory = document.getElementById('channel_category').value.trim();
 
             // Validation
             if (!channelId) {
@@ -273,16 +290,23 @@
             submitBtn.innerHTML = '<span class="spinner"></span>Adding Channel & Fetching Videos...';
 
             try {
+                const requestBody = {
+                    channel_id: channelId,
+                    channel_name: channelName,
+                    fetch_videos: true
+                };
+
+                // Add channel_category if provided
+                if (channelCategory) {
+                    requestBody.channel_category = channelCategory;
+                }
+
                 const response = await fetch('/channels', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        channel_id: channelId,
-                        channel_name: channelName,
-                        fetch_videos: true
-                    })
+                    body: JSON.stringify(requestBody)
                 });
 
                 const data = await response.json();
@@ -292,15 +316,13 @@
                     if (data.video_stats && data.video_stats.videos_fetched) {
                         successMsg += ` Fetched ${data.video_stats.videos_fetched} videos.`;
                     }
-                    successMsg += ' Redirecting...';
 
                     showMessage(successMsg, 'success');
                     form.reset();
 
-                    // Redirect after 2 seconds
-                    setTimeout(() => {
-                        window.location.href = '/';
-                    }, 2000);
+                    // Re-enable button for next submission
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'Add Channel';
                 } else {
                     showMessage(data.error || 'Failed to add channel', 'error');
                     submitBtn.disabled = false;
