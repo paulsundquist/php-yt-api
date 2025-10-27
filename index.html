@@ -1129,11 +1129,16 @@
             // First load all channels data
             await loadChannels(false);
 
-            // Restore last selected group if it exists
+            // Restore last selected group if it exists, or select the first group
             if (lastGroup && allGroups[lastGroup]) {
                 selectEl.value = lastGroup;
                 // Trigger the filter without saving again
                 selectGroup(lastGroup, false);
+            } else if (Object.keys(allGroups).length > 0) {
+                // Select the first group if no valid last selection
+                const firstGroupName = Object.values(allGroups)[0].name;
+                selectEl.value = firstGroupName;
+                selectGroup(firstGroupName, true);
             }
         }
 
