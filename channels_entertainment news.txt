@@ -1,0 +1,12 @@
+channel Name,YouTube Handle,Owner/Creator,Subscribers (Millions),Content Type
+Entertainment Tonight,@entertainmenttonight,CBS Media Ventures,7.05,Celebrity News/Entertainment
+TMZ,@TMZ,Fox Corporation,3.5,Celebrity Gossip/Entertainment News
+E! News,@enews,NBCUniversal,1.2,Entertainment News/Celebrity Coverage
+People,@people,Dotdash Meredith,~1.0,Celebrity & Entertainment News
+Access Hollywood,@accesshollywood,NBCUniversal,~0.8,Entertainment News/Celebrity Interviews
+Inside Edition,@insideedition,CBS Media Ventures,~2.5,News/Entertainment
+Extra,@extratv,Warner Bros,~0.5,Entertainment News
+The Ellen Show,@TheEllenShow,Ellen DeGeneres,38.2,Talk Show/Entertainment
+The Tonight Show,@fallontonight,Jimmy Fallon/NBC,29.0,Late Night Talk Show/Entertainment
+Good Morning America,@GMA,ABC News,~3.0,Morning News/Entertainment
+

@@ -1,0 +1,11 @@
+id      channel_id      channel_name    channel_category        uploads_playlist_id     is_active   created_at      updated_at
+9       UCzcRQ3vRNr6fJ1A9rqFn7QA        BoxofficeOneMedia       Trailers        UUzcRQ3vRNr6fJ1A9rqFn7QA    1       2025-10-16 18:37:42     2025-10-20 16:13:09
+10      UCz1GPotHecuLngiLuY739QQ        Rotten Tomatoes TV      Trailers        UUz1GPotHecuLngiLuY739QQ    1       2025-10-16 18:38:54     2025-10-20 16:13:09
+11      UCWOA1ZGywLbqmigxE4Qlvuw        Netflix Trailers        UUWOA1ZGywLbqmigxE4Qlvuw   12025-10-16 18:40:25     2025-10-20 16:13:09
+12      UCdC0An4ZPNr_YiFiYoVbwaw        Daily Dose Of Internet  NULL    UUdC0An4ZPNr_YiFiYoVbwaw    1       2025-10-17 16:56:00     2025-10-17 16:56:00
+13      UCa6vGFO9ty8v5KZJXQxdhaw        Jimmy Kimmel Live       Late Night      UUa6vGFO9ty8v5KZJXQxdhaw    1       2025-10-17 16:56:44     2025-10-20 16:12:06
+15      UCVTyTA7-g9nopHeHbeuvpRA        Late Night with Seth Meyers     Late Night      UUVTyTA7-g9nopHeHbeuvpRA    1       2025-10-17 17:26:57     2025-10-20 16:12:06
+16      UCMtFAi84ehTSYSE9XoHefig        The Late Show with Stephen Colbert      Late Night UUMtFAi84ehTSYSE9XoHefig 1       2025-10-17 17:27:37     2025-10-20 16:12:06
+18      UCGbQJy-531_5vfphay-rChQ        People  Entertainment   UUGbQJy-531_5vfphay-rChQ   12025-10-20 12:44:32     2025-10-20 16:12:40
+19      UCK7IIV6Q2junGSdYK3BmZMg        TMZ     Entertainment   UUK7IIV6Q2junGSdYK3BmZMg   12025-10-20 12:44:52     2025-10-20 16:12:40
+20      UCZ8Sxmkweh65HetaZfR8YuA        The Hollywood Reporter  Entertainment   UUZ8Sxmkweh65HetaZfR8YuA    1       2025-10-20 12:46:20     2025-10-20 16:12:40
