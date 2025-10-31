@@ -77,6 +77,19 @@
             flex: 1;
         }
 
+        .home-button {
+            text-decoration: none;
+            font-size: 24px;
+            line-height: 1;
+            transition: opacity 0.2s;
+            display: flex;
+            align-items: center;
+        }
+
+        .home-button:hover {
+            opacity: 0.7;
+        }
+
         .menu-dropdown {
             position: absolute;
             top: 50px;
@@ -462,10 +475,13 @@
                 <div class="spinner"></div>
             </div>
         </div>
+        <a href="index.html" class="home-button" title="Home">
+            🏠
+        </a>
     </div>
 
     <div id="menu-dropdown" class="menu-dropdown">
-        <div class="menu-item" onclick="window.location.href='groupChannels.html'" style="font-weight: 500; color: #2563eb;">
+        <div class="menu-item" onclick="window.location.href='channelsManageGroup.html'" style="font-weight: 500; color: #2563eb;">
             Manage Groups →
         </div>
     </div>
@@ -1093,50 +1109,34 @@
         async function loadGroupsDropdown() {
             const userGroups = JSON.parse(localStorage.getItem('channelGroups') || '{}');
 
-            // Fetch default groups from API
-            let defaultGroups = {};
-            try {
-                const response = await fetch('/groups/default');
-                const data = await response.json();
-                if (data.success && data.groups) {
-                    defaultGroups = data.groups;
-                }
-            } catch (error) {
-                console.error('Error loading default groups:', error);
-            }
-
-            // Merge default and user groups
-            const allGroups = { ...defaultGroups, ...userGroups };
-
             const selectEl = document.getElementById('groups-select');
             const lastGroup = localStorage.getItem('lastSelectedGroup');
 
             // Clear existing options except the first one
             selectEl.innerHTML = '<option value="">Select a group...</option>';
 
-            // Add options for each group, with visual distinction for default groups
-            Object.values(allGroups).forEach(group => {
+            // Add options for each group
+            Object.values(userGroups).forEach(group => {
                 const option = document.createElement('option');
                 option.value = group.name;
-                const prefix = group.is_default ? '⭐ ' : '';
-                option.textContent = `${prefix}${group.name} (${group.channels.length})`;
+                option.textContent = `${group.name} (${group.channels.length})`;
                 selectEl.appendChild(option);
             });
 
-            // Store merged groups globally for selectGroup function
-            window.allChannelGroups = allGroups;
+            // Store groups globally for selectGroup function
+            window.allChannelGroups = userGroups;
 
             // First load all channels data
             await loadChannels(false);
 
             // Restore last selected group if it exists, or select the first group
-            if (lastGroup && allGroups[lastGroup]) {
+            if (lastGroup && userGroups[lastGroup]) {
                 selectEl.value = lastGroup;
                 // Trigger the filter without saving again
                 selectGroup(lastGroup, false);
-            } else if (Object.keys(allGroups).length > 0) {
+            } else if (Object.keys(userGroups).length > 0) {
                 // Select the first group if no valid last selection
-                const firstGroupName = Object.values(allGroups)[0].name;
+                const firstGroupName = Object.values(userGroups)[0].name;
                 selectEl.value = firstGroupName;
                 selectGroup(firstGroupName, true);
             }
@@ -1167,7 +1167,7 @@
         }
 
         function selectGroup(groupName, saveSelection = true) {
-            // Use the merged groups from window or fallback to localStorage only
+            // Use groups from window or fallback to localStorage
             const allGroups = window.allChannelGroups || JSON.parse(localStorage.getItem('channelGroups') || '{}');
             const group = allGroups[groupName];
 
@@ -1208,6 +1208,14 @@
             }).join('');
 
             container.innerHTML = channelsHTML;
+
+            // Automatically select the first channel if it exists
+            if (filteredChannels.length > 0) {
+                // Use setTimeout to ensure the DOM is updated
+                setTimeout(() => {
+                    selectChannelByData(filteredChannels[0]);
+                }, 100);
+            }
         }
 
         function selectChannelByData(channel) {
@@ -1216,8 +1224,14 @@
                 item.classList.remove('active');
             });
 
-            // Add active class to clicked item
-            event.target.classList.add('active');
+            // Add active class to clicked/selected item
+            // Find the channel item by matching channel name
+            const channelItems = document.querySelectorAll('.channel-item');
+            channelItems.forEach(item => {
+                if (item.textContent.trim() === channel.channel_name) {
+                    item.classList.add('active');
+                }
+            });
 
             const contentArea = document.getElementById('content-area');
 

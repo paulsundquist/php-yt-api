@@ -106,16 +106,26 @@
                 padding: 40px 24px;
             }
         }
+
+        .first-visit-indicator {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
     <div class="welcome-container">
         <h1>MyTubie</h1>
         <p class="subtitle">
-            Watch YouTube with a Channel Based Layout
+            My YouTube, My Way
         </p>
 
-        <a href="/channels_w.html" class="cta-button">Channel Viewer</a>
+        <a href="/channels.html" class="cta-button">Channel Viewer</a>
 
         <div class="features">
             <div class="feature">
@@ -153,5 +163,106 @@
             </div>
         </div>
     </div>
+
+    <script>
+        // Load default groups from JSON and add to localStorage
+        async function loadDefaultGroups() {
+            try {
+                console.log('Starting to load default groups...');
+
+                // Fetch default groups configuration
+                const defaultGroupsResponse = await fetch('/config/default_groups.json');
+                if (!defaultGroupsResponse.ok) {
+                    throw new Error('Failed to fetch default_groups.json');
+                }
+                const defaultGroupsConfig = await defaultGroupsResponse.json();
+                console.log('Default groups config loaded:', defaultGroupsConfig);
+
+                // Fetch all available channels
+                const channelsResponse = await fetch('/channels');
+                if (!channelsResponse.ok) {
+                    throw new Error('Failed to fetch channels');
+                }
+                const channelsData = await channelsResponse.json();
+                console.log('Channels data loaded:', channelsData);
+
+                if (!channelsData.channels) {
+                    console.error('No channels available');
+                    return;
+                }
+
+                // Create a map of id to channel object (note: using 'id' not 'channel_id' for lookup)
+                const channelMapById = {};
+                channelsData.channels.forEach(channel => {
+                    channelMapById[channel.id] = {
+                        channel_id: channel.channel_id,
+                        channel_name: channel.channel_name
+                    };
+                });
+                console.log('Channel map created:', channelMapById);
+
+                // Convert default groups to user group format
+                const userGroups = {};
+                Object.values(defaultGroupsConfig).forEach(defaultGroup => {
+                    console.log('Processing group:', defaultGroup.name, 'with channel IDs:', defaultGroup.channel_ids);
+
+                    // Map channel_ids to full channel objects (using 'id' from database)
+                    const channels = defaultGroup.channel_ids
+                        .map(id => {
+                            const channel = channelMapById[id];
+                            if (!channel) {
+                                console.warn('Channel with id', id, 'not found');
+                            }
+                            return channel;
+                        })
+                        .filter(channel => channel); // Remove any undefined channels
+
+                    console.log('Mapped channels:', channels);
+
+                    if (channels.length > 0) {
+                        userGroups[defaultGroup.name] = {
+                            name: defaultGroup.name,
+                            channels: channels,
+                            created_at: new Date().toISOString()
+                        };
+                    }
+                });
+
+                // Save to localStorage
+                localStorage.setItem('channelGroups', JSON.stringify(userGroups));
+                console.log('Default groups saved to localStorage:', userGroups);
+                console.log('Total groups loaded:', Object.keys(userGroups).length);
+
+            } catch (error) {
+                console.error('Error loading default groups:', error);
+            }
+        }
+
+        // Check if this is the user's first visit
+        if (!localStorage.getItem('hasVisitedBefore')) {
+            // First time visitor
+            console.log('Welcome, first time visitor!');
+
+            // Add "1" indicator at bottom
+            const indicator = document.createElement('div');
+            indicator.className = 'first-visit-indicator';
+            indicator.textContent = '1';
+            document.body.appendChild(indicator);
+
+            // Load default groups
+            loadDefaultGroups();
+
+            // Mark as visited
+            localStorage.setItem('hasVisitedBefore', 'true');
+            localStorage.setItem('firstVisitDate', new Date().toISOString());
+        } else {
+            // Returning visitor
+            console.log('Welcome back!');
+            const firstVisit = localStorage.getItem('firstVisitDate');
+            if (firstVisit) {
+                console.log('First visited on:', firstVisit);
+            }
+        }
+    </script>
 </body>
 </html>

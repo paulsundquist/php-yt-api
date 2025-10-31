@@ -144,6 +144,25 @@
             margin-top: 4px;
         }
 
+        .group-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .edit-group {
+            padding: 6px 16px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .edit-group:hover {
+            background: #1d4ed8;
+        }
+
         .delete-group {
             padding: 6px 16px;
             background: #dc2626;
@@ -156,6 +175,25 @@
 
         .delete-group:hover {
             background: #b91c1c;
+        }
+
+        .cancel-edit {
+            padding: 6px 16px;
+            background: #6b7280;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            display: none;
+        }
+
+        .cancel-edit:hover {
+            background: #4b5563;
+        }
+
+        .cancel-edit.show {
+            display: inline-block;
         }
 
         .no-groups {
@@ -220,7 +258,7 @@
                 <h1>Group Channels</h1>
                 <p class="subtitle">Create groups of channels for easy organization</p>
             </div>
-            <a href="index.html" style="padding: 10px 20px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 500;">
+            <a href="channels.html" style="padding: 10px 20px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 500;">
                 ← Back to Viewer
             </a>
         </header>
@@ -231,12 +269,15 @@
         </div>
 
         <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px;">
-            <h2 style="font-size: 18px; font-weight: 600; color: #1f2937; margin-bottom: 16px;">Create New Group</h2>
+            <h2 id="form-title" style="font-size: 18px; font-weight: 600; color: #1f2937; margin-bottom: 16px;">Create New Group</h2>
             <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 16px;">
                 <input type="text" id="group-name" placeholder="Enter group name..."
                        style="flex: 1; padding: 10px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 16px;">
                 <button id="save-group" style="padding: 10px 24px; background: #2563eb; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 500; cursor: pointer;">
                     Save Group
+                </button>
+                <button id="cancel-edit" class="cancel-edit" onclick="cancelEdit()">
+                    Cancel
                 </button>
             </div>
             <div id="message" style="display: none; padding: 12px; border-radius: 6px; font-size: 14px;"></div>
@@ -334,59 +375,92 @@
         async function loadSavedGroups() {
             const userGroups = JSON.parse(localStorage.getItem('channelGroups') || '{}');
 
-            // Fetch default groups from API
-            let defaultGroups = {};
-            try {
-                const response = await fetch('/groups/default');
-                const data = await response.json();
-                if (data.success && data.groups) {
-                    defaultGroups = data.groups;
-                }
-            } catch (error) {
-                console.error('Error loading default groups:', error);
-            }
-
             const listEl = document.getElementById('saved-groups-list');
 
-            if (Object.keys(userGroups).length === 0 && Object.keys(defaultGroups).length === 0) {
+            if (Object.keys(userGroups).length === 0) {
                 listEl.innerHTML = '<div class="no-groups">No groups saved yet</div>';
                 return;
             }
 
-            let groupsHTML = '';
-
-            // Show default groups first (read-only)
-            if (Object.keys(defaultGroups).length > 0) {
-                groupsHTML += '<div style="font-weight: 600; color: #6b7280; font-size: 12px; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px;">Default Groups</div>';
-                groupsHTML += Object.values(defaultGroups).map(group => `
-                    <div class="group-item" style="background: #f9fafb;">
-                        <div>
-                            <div class="group-name">⭐ ${escapeHtml(group.name)}</div>
-                            <div class="group-channels">${group.channels.length} channel(s): ${group.channels.map(c => escapeHtml(c.channel_name)).join(', ')}</div>
-                            ${group.description ? `<div style="color: #9ca3af; font-size: 12px; margin-top: 4px;">${escapeHtml(group.description)}</div>` : ''}
-                        </div>
-                        <div style="padding: 6px 16px; background: #e5e7eb; color: #6b7280; border-radius: 6px; font-size: 14px; font-weight: 500;">Default</div>
+            const groupsHTML = Object.values(userGroups).map(group => `
+                <div class="group-item">
+                    <div>
+                        <div class="group-name">${escapeHtml(group.name)}</div>
+                        <div class="group-channels">${group.channels.length} channel(s): ${group.channels.map(c => escapeHtml(c.channel_name)).join(', ')}</div>
                     </div>
-                `).join('');
-            }
-
-            // Show user groups
-            if (Object.keys(userGroups).length > 0) {
-                if (Object.keys(defaultGroups).length > 0) {
-                    groupsHTML += '<div style="font-weight: 600; color: #6b7280; font-size: 12px; text-transform: uppercase; margin: 16px 0 8px 0; letter-spacing: 0.5px;">Your Groups</div>';
-                }
-                groupsHTML += Object.values(userGroups).map(group => `
-                    <div class="group-item">
-                        <div>
-                            <div class="group-name">${escapeHtml(group.name)}</div>
-                            <div class="group-channels">${group.channels.length} channel(s): ${group.channels.map(c => escapeHtml(c.channel_name)).join(', ')}</div>
-                        </div>
+                    <div class="group-actions">
+                        <button class="edit-group" onclick="editGroup('${escapeHtml(group.name)}')">Edit</button>
                         <button class="delete-group" onclick="deleteGroup('${escapeHtml(group.name)}')">Delete</button>
                     </div>
-                `).join('');
-            }
+                </div>
+            `).join('');
 
             listEl.innerHTML = groupsHTML;
+        }
+
+        let editingGroupName = null;
+
+        function editGroup(groupName) {
+            const groups = JSON.parse(localStorage.getItem('channelGroups') || '{}');
+            const group = groups[groupName];
+
+            if (!group) {
+                alert('Group not found');
+                return;
+            }
+
+            // Store the original group name for editing
+            editingGroupName = groupName;
+
+            // Update form title
+            document.getElementById('form-title').textContent = 'Edit Group';
+
+            // Fill in the group name
+            document.getElementById('group-name').value = groupName;
+
+            // Update save button text
+            document.getElementById('save-group').textContent = 'Update Group';
+
+            // Show cancel button
+            document.getElementById('cancel-edit').classList.add('show');
+
+            // Clear all checkboxes first
+            document.querySelectorAll('.channel-checkbox').forEach(cb => cb.checked = false);
+
+            // Check the channels that are in this group
+            const groupChannelIds = group.channels.map(c => c.channel_id);
+            document.querySelectorAll('.channel-checkbox').forEach(cb => {
+                if (groupChannelIds.includes(cb.getAttribute('data-channel-id'))) {
+                    cb.checked = true;
+                }
+            });
+
+            // Scroll to form
+            document.getElementById('form-title').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            showMessage(`Editing group "${groupName}"`, false);
+        }
+
+        function cancelEdit() {
+            editingGroupName = null;
+
+            // Reset form title
+            document.getElementById('form-title').textContent = 'Create New Group';
+
+            // Clear form
+            document.getElementById('group-name').value = '';
+
+            // Reset save button text
+            document.getElementById('save-group').textContent = 'Save Group';
+
+            // Hide cancel button
+            document.getElementById('cancel-edit').classList.remove('show');
+
+            // Clear all checkboxes
+            document.querySelectorAll('.channel-checkbox').forEach(cb => cb.checked = false);
+
+            // Clear message
+            document.getElementById('message').style.display = 'none';
         }
 
         function deleteGroup(groupName) {
@@ -437,20 +511,32 @@
             // Get existing groups from localStorage
             const groups = JSON.parse(localStorage.getItem('channelGroups') || '{}');
 
+            // If editing and name changed, delete the old group
+            if (editingGroupName && editingGroupName !== groupName) {
+                delete groups[editingGroupName];
+            }
+
             // Save or update the group
             groups[groupName] = {
                 name: groupName,
                 channels: selectedChannels,
-                created_at: new Date().toISOString()
+                created_at: groups[groupName]?.created_at || new Date().toISOString(),
+                updated_at: editingGroupName ? new Date().toISOString() : undefined
             };
 
             localStorage.setItem('channelGroups', JSON.stringify(groups));
 
-            showMessage(`Group "${groupName}" saved with ${selectedChannels.length} channel(s)`);
+            const action = editingGroupName ? 'updated' : 'saved';
+            showMessage(`Group "${groupName}" ${action} with ${selectedChannels.length} channel(s)`);
 
-            // Clear selections
-            document.getElementById('group-name').value = '';
-            checkboxes.forEach(cb => cb.checked = false);
+            // Reset edit state
+            if (editingGroupName) {
+                cancelEdit();
+            } else {
+                // Clear selections for new group
+                document.getElementById('group-name').value = '';
+                checkboxes.forEach(cb => cb.checked = false);
+            }
 
             // Reload saved groups list
             loadSavedGroups();
