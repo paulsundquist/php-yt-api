@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tour Editor - MyTubie</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: white;
+            font-size: 32px;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            margin: 0;
+            flex: 1;
+            text-align: center;
+        }
+
+        .back-button {
+            display: inline-block;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateX(-5px);
+        }
+
+        .header-spacer {
+            width: 120px;
+        }
+
+        .section {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #374151;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            aspect-ratio: 16 / 9;
+            margin: 0 auto 20px;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        #ytplayer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .section h2 {
+            color: #1f2937;
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+
+        .steps-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .steps-table thead {
+            background: #f9fafb;
+        }
+
+        .steps-table th {
+            padding: 12px 10px;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .steps-table td {
+            padding: 12px 10px;
+            color: #1f2937;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .steps-table tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .steps-table tbody tr.current-step {
+            background: #dbeafe;
+            border-left: 4px solid #2563eb;
+        }
+
+        .steps-table tbody tr.current-step td:first-child {
+            padding-left: 6px;
+        }
+
+        .editable-cell {
+            cursor: text;
+            position: relative;
+        }
+
+        .editable-cell:hover {
+            background: #f3f4f6;
+            outline: 1px solid #d1d5db;
+        }
+
+        .editable-cell input {
+            width: 100%;
+            padding: 4px 8px;
+            border: 2px solid #2563eb;
+            border-radius: 4px;
+            font-size: inherit;
+        }
+
+        .actions-cell {
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .btn-icon {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 6px 10px;
+            font-size: 16px;
+            color: #6b7280;
+            transition: all 0.2s;
+        }
+
+        .btn-icon:hover {
+            color: #2563eb;
+        }
+
+        .btn-icon.danger:hover {
+            color: #dc2626;
+        }
+
+        .save-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .empty-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: #9ca3af;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .section {
+                padding: 20px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .steps-table {
+                font-size: 14px;
+            }
+
+            .steps-table th,
+            .steps-table td {
+                padding: 8px 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="/tours.html" class="back-button">&larr; Back to Tours</a>
+            <h1 id="pageTitle">Create New Tour</h1>
+            <div class="header-spacer"></div>
+        </div>
+
+        <!-- Tour Info Section -->
+        <div class="section">
+            <h2>Tour Information</h2>
+            <div class="form-group">
+                <label for="tourName">Tour Name *</label>
+                <input type="text" id="tourName" placeholder="Enter tour name" required>
+            </div>
+            <div class="form-group">
+                <label for="tourDescription">Description</label>
+                <textarea id="tourDescription" placeholder="Enter tour description (optional)"></textarea>
+            </div>
+        </div>
+
+        <!-- Video Player Section -->
+        <div class="section">
+            <div class="video-wrapper">
+                <div id="ytplayer"></div>
+            </div>
+        </div>
+
+        <!-- Steps Section -->
+        <div class="section">
+            <h2>Tour Steps</h2>
+
+            <!-- Steps Table -->
+            <div id="stepsContainer">
+                <div class="empty-message">No steps yet.</div>
+            </div>
+        </div>
+
+        <!-- Save Actions -->
+        <div class="section">
+            <div class="save-actions">
+                <button class="btn btn-secondary" onclick="cancelEdit()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveTour()">
+                    <i class="fa-solid fa-save"></i> Save Tour
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let tourId = null;
+        let steps = [];
+        let player = null;
+        let playerReady = false;
+        let apiReady = false;
+        let currentStepIndex = null;
+        let playingSequence = false;
+
+        // Load YouTube IFrame API
+        const tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        function onYouTubeIframeAPIReady() {
+            apiReady = true;
+            console.log('YouTube API ready');
+        }
+
+        // Initialize
+        (async function init() {
+            const urlParams = new URLSearchParams(window.location.search);
+            tourId = urlParams.get('id');
+
+            if (tourId) {
+                document.getElementById('pageTitle').textContent = 'Edit Tour';
+                await loadTour();
+            } else {
+                // New tour - start with one blank step
+                steps = [{
+                    step_id: Date.now(),
+                    step_name: '',
+                    youtube_id: '',
+                    start_loc: null,
+                    stop_loc: null,
+                    step_comment: null,
+                    step_order: 1,
+                    _isNew: true
+                }];
+                renderSteps();
+            }
+        })();
+
+        async function loadTour() {
+            try {
+                const response = await fetch(`/api/tours/${tourId}`);
+                const data = await response.json();
+
+                if (!data.success) {
+                    alert('Error loading tour: ' + (data.error || 'Unknown error'));
+                    return;
+                }
+
+                const tour = data.tour;
+                document.getElementById('tourName').value = tour.tour_name;
+                document.getElementById('tourDescription').value = tour.tour_description || '';
+
+                steps = tour.steps || [];
+                renderSteps();
+
+            } catch (error) {
+                console.error('Error loading tour:', error);
+                alert('Error loading tour. Please try again.');
+            }
+        }
+
+        function renderSteps() {
+            const container = document.getElementById('stepsContainer');
+
+            if (steps.length === 0) {
+                container.innerHTML = '<div class="empty-message">No steps yet.</div>';
+                return;
+            }
+
+            const tableHTML = `
+                <table class="steps-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px;">#</th>
+                            <th>Step Name</th>
+                            <th>Comment</th>
+                            <th>YouTube ID</th>
+                            <th>Start (s)</th>
+                            <th>Stop (s)</th>
+                            <th style="width: 120px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${steps.map((step, index) => `
+                            <tr data-row-index="${index}">
+                                <td>${index + 1}</td>
+                                <td class="editable-cell" data-step-index="${index}" data-field="step_name" onclick="makeEditable(this, 'text')">${escapeHtml(step.step_name)}</td>
+                                <td class="editable-cell" data-step-index="${index}" data-field="step_comment" onclick="makeEditable(this, 'text')">${escapeHtml(step.step_comment || '')}</td>
+                                <td class="editable-cell" data-step-index="${index}" data-field="youtube_id" onclick="makeEditable(this, 'text')">${escapeHtml(step.youtube_id)}</td>
+                                <td class="editable-cell" data-step-index="${index}" data-field="start_loc" onclick="makeEditable(this, 'number')">${step.start_loc !== null ? step.start_loc : ''}</td>
+                                <td class="editable-cell" data-step-index="${index}" data-field="stop_loc" onclick="makeEditable(this, 'number')">${step.stop_loc !== null ? step.stop_loc : ''}</td>
+                                <td class="actions-cell">
+                                    <button class="btn-icon" onclick="playFromStep(${index})" title="Play from here">
+                                        <i class="fa-solid fa-play"></i>
+                                    </button>
+                                    <button class="btn-icon" onclick="addStepBelow(${index})" title="Add step below">
+                                        <i class="fa-solid fa-plus"></i>
+                                    </button>
+                                    <button class="btn-icon danger" onclick="deleteStep(${index})" title="Delete step">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = tableHTML;
+
+            // Re-apply highlight if playing
+            if (currentStepIndex !== null) {
+                setTimeout(highlightCurrentStep, 0);
+            }
+        }
+
+        function makeEditable(cell, type) {
+            if (cell.querySelector('input')) return;
+
+            const stepIndex = parseInt(cell.dataset.stepIndex);
+            const field = cell.dataset.field;
+            const step = steps[stepIndex];
+            const currentValue = step[field];
+
+            const input = document.createElement('input');
+            input.type = type;
+            input.value = currentValue || '';
+
+            if (type === 'number') {
+                input.step = '0.1';
+                input.min = '0';
+            }
+
+            const originalContent = cell.innerHTML;
+            cell.innerHTML = '';
+            cell.appendChild(input);
+            input.focus();
+            input.select();
+
+            const saveEdit = () => {
+                let newValue = input.value.trim();
+
+                if (type === 'number') {
+                    newValue = newValue === '' ? null : parseFloat(newValue);
+                    if (newValue !== null && (isNaN(newValue) || newValue < 0)) {
+                        cell.innerHTML = originalContent;
+                        return;
+                    }
+                }
+
+                step[field] = newValue;
+                renderSteps();
+            };
+
+            input.addEventListener('blur', saveEdit);
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    input.blur();
+                }
+            });
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    cell.innerHTML = originalContent;
+                } else if (e.key === 'Tab') {
+                    e.preventDefault();
+
+                    // Save current edit
+                    let newValue = input.value.trim();
+                    if (type === 'number') {
+                        newValue = newValue === '' ? null : parseFloat(newValue);
+                        if (newValue !== null && (isNaN(newValue) || newValue < 0)) {
+                            return;
+                        }
+                    }
+                    step[field] = newValue;
+
+                    // Find next field
+                    const fields = ['step_name', 'step_comment', 'youtube_id', 'start_loc', 'stop_loc'];
+                    const currentFieldIndex = fields.indexOf(field);
+
+                    if (currentFieldIndex < fields.length - 1) {
+                        // Move to next field in same row
+                        const nextField = fields[currentFieldIndex + 1];
+                        renderSteps();
+
+                        // Find and click the next cell
+                        setTimeout(() => {
+                            const nextCell = document.querySelector(`[data-step-index="${stepIndex}"][data-field="${nextField}"]`);
+                            if (nextCell) {
+                                nextCell.click();
+                            }
+                        }, 0);
+                    } else {
+                        // Last field, just save and re-render
+                        renderSteps();
+                    }
+                }
+            });
+        }
+
+        function highlightCurrentStep() {
+            // Remove highlight from all rows
+            document.querySelectorAll('.steps-table tbody tr').forEach(row => {
+                row.classList.remove('current-step');
+            });
+
+            // Add highlight to current step
+            if (currentStepIndex !== null) {
+                const currentRow = document.querySelector(`.steps-table tbody tr[data-row-index="${currentStepIndex}"]`);
+                if (currentRow) {
+                    currentRow.classList.add('current-step');
+                }
+            }
+        }
+
+        function playFromStep(index) {
+            if (!apiReady) {
+                alert('YouTube API is still loading. Please wait a moment.');
+                return;
+            }
+
+            currentStepIndex = index;
+            playingSequence = true;
+            highlightCurrentStep();
+            const step = steps[index];
+
+            if (!playerReady) {
+                player = new YT.Player('ytplayer', {
+                    videoId: step.youtube_id,
+                    playerVars: {
+                        'playsinline': 1,
+                        'enablejsapi': 1,
+                        'rel': 0,
+                        'modestbranding': 1,
+                        'showinfo': 0,
+                        'iv_load_policy': 3,
+                        'start': Math.floor(step.start_loc || 0)
+                    },
+                    events: {
+                        'onReady': onPlayerReady,
+                        'onStateChange': onPlayerStateChange
+                    }
+                });
+            } else {
+                player.loadVideoById({
+                    videoId: step.youtube_id,
+                    startSeconds: step.start_loc || 0
+                });
+                player.playVideo();
+            }
+        }
+
+        function onPlayerReady(event) {
+            playerReady = true;
+            event.target.playVideo();
+        }
+
+        let checkInterval = null;
+
+        function onPlayerStateChange(event) {
+            if (event.data === YT.PlayerState.PLAYING && playingSequence && currentStepIndex !== null) {
+                if (checkInterval) clearInterval(checkInterval);
+
+                checkInterval = setInterval(() => {
+                    const currentTime = player.getCurrentTime();
+                    const step = steps[currentStepIndex];
+
+                    if (step.stop_loc !== null && currentTime >= step.stop_loc) {
+                        clearInterval(checkInterval);
+                        advanceToNextStep();
+                    }
+                }, 100);
+            } else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
+                if (checkInterval) {
+                    clearInterval(checkInterval);
+                    checkInterval = null;
+                }
+            }
+        }
+
+        function advanceToNextStep() {
+            if (currentStepIndex < steps.length - 1) {
+                currentStepIndex++;
+                highlightCurrentStep();
+                const nextStep = steps[currentStepIndex];
+
+                player.loadVideoById({
+                    videoId: nextStep.youtube_id,
+                    startSeconds: nextStep.start_loc || 0
+                });
+                player.playVideo();
+            } else {
+                playingSequence = false;
+                currentStepIndex = null;
+                highlightCurrentStep();
+            }
+        }
+
+        function addStepBelow(index) {
+            const currentStep = steps[index];
+
+            const newStep = {
+                step_id: Date.now(),
+                step_name: '',
+                youtube_id: currentStep.youtube_id, // Copy from current line
+                start_loc: null,
+                stop_loc: null,
+                step_comment: null,
+                step_order: index + 2,
+                _isNew: true
+            };
+
+            steps.splice(index + 1, 0, newStep);
+
+            // Update step orders
+            steps.forEach((step, idx) => {
+                step.step_order = idx + 1;
+            });
+
+            renderSteps();
+
+            // Automatically start editing the first field of the new step
+            setTimeout(() => {
+                const newStepIndex = index + 1;
+                const firstCell = document.querySelector(`[data-step-index="${newStepIndex}"][data-field="step_name"]`);
+                if (firstCell) {
+                    firstCell.click();
+                }
+            }, 0);
+        }
+
+        function deleteStep(index) {
+            if (!confirm(`Delete step "${steps[index].step_name}"?`)) {
+                return;
+            }
+
+            steps.splice(index, 1);
+
+            // Update step orders
+            steps.forEach((step, idx) => {
+                step.step_order = idx + 1;
+            });
+
+            renderSteps();
+        }
+
+        async function saveTour() {
+            const tourName = document.getElementById('tourName').value.trim();
+            const tourDescription = document.getElementById('tourDescription').value.trim();
+
+            if (!tourName) {
+                alert('Tour name is required');
+                return;
+            }
+
+            try {
+                let savedTourId = tourId;
+
+                // Create or update tour
+                if (tourId) {
+                    const response = await fetch(`/api/tours/${tourId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            tour_name: tourName,
+                            tour_description: tourDescription
+                        })
+                    });
+
+                    const data = await response.json();
+                    if (!data.success) {
+                        alert('Error updating tour: ' + (data.error || 'Unknown error'));
+                        return;
+                    }
+                } else {
+                    const response = await fetch('/api/tours', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            tour_name: tourName,
+                            tour_description: tourDescription
+                        })
+                    });
+
+                    const data = await response.json();
+                    if (!data.success) {
+                        alert('Error creating tour: ' + (data.error || 'Unknown error'));
+                        return;
+                    }
+
+                    savedTourId = data.tour_id;
+                    tourId = savedTourId;
+                }
+
+                // Save all steps
+                for (const step of steps) {
+                    if (step._isNew) {
+                        await fetch(`/api/tours/${savedTourId}/steps`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                step_name: step.step_name,
+                                step_comment: step.step_comment,
+                                youtube_id: step.youtube_id,
+                                start_loc: step.start_loc,
+                                stop_loc: step.stop_loc,
+                                step_order: step.step_order
+                            })
+                        });
+                    } else {
+                        await fetch(`/api/tour-steps/${step.step_id}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                step_name: step.step_name,
+                                step_comment: step.step_comment,
+                                youtube_id: step.youtube_id,
+                                start_loc: step.start_loc,
+                                stop_loc: step.stop_loc,
+                                step_order: step.step_order
+                            })
+                        });
+                    }
+                }
+
+                alert('Tour saved successfully!');
+                window.location.href = '/tours.html';
+
+            } catch (error) {
+                console.error('Error saving tour:', error);
+                alert('Error saving tour. Please try again.');
+            }
+        }
+
+        function cancelEdit() {
+            if (confirm('Are you sure you want to cancel? Any unsaved changes will be lost.')) {
+                window.location.href = '/tours.html';
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

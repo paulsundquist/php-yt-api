@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tours - MyTubie</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: white;
+            font-size: 36px;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            margin: 0;
+            flex: 1;
+            text-align: center;
+        }
+
+        .back-button {
+            display: inline-block;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateX(-5px);
+        }
+
+        .header-spacer {
+            width: 120px;
+        }
+
+        .add-button {
+            background: #10b981;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .add-button:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+
+        .content-section {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .tours-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .tours-table thead {
+            background: #f9fafb;
+        }
+
+        .tours-table th {
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .tours-table td {
+            padding: 15px;
+            color: #1f2937;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .tours-table tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .tours-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .tour-name {
+            font-weight: 600;
+            color: #2563eb;
+            font-size: 16px;
+        }
+
+        .tour-description {
+            color: #6b7280;
+            font-size: 14px;
+            margin-top: 5px;
+            max-width: 500px;
+        }
+
+        .tour-date {
+            color: #6b7280;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .actions-col {
+            width: 150px;
+            text-align: right;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-edit {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-delete {
+            background: transparent;
+            color: #dc2626;
+            border: 1px solid #dc2626;
+        }
+
+        .btn-delete:hover {
+            background: #dc2626;
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: 20px;
+            color: #d1d5db;
+        }
+
+        .empty-state h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: #374151;
+        }
+
+        .empty-state p {
+            margin-bottom: 30px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            h1 {
+                font-size: 28px;
+                order: -1;
+            }
+
+            .back-button {
+                align-self: flex-start;
+            }
+
+            .header-spacer {
+                display: none;
+            }
+
+            .content-section {
+                padding: 20px;
+            }
+
+            .tours-table {
+                font-size: 14px;
+            }
+
+            .tours-table th,
+            .tours-table td {
+                padding: 10px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .btn-small {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="/" class="back-button">&larr; Back to Home</a>
+            <h1>YouTube Tours</h1>
+            <div class="header-spacer"></div>
+        </div>
+
+        <div class="content-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="color: #1f2937; font-size: 24px; margin: 0;">All Tours</h2>
+                <a href="/tour_editor.html" class="add-button">
+                    <i class="fa-solid fa-plus"></i> Create New Tour
+                </a>
+            </div>
+
+            <div id="toursContainer">
+                <div class="loading">
+                    <i class="fa-solid fa-spinner fa-spin"></i> Loading tours...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Fetch and display tours
+        async function loadTours() {
+            try {
+                const response = await fetch('/api/tours');
+                const data = await response.json();
+
+                const container = document.getElementById('toursContainer');
+
+                if (!data.success) {
+                    container.innerHTML = `<div class="empty-state"><p>Error loading tours: ${data.error || 'Unknown error'}</p></div>`;
+                    return;
+                }
+
+                if (data.tours.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fa-solid fa-route"></i>
+                            <h3>No Tours Yet</h3>
+                            <p>Create your first YouTube tour to get started!</p>
+                            <a href="/tour_editor.html" class="add-button">
+                                <i class="fa-solid fa-plus"></i> Create Your First Tour
+                            </a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Create table
+                const tableHTML = `
+                    <table class="tours-table">
+                        <thead>
+                            <tr>
+                                <th>Tour</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.tours.map(tour => `
+                                <tr>
+                                    <td>
+                                        <div class="tour-name">${escapeHtml(tour.tour_name)}</div>
+                                        ${tour.tour_description ? `<div class="tour-description">${escapeHtml(tour.tour_description)}</div>` : ''}
+                                    </td>
+                                    <td>
+                                        <div class="tour-date">${formatDate(tour.created_at)}</div>
+                                        ${tour.created_by ? `<div style="font-size: 12px; color: #9ca3af;">by ${escapeHtml(tour.created_by)}</div>` : ''}
+                                    </td>
+                                    <td class="actions-col">
+                                        <div class="action-buttons">
+                                            <button class="btn-small btn-edit" onclick="editTour('${tour.tour_id}')">
+                                                <i class="fa-solid fa-pen"></i> Edit
+                                            </button>
+                                            <button class="btn-small btn-delete" onclick="deleteTour('${tour.tour_id}', '${escapeHtml(tour.tour_name)}')">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+
+                container.innerHTML = tableHTML;
+
+            } catch (error) {
+                console.error('Error loading tours:', error);
+                document.getElementById('toursContainer').innerHTML = `
+                    <div class="empty-state">
+                        <p>Error loading tours. Please try again.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function editTour(tourId) {
+            window.location.href = `/tour_editor.html?id=${tourId}`;
+        }
+
+        async function deleteTour(tourId, tourName) {
+            if (!confirm(`Are you sure you want to delete the tour "${tourName}"?\n\nThis will also delete all steps in this tour.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/tours/${tourId}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('Tour deleted successfully!');
+                    loadTours(); // Reload the list
+                } else {
+                    alert('Error deleting tour: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error deleting tour:', error);
+                alert('Error deleting tour. Please try again.');
+            }
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Load tours on page load
+        loadTours();
+    </script>
+</body>
+</html>

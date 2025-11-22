@@ -4,6 +4,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 use App\Database;
 use App\YouTubeService;
+use App\TourService;
 
 // Load environment variables from .env file
 if (file_exists(__DIR__ . '/.env')) {
@@ -82,6 +83,7 @@ try {
                 $channelId = $input['channel_id'] ?? '';
                 $channelName = $input['channel_name'] ?? '';
                 $channelCategory = $input['channel_category'] ?? null;
+                $schedule = $input['schedule'] ?? null;
                 $fetchVideos = $input['fetch_videos'] ?? true;
                 $playlistId = null;
 
@@ -118,7 +120,7 @@ try {
                 }
 
                 // Add the channel to database
-                $result = $db->addChannel($channelId, $channelName, $channelCategory);
+                $result = $db->addChannel($channelId, $channelName, $channelCategory, $schedule);
 
                 if (!$result) {
                     http_response_code(500);
@@ -363,7 +365,174 @@ try {
             ]);
             break;
 
+        case '/api/tours':
+            $tourService = new TourService();
+
+            if ($method === 'GET') {
+                $tours = $tourService->getAllTours();
+                echo json_encode([
+                    'success' => true,
+                    'count' => count($tours),
+                    'tours' => $tours
+                ]);
+            } elseif ($method === 'POST') {
+                $input = json_decode(file_get_contents('php://input'), true);
+
+                if (empty($input['tour_name'])) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'tour_name is required']);
+                    break;
+                }
+
+                $tourId = $tourService->createTour(
+                    $input['tour_name'],
+                    $input['tour_description'] ?? null,
+                    $input['created_by'] ?? null
+                );
+
+                http_response_code(201);
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Tour created successfully',
+                    'tour_id' => $tourId
+                ]);
+            } else {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+            }
+            break;
+
         default:
+            // Check for dynamic tour routes
+            if (preg_match('#^/api/tours/([A-Z0-9]{8})$#', $path, $matches)) {
+                $tourId = $matches[1];
+                $tourService = new TourService();
+
+                if ($method === 'GET') {
+                    $tour = $tourService->getTourById($tourId);
+                    if (!$tour) {
+                        http_response_code(404);
+                        echo json_encode(['error' => 'Tour not found']);
+                        break;
+                    }
+                    echo json_encode([
+                        'success' => true,
+                        'tour' => $tour
+                    ]);
+                } elseif ($method === 'PUT') {
+                    $input = json_decode(file_get_contents('php://input'), true);
+
+                    if (empty($input['tour_name'])) {
+                        http_response_code(400);
+                        echo json_encode(['error' => 'tour_name is required']);
+                        break;
+                    }
+
+                    $result = $tourService->updateTour(
+                        $tourId,
+                        $input['tour_name'],
+                        $input['tour_description'] ?? null
+                    );
+
+                    if (!$result) {
+                        http_response_code(404);
+                        echo json_encode(['error' => 'Tour not found']);
+                        break;
+                    }
+
+                    echo json_encode([
+                        'success' => true,
+                        'message' => 'Tour updated successfully'
+                    ]);
+                } elseif ($method === 'DELETE') {
+                    $result = $tourService->deleteTour($tourId);
+
+                    if (!$result) {
+                        http_response_code(404);
+                        echo json_encode(['error' => 'Tour not found']);
+                        break;
+                    }
+
+                    echo json_encode([
+                        'success' => true,
+                        'message' => 'Tour deleted successfully'
+                    ]);
+                } else {
+                    http_response_code(405);
+                    echo json_encode(['error' => 'Method not allowed']);
+                }
+                break;
+            }
+
+            // Add step to tour
+            if (preg_match('#^/api/tours/([A-Z0-9]{8})/steps$#', $path, $matches)) {
+                $tourId = $matches[1];
+                $tourService = new TourService();
+
+                if ($method === 'POST') {
+                    $input = json_decode(file_get_contents('php://input'), true);
+
+                    if (empty($input['step_name']) || empty($input['youtube_id'])) {
+                        http_response_code(400);
+                        echo json_encode(['error' => 'step_name and youtube_id are required']);
+                        break;
+                    }
+
+                    $stepId = $tourService->addStep($tourId, $input);
+
+                    http_response_code(201);
+                    echo json_encode([
+                        'success' => true,
+                        'message' => 'Step added successfully',
+                        'step_id' => $stepId
+                    ]);
+                } else {
+                    http_response_code(405);
+                    echo json_encode(['error' => 'Method not allowed']);
+                }
+                break;
+            }
+
+            // Update or delete step
+            if (preg_match('#^/api/tour-steps/(\d+)$#', $path, $matches)) {
+                $stepId = (int)$matches[1];
+                $tourService = new TourService();
+
+                if ($method === 'PUT') {
+                    $input = json_decode(file_get_contents('php://input'), true);
+
+                    $result = $tourService->updateStep($stepId, $input);
+
+                    if (!$result) {
+                        http_response_code(404);
+                        echo json_encode(['error' => 'Step not found or nothing to update']);
+                        break;
+                    }
+
+                    echo json_encode([
+                        'success' => true,
+                        'message' => 'Step updated successfully'
+                    ]);
+                } elseif ($method === 'DELETE') {
+                    $result = $tourService->deleteStep($stepId);
+
+                    if (!$result) {
+                        http_response_code(404);
+                        echo json_encode(['error' => 'Step not found']);
+                        break;
+                    }
+
+                    echo json_encode([
+                        'success' => true,
+                        'message' => 'Step deleted successfully'
+                    ]);
+                } else {
+                    http_response_code(405);
+                    echo json_encode(['error' => 'Method not allowed']);
+                }
+                break;
+            }
+
             http_response_code(404);
             echo json_encode(['error' => 'Endpoint not found']);
             break;

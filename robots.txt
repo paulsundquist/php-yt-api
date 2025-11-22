@@ -1,0 +1,29 @@
+# robots.txt for MyTubie
+
+User-agent: *
+
+# Block admin/utility pages
+Disallow: /channels_add_821.html
+Disallow: /channelsManageGroup.html
+Disallow: /fetchVideos.html
+Disallow: /listChannels.html
+
+# Block config and vendor directories
+Disallow: /config/
+Disallow: /vendor/
+Disallow: /src/
+
+# Block sensitive files
+Disallow: /*.sql
+Disallow: /*.env
+Disallow: /*.log
+
+# Allow public pages
+Allow: /index.html
+Allow: /channelsw.html
+Allow: /favicon.svg
+Allow: /favicon.ico
+Allow: /favicon.png
+
+# Crawl-delay (optional - prevents aggressive crawling)
+# Crawl-delay: 10

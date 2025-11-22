@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Player - MyTubie</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #000;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .video-wrapper {
+            width: 100%;
+            max-width: 1280px;
+            aspect-ratio: 16 / 9;
+        }
+
+        .video-wrapper iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        .overlay-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 48px;
+            font-weight: bold;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .overlay-text.show {
+            opacity: 1;
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 1280px;
+            aspect-ratio: 16 / 9;
+        }
+    </style>
+</head>
+<body>
+    <div class="video-container">
+        <div class="overlay-text" id="overlayText">We are the World</div>
+        <div class="video-wrapper">
+            <iframe
+                id="ytplayer"
+                src="https://www.youtube.com/embed/9AjkUyX0rVw?enablejsapi=1"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen>
+            </iframe>
+        </div>
+    </div>
+
+    <script>
+        // Load YouTube IFrame API
+        var tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        var player;
+
+        // Define overlays with their timing
+        var overlays = [
+            { time: 2, text: 'We are the World', shown: false },
+            { time: 30, text: 'Lionel Richie', shown: false }
+        ];
+
+        // Called when YouTube API is ready
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('ytplayer', {
+                events: {
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+        }
+
+        function onPlayerStateChange(event) {
+            // When video is playing
+            if (event.data == YT.PlayerState.PLAYING) {
+                checkTime();
+            }
+        }
+
+        function checkTime() {
+            if (player && player.getCurrentTime) {
+                var interval = setInterval(function() {
+                    var currentTime = player.getCurrentTime();
+
+                    // Check each overlay
+                    overlays.forEach(function(overlay) {
+                        if (currentTime >= overlay.time && !overlay.shown) {
+                            showOverlay(overlay.text);
+                            overlay.shown = true;
+                        }
+                    });
+
+                    // Stop checking if all overlays have been shown
+                    if (overlays.every(function(o) { return o.shown; })) {
+                        clearInterval(interval);
+                    }
+                }, 100);
+            }
+        }
+
+        function showOverlay(text) {
+            var overlayElement = document.getElementById('overlayText');
+            overlayElement.textContent = text;
+            overlayElement.classList.add('show');
+
+            // Hide overlay after 3 seconds
+            setTimeout(function() {
+                overlayElement.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyTubie Popup Editor</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        h1 {
+            color: white;
+            font-size: 36px;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            margin: 0;
+            flex: 1;
+            text-align: center;
+        }
+
+        .back-button {
+            display: inline-block;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateX(-5px);
+        }
+
+        .header-spacer {
+            width: 120px;
+        }
+
+        .input-section {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            color: #374151;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        .load-button {
+            background: #2563eb;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .load-button:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+        }
+
+        .video-section {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+            display: none;
+        }
+
+        .video-section.active {
+            display: block;
+        }
+
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 640px;
+            aspect-ratio: 16 / 9;
+            margin: 0 auto 20px;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .video-wrapper iframe,
+        .video-wrapper #ytplayer {
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        #ytplayer {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        #overlayContainer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .video-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: bold;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+            text-align: center;
+            max-width: 90%;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 20px 40px;
+            border-radius: 12px;
+        }
+
+        .video-overlay.show {
+            opacity: 1;
+        }
+
+        .overlay-management {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #e5e7eb;
+        }
+
+        .overlay-management h2 {
+            color: #1f2937;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .overlay-management h3 {
+            color: #374151;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .overlay-form {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-row .input-group {
+            margin-bottom: 0;
+        }
+
+        .form-row-single {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .form-row-single .input-group {
+            margin-bottom: 0;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .form-row-single .input-group:first-child {
+            flex: 2;
+            min-width: 200px;
+        }
+
+        .form-row-single .input-group-color {
+            flex: 0.5;
+            min-width: 80px;
+        }
+
+        .form-row-single .input-group button {
+            width: 100%;
+            margin: 0;
+        }
+
+        .input-group input[type="color"] {
+            height: 46px;
+            cursor: pointer;
+        }
+
+        .overlay-list {
+            margin-bottom: 30px;
+        }
+
+        #overlayListContainer {
+            overflow-x: auto;
+        }
+
+        .overlay-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .overlay-table thead {
+            background: #f9fafb;
+        }
+
+        .overlay-table th {
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .overlay-table td {
+            padding: 12px 15px;
+            color: #1f2937;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .overlay-table tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .overlay-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .overlay-table .text-col {
+            font-weight: 500;
+            max-width: 300px;
+        }
+
+        .overlay-table .time-col,
+        .overlay-table .duration-col,
+        .overlay-table .size-col {
+            white-space: nowrap;
+        }
+
+        .overlay-table .color-col {
+            width: 60px;
+        }
+
+        .color-swatch {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            border: 2px solid #e5e7eb;
+            display: inline-block;
+        }
+
+        .overlay-table .actions-col {
+            width: 100px;
+            text-align: right;
+        }
+
+        .overlay-item-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .editable-cell {
+            cursor: text;
+            position: relative;
+        }
+
+        .editable-cell:hover {
+            background: #f3f4f6;
+            outline: 1px solid #d1d5db;
+        }
+
+        .editable-cell input {
+            width: 100%;
+            padding: 4px 8px;
+            border: 2px solid #2563eb;
+            border-radius: 4px;
+            font-size: inherit;
+            font-family: inherit;
+            background: white;
+        }
+
+        .editable-cell input:focus {
+            outline: none;
+        }
+
+        .color-cell {
+            cursor: pointer;
+        }
+
+        .color-cell:hover {
+            background: #f3f4f6;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn-edit {
+            background: transparent;
+            color: #374151;
+            font-size: 16px;
+            padding: 6px 10px;
+        }
+
+        .btn-edit:hover {
+            background: #f3f4f6;
+            color: #1f2937;
+        }
+
+        .btn-edit i {
+            pointer-events: none;
+        }
+
+        .btn-delete {
+            background: transparent;
+            color: #dc2626;
+            font-size: 16px;
+            padding: 6px 10px;
+        }
+
+        .btn-delete:hover {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .btn-delete i {
+            pointer-events: none;
+        }
+
+        .save-load-section {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .saved-configs {
+            margin-top: 20px;
+        }
+
+        .config-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #10b981;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .config-item-info {
+            flex: 1;
+        }
+
+        .config-item-name {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 5px;
+        }
+
+        .config-item-details {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .config-item-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-load {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-load:hover {
+            background: #059669;
+        }
+
+        .empty-message {
+            color: #9ca3af;
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            h1 {
+                font-size: 28px;
+                order: -1;
+            }
+
+            .back-button {
+                align-self: flex-start;
+            }
+
+            .header-spacer {
+                display: none;
+            }
+
+            .input-section, .video-section {
+                padding: 20px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row-single {
+                flex-direction: column;
+            }
+
+            .form-row-single .input-group {
+                width: 100%;
+                min-width: 100%;
+            }
+
+            .form-row-single .input-group:first-child {
+                min-width: 100%;
+            }
+
+            .overlay-table {
+                font-size: 14px;
+            }
+
+            .overlay-table th,
+            .overlay-table td {
+                padding: 8px 10px;
+            }
+
+            .overlay-table .text-col {
+                max-width: 150px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .config-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .config-item-actions {
+                width: 100%;
+            }
+
+            .config-item-actions .btn-small {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="/" class="back-button">&larr; Back to Home</a>
+            <h1>MyTubie Popup Editor</h1>
+            <div class="header-spacer"></div>
+        </div>
+
+        <!-- Input Section -->
+        <div class="input-section" id="inputSection">
+            <div class="input-group">
+                <label for="video-input">YouTube Video URL:</label>
+                <input
+                    type="text"
+                    id="video-input"
+                    placeholder="Enter YouTube video URL (e.g., https://www.youtube.com/watch?v=...)"
+                    autofocus
+                >
+            </div>
+            <button class="load-button" onclick="loadVideo()">Load Video</button>
+        </div>
+
+        <!-- Video Section -->
+        <div class="video-section" id="videoSection">
+            <div class="video-wrapper">
+                <div id="ytplayer"></div>
+                <div id="overlayContainer"></div>
+            </div>
+
+            <!-- Overlay Management Section -->
+            <div class="overlay-management">
+                <!-- Add Overlay Form -->
+                <div class="overlay-form">
+                    <div class="form-row-single">
+                        <div class="input-group">
+                            <label for="overlay-text">Popup Text:</label>
+                            <input type="text" id="overlay-text" placeholder="Enter overlay text">
+                        </div>
+                        <div class="input-group">
+                            <label for="overlay-timestamp">Time (s):</label>
+                            <input type="number" id="overlay-timestamp" placeholder="30" min="0" step="0.1">
+                        </div>
+                        <div class="input-group">
+                            <label for="overlay-duration">Duration (s):</label>
+                            <input type="number" id="overlay-duration" placeholder="3" min="0.5" step="0.5" value="3">
+                        </div>
+                        <div class="input-group">
+                            <label for="overlay-fontsize">Size (px):</label>
+                            <input type="number" id="overlay-fontsize" placeholder="48" min="12" step="2" value="48">
+                        </div>
+                        <div class="input-group input-group-color">
+                            <label for="overlay-color">Color:</label>
+                            <input type="color" id="overlay-color" value="#ffffff">
+                        </div>
+                        <div class="input-group">
+                            <button class="load-button" onclick="addOverlay()">Add</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Overlay List -->
+                <div class="overlay-list">
+                    <h3>Script</h3>
+                    <div id="overlayListContainer">
+                        <p class="empty-message">No overlays yet. Add one above!</p>
+                    </div>
+                </div>
+
+                <!-- Save/Load Section -->
+                <div class="save-load-section">
+                    <h3>Save & Load Configurations</h3>
+                    <div class="form-row">
+                        <div class="input-group">
+                            <label for="config-name">Configuration Name:</label>
+                            <input type="text" id="config-name" placeholder="e.g., My Video Overlays">
+                        </div>
+                        <button class="load-button" onclick="saveConfiguration()">Save Configuration</button>
+                    </div>
+                    <div class="saved-configs" id="savedConfigsContainer">
+                        <p class="empty-message">No saved configurations</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var player;
+        var playerReady = false;
+        var apiReady = false;
+
+        // Load YouTube IFrame API
+        var tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        // Called when YouTube API is ready
+        function onYouTubeIframeAPIReady() {
+            apiReady = true;
+            console.log('YouTube API ready');
+        }
+
+        function extractVideoId(input) {
+            if (!input || input.trim() === '') {
+                return '';
+            }
+
+            input = input.trim();
+
+            // If it's just a video ID (11 characters), return it
+            if (input.length === 11 && !input.includes('/') && !input.includes('?')) {
+                return input;
+            }
+
+            // Try to extract from various YouTube URL formats
+            const patterns = [
+                /(?:youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/,
+                /(?:youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+                /(?:youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+                /(?:youtube\.com\/v\/)([a-zA-Z0-9_-]{11})/
+            ];
+
+            for (const pattern of patterns) {
+                const match = input.match(pattern);
+                if (match && match[1]) {
+                    return match[1];
+                }
+            }
+
+            return input;
+        }
+
+        function loadVideo() {
+            const input = document.getElementById('video-input').value;
+            const videoId = extractVideoId(input);
+
+            if (!videoId) {
+                alert('Please enter a valid YouTube video URL or ID');
+                return;
+            }
+
+            // Wait for API to be ready
+            if (!apiReady) {
+                alert('YouTube API is still loading. Please wait a moment and try again.');
+                console.log('Waiting for YouTube API...');
+                // Try again after a short delay
+                setTimeout(function() {
+                    if (apiReady) {
+                        loadVideo();
+                    }
+                }, 1000);
+                return;
+            }
+
+            // Hide input section, show video section
+            document.getElementById('inputSection').style.display = 'none';
+            document.getElementById('videoSection').classList.add('active');
+
+            // Initialize or update player
+            if (!playerReady) {
+                player = new YT.Player('ytplayer', {
+                    videoId: videoId,
+                    playerVars: {
+                        'playsinline': 1,
+                        'enablejsapi': 1,
+                        'rel': 0,
+                        'modestbranding': 1,
+                        'showinfo': 0
+                    },
+                    events: {
+                        'onReady': onPlayerReady,
+                        'onStateChange': onPlayerStateChange
+                    }
+                });
+            } else {
+                player.loadVideoById(videoId);
+            }
+        }
+
+        function onPlayerReady(event) {
+            playerReady = true;
+            console.log('Player ready');
+        }
+
+        var overlayCheckInterval = null;
+
+        function onPlayerStateChange(event) {
+            // Player state changed
+            console.log('Player state:', event.data);
+
+            // Start checking for overlays when video is playing
+            if (event.data === YT.PlayerState.PLAYING) {
+                if (!overlayCheckInterval) {
+                    overlayCheckInterval = setInterval(checkOverlays, 100);
+                }
+            } else {
+                // Stop checking when paused or stopped
+                if (overlayCheckInterval) {
+                    clearInterval(overlayCheckInterval);
+                    overlayCheckInterval = null;
+                }
+            }
+
+            // When video is paused, update the time field with current time
+            if (event.data === YT.PlayerState.PAUSED) {
+                const currentTime = player.getCurrentTime();
+                const roundedTime = Math.round(currentTime * 10) / 10; // Round to 1 decimal place
+                document.getElementById('overlay-timestamp').value = roundedTime;
+                console.log('Video paused at:', roundedTime, 'seconds');
+            }
+
+            // Reset overlays when video is restarted or seeked to beginning
+            if (event.data === YT.PlayerState.PLAYING && player.getCurrentTime() < 1) {
+                resetOverlays();
+            }
+        }
+
+        function checkOverlays() {
+            if (!player || !playerReady) return;
+
+            const currentTime = player.getCurrentTime();
+
+            overlays.forEach(overlay => {
+                const overlayElement = document.getElementById(`overlay-${overlay.id}`);
+                const shouldShow = currentTime >= overlay.timestamp &&
+                                 currentTime < (overlay.timestamp + overlay.duration);
+
+                if (shouldShow && !overlay.shown) {
+                    // Show overlay
+                    if (!overlayElement) {
+                        createOverlayElement(overlay);
+                    }
+                    showOverlayElement(overlay.id);
+                    overlay.shown = true;
+                } else if (!shouldShow && overlay.shown && overlayElement) {
+                    // Hide overlay
+                    hideOverlayElement(overlay.id);
+
+                    // Reset shown flag if we're past this overlay
+                    if (currentTime < overlay.timestamp) {
+                        overlay.shown = false;
+                    }
+                }
+            });
+        }
+
+        function createOverlayElement(overlay) {
+            const container = document.getElementById('overlayContainer');
+            const overlayDiv = document.createElement('div');
+            overlayDiv.id = `overlay-${overlay.id}`;
+            overlayDiv.className = 'video-overlay';
+            overlayDiv.textContent = overlay.text;
+            overlayDiv.style.fontSize = overlay.fontSize + 'px';
+            overlayDiv.style.color = overlay.color;
+            container.appendChild(overlayDiv);
+        }
+
+        function showOverlayElement(id) {
+            const element = document.getElementById(`overlay-${id}`);
+            if (element) {
+                element.classList.add('show');
+            }
+        }
+
+        function hideOverlayElement(id) {
+            const element = document.getElementById(`overlay-${id}`);
+            if (element) {
+                element.classList.remove('show');
+            }
+        }
+
+        function resetOverlays() {
+            // Reset all overlay shown flags
+            overlays.forEach(overlay => {
+                overlay.shown = false;
+            });
+
+            // Remove all overlay elements
+            const container = document.getElementById('overlayContainer');
+            if (container) {
+                container.innerHTML = '';
+            }
+        }
+
+        // Allow Enter key to load video
+        document.getElementById('video-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                loadVideo();
+            }
+        });
+
+        // Check for debug mode
+        const urlParams = new URLSearchParams(window.location.search);
+        const debugMode = urlParams.get('debug');
+
+        if (debugMode === 'true') {
+            document.getElementById('video-input').value = 'https://www.youtube.com/watch?v=9AjkUyX0rVw';
+            console.log('Debug mode enabled - default video URL loaded');
+        }
+
+        // Overlay Management
+        var overlays = [];
+        var overlayIdCounter = 0;
+        var editingOverlayId = null;
+
+        function addOverlay() {
+            const text = document.getElementById('overlay-text').value;
+            const timestamp = parseFloat(document.getElementById('overlay-timestamp').value);
+            const duration = parseFloat(document.getElementById('overlay-duration').value);
+            const fontSize = parseInt(document.getElementById('overlay-fontsize').value);
+            const color = document.getElementById('overlay-color').value;
+
+            if (!text || isNaN(timestamp) || isNaN(duration)) {
+                alert('Please fill in all required fields (Text, Time, Duration)');
+                return;
+            }
+
+            if (editingOverlayId !== null) {
+                // Edit existing overlay
+                const overlayIndex = overlays.findIndex(o => o.id === editingOverlayId);
+                if (overlayIndex !== -1) {
+                    overlays[overlayIndex] = {
+                        id: editingOverlayId,
+                        text: text,
+                        timestamp: timestamp,
+                        duration: duration,
+                        fontSize: fontSize,
+                        color: color,
+                        shown: false
+                    };
+                }
+                editingOverlayId = null;
+                document.querySelector('.overlay-form .load-button').textContent = 'Add';
+            } else {
+                // Add new overlay
+                const overlay = {
+                    id: overlayIdCounter++,
+                    text: text,
+                    timestamp: timestamp,
+                    duration: duration,
+                    fontSize: fontSize,
+                    color: color,
+                    shown: false
+                };
+                overlays.push(overlay);
+            }
+
+            // Clear form
+            document.getElementById('overlay-text').value = '';
+            document.getElementById('overlay-timestamp').value = '';
+            document.getElementById('overlay-duration').value = '3';
+            document.getElementById('overlay-fontsize').value = '48';
+            document.getElementById('overlay-color').value = '#ffffff';
+
+            renderOverlayList();
+            console.log('Current overlays:', overlays);
+        }
+
+        function editOverlay(id) {
+            const overlay = overlays.find(o => o.id === id);
+            if (!overlay) return;
+
+            document.getElementById('overlay-text').value = overlay.text;
+            document.getElementById('overlay-timestamp').value = overlay.timestamp;
+            document.getElementById('overlay-duration').value = overlay.duration;
+            document.getElementById('overlay-fontsize').value = overlay.fontSize;
+            document.getElementById('overlay-color').value = overlay.color;
+
+            editingOverlayId = id;
+            document.querySelector('.overlay-form .load-button').textContent = 'Update';
+
+            // Scroll to form
+            document.querySelector('.overlay-form').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function deleteOverlay(id) {
+            if (confirm('Are you sure you want to delete this overlay?')) {
+                overlays = overlays.filter(o => o.id !== id);
+                renderOverlayList();
+                console.log('Overlay deleted. Current overlays:', overlays);
+            }
+        }
+
+        function renderOverlayList() {
+            const container = document.getElementById('overlayListContainer');
+
+            if (overlays.length === 0) {
+                container.innerHTML = '<p class="empty-message">No overlays yet. Add one above!</p>';
+                return;
+            }
+
+            // Sort overlays by timestamp in ascending order
+            const sortedOverlays = [...overlays].sort((a, b) => a.timestamp - b.timestamp);
+
+            const tableRows = sortedOverlays.map(overlay => `
+                <tr>
+                    <td class="text-col editable-cell" data-overlay-id="${overlay.id}" data-field="text" onclick="makeEditable(this, 'text')">${overlay.text}</td>
+                    <td class="time-col editable-cell" data-overlay-id="${overlay.id}" data-field="timestamp" onclick="makeEditable(this, 'number')">${overlay.timestamp}s</td>
+                    <td class="duration-col editable-cell" data-overlay-id="${overlay.id}" data-field="duration" onclick="makeEditable(this, 'number')">${overlay.duration}s</td>
+                    <td class="size-col editable-cell" data-overlay-id="${overlay.id}" data-field="fontSize" onclick="makeEditable(this, 'number')">${overlay.fontSize}px</td>
+                    <td class="color-col color-cell" data-overlay-id="${overlay.id}" data-field="color" onclick="editColor(${overlay.id})">
+                        <span class="color-swatch" style="background-color: ${overlay.color};"></span>
+                    </td>
+                    <td class="actions-col">
+                        <div class="overlay-item-actions">
+                            <button class="btn-small btn-edit" onclick="editOverlay(${overlay.id})"><i class="fa-solid fa-pen"></i></button>
+                            <button class="btn-small btn-delete" onclick="deleteOverlay(${overlay.id})"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+
+            container.innerHTML = `
+                <table class="overlay-table">
+                    <thead>
+                        <tr>
+                            <th>Text</th>
+                            <th>Time</th>
+                            <th>Duration</th>
+                            <th>Size</th>
+                            <th>Color</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tableRows}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // Save/Load Configuration
+        function generateUniqueId() {
+            const characters = '0123456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+            let id = '';
+            for (let i = 0; i < 8; i++) {
+                id += characters.charAt(Math.floor(Math.random() * characters.length));
+            }
+            return id;
+        }
+
+        function saveConfiguration() {
+            const configName = document.getElementById('config-name').value.trim();
+
+            if (!configName) {
+                alert('Please enter a configuration name');
+                return;
+            }
+
+            if (overlays.length === 0) {
+                alert('Please add at least one overlay before saving');
+                return;
+            }
+
+            const videoUrl = document.getElementById('video-input').value;
+            if (!videoUrl) {
+                alert('Please load a video first');
+                return;
+            }
+
+            const configId = generateUniqueId();
+            const config = {
+                id: configId,
+                name: configName,
+                videoUrl: videoUrl,
+                overlays: JSON.parse(JSON.stringify(overlays)), // Deep copy
+                createdAt: new Date().toISOString()
+            };
+
+            // Get existing configs from localStorage
+            let savedConfigs = JSON.parse(localStorage.getItem('popupConfigs') || '{}');
+            savedConfigs[configId] = config;
+
+            // Save to localStorage
+            localStorage.setItem('popupConfigs', JSON.stringify(savedConfigs));
+
+            // Clear config name input
+            document.getElementById('config-name').value = '';
+
+            alert(`Configuration "${configName}" saved successfully! (ID: ${configId})`);
+            renderSavedConfigurations();
+            console.log('Configuration saved:', config);
+        }
+
+        function loadConfiguration(id) {
+            const savedConfigs = JSON.parse(localStorage.getItem('popupConfigs') || '{}');
+            const config = savedConfigs[id];
+
+            if (!config) {
+                alert('Configuration not found');
+                return;
+            }
+
+            // Load video URL
+            document.getElementById('video-input').value = config.videoUrl;
+
+            // Load overlays
+            overlays = JSON.parse(JSON.stringify(config.overlays)); // Deep copy
+            overlayIdCounter = Math.max(...overlays.map(o => o.id), 0) + 1;
+
+            // Reset overlay shown flags
+            overlays.forEach(overlay => overlay.shown = false);
+
+            // Load video if not already loaded
+            if (!playerReady) {
+                loadVideo();
+            } else {
+                // If video is already loaded, just reload with new URL
+                const videoId = extractVideoId(config.videoUrl);
+                if (videoId) {
+                    player.loadVideoById(videoId);
+                }
+            }
+
+            // Render overlay list
+            renderOverlayList();
+
+            // Reset overlay container
+            resetOverlays();
+
+            alert(`Configuration "${config.name}" loaded successfully!`);
+            console.log('Configuration loaded:', config);
+        }
+
+        function deleteConfiguration(id) {
+            const savedConfigs = JSON.parse(localStorage.getItem('popupConfigs') || '{}');
+            const config = savedConfigs[id];
+
+            if (!config) {
+                alert('Configuration not found');
+                return;
+            }
+
+            if (confirm(`Are you sure you want to delete configuration "${config.name}"?`)) {
+                delete savedConfigs[id];
+                localStorage.setItem('popupConfigs', JSON.stringify(savedConfigs));
+                renderSavedConfigurations();
+                console.log('Configuration deleted:', id);
+            }
+        }
+
+        function renderSavedConfigurations() {
+            const container = document.getElementById('savedConfigsContainer');
+            const savedConfigs = JSON.parse(localStorage.getItem('popupConfigs') || '{}');
+            const configArray = Object.values(savedConfigs);
+
+            if (configArray.length === 0) {
+                container.innerHTML = '<p class="empty-message">No saved configurations</p>';
+                return;
+            }
+
+            container.innerHTML = configArray.map(config => {
+                const date = new Date(config.createdAt);
+                const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+
+                return `
+                    <div class="config-item">
+                        <div class="config-item-info">
+                            <div class="config-item-name">${config.name}</div>
+                            <div class="config-item-details">
+                                ID: ${config.id} | Overlays: ${config.overlays.length} | Created: ${dateStr}
+                            </div>
+                        </div>
+                        <div class="config-item-actions">
+                            <button class="btn-small btn-load" onclick="loadConfiguration('${config.id}')">Load</button>
+                            <button class="btn-small btn-delete" onclick="deleteConfiguration('${config.id}')"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Inline Editing Functions
+        function makeEditable(cell, type) {
+            // Prevent double-editing
+            if (cell.querySelector('input')) return;
+
+            const overlayId = parseInt(cell.dataset.overlayId);
+            const field = cell.dataset.field;
+            const overlay = overlays.find(o => o.id === overlayId);
+            if (!overlay) return;
+
+            // Get current value (remove suffix like 's' or 'px')
+            let currentValue = overlay[field];
+
+            // Create input element
+            const input = document.createElement('input');
+            input.type = type;
+            input.value = currentValue;
+
+            if (type === 'number') {
+                input.step = field === 'timestamp' || field === 'duration' ? '0.1' : '1';
+                input.min = '0';
+            }
+
+            // Replace cell content with input
+            const originalContent = cell.innerHTML;
+            cell.innerHTML = '';
+            cell.appendChild(input);
+            input.focus();
+            input.select();
+
+            // Save on Enter or blur
+            const saveEdit = () => {
+                let newValue = input.value.trim();
+
+                if (type === 'number') {
+                    newValue = parseFloat(newValue);
+                    if (isNaN(newValue) || newValue < 0) {
+                        cell.innerHTML = originalContent;
+                        return;
+                    }
+                } else if (newValue === '') {
+                    cell.innerHTML = originalContent;
+                    return;
+                }
+
+                // Update overlay
+                overlay[field] = newValue;
+
+                // Re-render the list to show updated value and re-sort
+                renderOverlayList();
+
+                // Reset overlay container to apply changes
+                resetOverlays();
+
+                console.log('Updated overlay:', overlay);
+            };
+
+            input.addEventListener('blur', saveEdit);
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    input.blur();
+                }
+            });
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    cell.innerHTML = originalContent;
+                }
+            });
+        }
+
+        function editColor(overlayId) {
+            const overlay = overlays.find(o => o.id === overlayId);
+            if (!overlay) return;
+
+            // Create a temporary color input
+            const colorInput = document.createElement('input');
+            colorInput.type = 'color';
+            colorInput.value = overlay.color;
+            colorInput.style.position = 'absolute';
+            colorInput.style.opacity = '0';
+            document.body.appendChild(colorInput);
+
+            colorInput.click();
+
+            colorInput.addEventListener('change', () => {
+                overlay.color = colorInput.value;
+                renderOverlayList();
+                resetOverlays();
+                document.body.removeChild(colorInput);
+                console.log('Updated color:', overlay);
+            });
+
+            colorInput.addEventListener('blur', () => {
+                setTimeout(() => {
+                    if (document.body.contains(colorInput)) {
+                        document.body.removeChild(colorInput);
+                    }
+                }, 100);
+            });
+        }
+
+        // Initialize: Load saved configurations on page load
+        renderSavedConfigurations();
+    </script>
+</body>
+</html>

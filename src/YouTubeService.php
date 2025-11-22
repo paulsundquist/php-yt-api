@@ -211,6 +211,19 @@ class YouTubeService
     public function fetchAndStoreVideos(Database $db, $maxResultsPerChannel = 10)
     {
         $channels = $db->getActiveChannels();
+        return $this->fetchAndStoreVideosForChannels($db, $channels, $maxResultsPerChannel);
+    }
+
+    /**
+     * Fetch and store videos for specific channels
+     *
+     * @param Database $db
+     * @param array $channels List of channel records
+     * @param int $maxResultsPerChannel
+     * @return array Statistics about the fetch operation
+     */
+    public function fetchAndStoreVideosForChannels(Database $db, $channels, $maxResultsPerChannel = 10)
+    {
         $stats = [
             'channels_processed' => 0,
             'videos_added' => 0,
@@ -220,22 +233,35 @@ class YouTubeService
 
         foreach ($channels as $channel) {
             try {
-                // Get or fetch uploads playlist ID
+                $channelId = $channel['channel_id'];
                 $playlistId = $channel['uploads_playlist_id'] ?? null;
 
-                if (!$playlistId) {
-                    // Fetch playlist ID from YouTube (1 quota unit)
-                    $playlistId = $this->getUploadsPlaylistId($channel['channel_id']);
+                // Check if this is a playlist (channel_id starts with "PL_")
+                $isPlaylist = str_starts_with($channelId, 'PL_');
 
-                    if ($playlistId) {
-                        // Store it in DB for future use
-                        $db->updateChannelPlaylistId($channel['channel_id'], $playlistId);
-                    } else {
-                        throw new \Exception("Could not get uploads playlist ID");
+                if ($isPlaylist) {
+                    // For playlists, extract the actual playlist ID from the channel_id
+                    // Format: PL_<actual_playlist_id>
+                    $actualPlaylistId = substr($channelId, 3); // Remove "PL_" prefix
+
+                    // Use the extracted playlist ID or the one stored in uploads_playlist_id
+                    $playlistId = $playlistId ?: $actualPlaylistId;
+                } else {
+                    // For channels, get or fetch uploads playlist ID
+                    if (!$playlistId) {
+                        // Fetch playlist ID from YouTube (1 quota unit)
+                        $playlistId = $this->getUploadsPlaylistId($channelId);
+
+                        if ($playlistId) {
+                            // Store it in DB for future use
+                            $db->updateChannelPlaylistId($channelId, $playlistId);
+                        } else {
+                            throw new \Exception("Could not get uploads playlist ID");
+                        }
                     }
                 }
 
-                $videos = $this->getChannelVideos($channel['channel_id'], $playlistId, $maxResultsPerChannel);
+                $videos = $this->getChannelVideos($channelId, $playlistId, $maxResultsPerChannel);
 
                 foreach ($videos as $videoData) {
                     try {

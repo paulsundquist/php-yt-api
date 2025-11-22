@@ -3,15 +3,15 @@
 
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-// API endpoints
-if (preg_match('#^/(channels|videos|fetch|categories|groups)#', $uri)) {
-    require __DIR__ . '/index.php';
-    return true;
-}
-
-// If file exists, serve it
+// If file exists, serve it first
 if ($uri !== '/' && file_exists(__DIR__ . $uri)) {
     return false;
+}
+
+// API endpoints
+if (preg_match('#^/(channels|videos|fetch|categories|groups|tours|tour-steps|api)#', $uri)) {
+    require __DIR__ . '/index.php';
+    return true;
 }
 
 // Default to index.html

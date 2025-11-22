@@ -16,84 +16,92 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+            padding: 40px 20px;
         }
 
-        .welcome-container {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            padding: 60px 40px;
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
             text-align: center;
-            max-width: 600px;
-            width: 100%;
+            margin-bottom: 50px;
         }
 
         h1 {
-            color: #1f2937;
+            color: white;
             font-size: 48px;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             font-weight: 700;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
 
         .subtitle {
-            color: #6b7280;
+            color: rgba(255, 255, 255, 0.9);
             font-size: 20px;
-            margin-bottom: 40px;
-            line-height: 1.6;
+            text-shadow: 0 1px 5px rgba(0,0,0,0.1);
         }
 
-        .cta-button {
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 30px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .card-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            color: #1f2937;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .card-description {
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.6;
+            flex: 1;
+        }
+
+        .card-badge {
             display: inline-block;
             background: #2563eb;
             color: white;
-            padding: 16px 40px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-size: 18px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
             font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+            margin-top: 15px;
         }
 
-        .cta-button:hover {
-            background: #1d4ed8;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+        .card-badge.coming-soon {
+            background: #9ca3af;
         }
 
-        .features {
-            margin-top: 50px;
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-            text-align: left;
-        }
-
-        .feature {
-            background: #f9fafb;
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 4px solid #2563eb;
-        }
-
-        .feature-title {
-            color: #1f2937;
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        .feature-description {
-            color: #6b7280;
-            font-size: 14px;
-            line-height: 1.5;
-        }
-
-        @media (max-width: 640px) {
+        @media (max-width: 768px) {
             h1 {
                 font-size: 36px;
             }
@@ -102,8 +110,9 @@
                 font-size: 16px;
             }
 
-            .welcome-container {
-                padding: 40px 24px;
+            .cards-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
             }
         }
 
@@ -119,47 +128,55 @@
     </style>
 </head>
 <body>
-    <div class="welcome-container">
-        <h1>MyTubie</h1>
-        <p class="subtitle">
-            My YouTube, My Way 
-        </p>
+    <div class="container">
+        <header>
+            <h1>MyTubie</h1>
+            <p class="subtitle">My YouTube, My Way</p>
+        </header>
 
-        <a href="/channelsw.html" class="cta-button">Channel Viewer</a>
-
-        <div class="features">
-            <div class="feature">
-                <div class="feature-title">Organize Your Channels</div>
-                <div class="feature-description">
-                    Create custom groups to organize your favorite YouTube channels by topic, category, or any way you like.
+        <div class="cards-grid">
+            <!-- Channel Viewer Card -->
+            <a href="/channelsw.html" class="card">
+                <div class="card-icon">📺</div>
+                <div class="card-title">Channel Viewer</div>
+                <div class="card-description">
+                    Watch videos from your organized channel groups with a clean, distraction-free player. Track your progress and enjoy keyboard shortcuts.
                 </div>
+                <button href="/channelsManageGroup.html"
+                   onclick="event.stopPropagation(); event.preventDefault(); window.location.href='/channelsManageGroup.html';"
+                   style="display: inline-block; margin-top: 15px; padding: 8px 16px; background: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 14px; font-weight: 500; text-align: center;">
+                    Manage Groups
+                </button>
+            </a>
+
+            <!-- Tours Card -->
+            <div class="card" style="opacity: 0.7; cursor: not-allowed;">
+                <div class="card-icon">🎬</div>
+                <div class="card-title">Tours</div>
+                <div class="card-description">
+                    Create guided video tours with step-by-step playlists. Perfect for tutorials, lessons, or curated content experiences.
+                </div>
+                <span class="card-badge coming-soon">Coming Soon</span>
             </div>
 
-            <div class="feature">
-                <div class="feature-title">Watch With Ease</div>
-                <div class="feature-description">
-                    Browse videos from your channels and watch them with a clean, distraction-free player with keyboard shortcuts.
+            <!-- Shorts Viewer Card (Coming Soon) -->
+            <div class="card" style="opacity: 0.7; cursor: not-allowed;">
+                <div class="card-icon">📱</div>
+                <div class="card-title">Shorts Viewer</div>
+                <div class="card-description">
+                    Browse and watch YouTube Shorts from your favorite channels in a dedicated vertical video player.
                 </div>
+                <span class="card-badge coming-soon">Coming Soon</span>
             </div>
 
-            <div class="feature">
-                <div class="feature-title">Track Your Progress</div>
-                <div class="feature-description">
-                    Keep track of which videos you've already watched so you never miss new content from your favorite creators.
+            <!-- Trailer Viewer Card (Coming Soon) -->
+            <div class="card" style="opacity: 0.7; cursor: not-allowed;">
+                <div class="card-icon">🎥</div>
+                <div class="card-title">Trailer Viewer</div>
+                <div class="card-description">
+                    Discover the latest movie and TV show trailers from top entertainment channels in one place.
                 </div>
-            </div>
-
-            <div class="feature">
-                <div class="feature-title">More Viewers Coming Soon!</div>
-                <div class="feature-description">
-                    Youtube Shorts Viewer 
-                </div>
-                <div class="feature-description">
-		    Movie Trailer Viewer
-                </div>
-                <div class="feature-description">
-		    YouTube Movie Viewer
-                </div>
+                <span class="card-badge coming-soon">Coming Soon</span>
             </div>
         </div>
     </div>
