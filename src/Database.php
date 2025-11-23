@@ -139,4 +139,30 @@ class Database
 
         return $stmt->fetchAll();
     }
+
+    public function getFeatureVotes()
+    {
+        $stmt = $this->connection->prepare(
+            "SELECT feature_id, vote_count FROM feature_votes ORDER BY vote_count DESC"
+        );
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    public function addFeatureVote($featureId)
+    {
+        $stmt = $this->connection->prepare(
+            "INSERT INTO feature_votes (feature_id, vote_count) VALUES (:feature_id, 1)
+             ON DUPLICATE KEY UPDATE vote_count = vote_count + 1"
+        );
+        return $stmt->execute([':feature_id' => $featureId]);
+    }
+
+    public function removeFeatureVote($featureId)
+    {
+        $stmt = $this->connection->prepare(
+            "UPDATE feature_votes SET vote_count = GREATEST(vote_count - 1, 0) WHERE feature_id = :feature_id"
+        );
+        return $stmt->execute([':feature_id' => $featureId]);
+    }
 }

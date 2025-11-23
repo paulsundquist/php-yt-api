@@ -365,6 +365,58 @@ try {
             ]);
             break;
 
+        case '/votes':
+            if ($method === 'GET') {
+                $votes = $db->getFeatureVotes();
+
+                // Convert to a more convenient format
+                $voteData = [];
+                foreach ($votes as $vote) {
+                    $voteData[$vote['feature_id']] = (int)$vote['vote_count'];
+                }
+
+                echo json_encode([
+                    'success' => true,
+                    'votes' => $voteData
+                ]);
+            } elseif ($method === 'POST') {
+                $input = json_decode(file_get_contents('php://input'), true);
+                $featureId = $input['feature_id'] ?? '';
+                $action = $input['action'] ?? ''; // 'add' or 'remove'
+
+                if (empty($featureId) || empty($action)) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'feature_id and action are required']);
+                    break;
+                }
+
+                if ($action === 'add') {
+                    $db->addFeatureVote($featureId);
+                } elseif ($action === 'remove') {
+                    $db->removeFeatureVote($featureId);
+                } else {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'Invalid action. Must be "add" or "remove"']);
+                    break;
+                }
+
+                // Return updated votes
+                $votes = $db->getFeatureVotes();
+                $voteData = [];
+                foreach ($votes as $vote) {
+                    $voteData[$vote['feature_id']] = (int)$vote['vote_count'];
+                }
+
+                echo json_encode([
+                    'success' => true,
+                    'votes' => $voteData
+                ]);
+            } else {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+            }
+            break;
+
         case '/api/tours':
             $tourService = new TourService();
 

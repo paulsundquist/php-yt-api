@@ -101,6 +101,48 @@
             background: #9ca3af;
         }
 
+        .vote-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .vote-button {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            color: #374151;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .vote-button:hover {
+            background: #e5e7eb;
+            border-color: #2563eb;
+            color: #2563eb;
+        }
+
+        .vote-button.voted {
+            background: #dbeafe;
+            border-color: #2563eb;
+            color: #2563eb;
+        }
+
+        .vote-count {
+            color: #6b7280;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
         @media (max-width: 768px) {
             h1 {
                 font-size: 36px;
@@ -150,33 +192,88 @@
             </a>
 
             <!-- Tours Card -->
-            <div class="card" style="opacity: 0.7; cursor: not-allowed;">
+            <div class="card" style="opacity: 1; cursor: default;">
                 <div class="card-icon">🎬</div>
                 <div class="card-title">Tours</div>
                 <div class="card-description">
                     Create guided video tours with step-by-step playlists. Perfect for tutorials, lessons, or curated content experiences.
                 </div>
                 <span class="card-badge coming-soon">Coming Soon</span>
+                <div class="vote-section">
+                    <button class="vote-button" onclick="toggleVote('tours')" data-feature="tours">
+                        <span>👍</span>
+                        <span class="vote-text">Vote</span>
+                    </button>
+                    <span class="vote-count" data-feature="tours">0 votes</span>
+                </div>
             </div>
 
             <!-- Shorts Viewer Card (Coming Soon) -->
-            <div class="card" style="opacity: 0.7; cursor: not-allowed;">
+            <div class="card" style="opacity: 1; cursor: default;">
                 <div class="card-icon">📱</div>
                 <div class="card-title">Shorts Viewer</div>
                 <div class="card-description">
-                    Browse and watch YouTube Shorts from your favorite channels in a dedicated vertical video player.
+                    Browse and watch YouTube Shorts from your favorite channels in a dedicated vertical video player, but with speed control and see when it was published.
                 </div>
                 <span class="card-badge coming-soon">Coming Soon</span>
+                <div class="vote-section">
+                    <button class="vote-button" onclick="toggleVote('shorts')" data-feature="shorts">
+                        <span>👍</span>
+                        <span class="vote-text">Vote</span>
+                    </button>
+                    <span class="vote-count" data-feature="shorts">0 votes</span>
+                </div>
             </div>
 
             <!-- Trailer Viewer Card (Coming Soon) -->
-            <div class="card" style="opacity: 0.7; cursor: not-allowed;">
+            <div class="card" style="opacity: 1; cursor: default;">
                 <div class="card-icon">🎥</div>
                 <div class="card-title">Trailer Viewer</div>
                 <div class="card-description">
                     Discover the latest movie and TV show trailers from top entertainment channels in one place.
                 </div>
                 <span class="card-badge coming-soon">Coming Soon</span>
+                <div class="vote-section">
+                    <button class="vote-button" onclick="toggleVote('trailers')" data-feature="trailers">
+                        <span>👍</span>
+                        <span class="vote-text">Vote</span>
+                    </button>
+                    <span class="vote-count" data-feature="trailers">0 votes</span>
+                </div>
+            </div>
+
+            <!-- Popup Comments Card (Coming Soon) -->
+            <div class="card" style="opacity: 1; cursor: default;">
+                <div class="card-icon">💬</div>
+                <div class="card-title">Popup Commentator</div>
+                <div class="card-description">
+                    YouTube comments just for friends.
+                </div>
+                <span class="card-badge coming-soon">Coming Soon</span>
+                <div class="vote-section">
+                    <button class="vote-button" onclick="toggleVote('popup-comments')" data-feature="popup-comments">
+                        <span>👍</span>
+                        <span class="vote-text">Vote</span>
+                    </button>
+                    <span class="vote-count" data-feature="popup-comments">0 votes</span>
+                </div>
+            </div>
+
+            <!-- 7 Degrees Card (Coming Soon) -->
+            <div class="card" style="opacity: 1; cursor: default;">
+                <div class="card-icon">🎭</div>
+                <div class="card-title">7 Degrees</div>
+                <div class="card-description">
+                    Movies to Actors to Movies to..... It's so connected!.
+                </div>
+                <span class="card-badge coming-soon">Coming Soon</span>
+                <div class="vote-section">
+                    <button class="vote-button" onclick="toggleVote('7-degrees')" data-feature="7-degrees">
+                        <span>👍</span>
+                        <span class="vote-text">Vote</span>
+                    </button>
+                    <span class="vote-count" data-feature="7-degrees">0 votes</span>
+                </div>
             </div>
         </div>
     </div>
@@ -280,6 +377,99 @@
                 console.log('First visited on:', firstVisit);
             }
         }
+
+        // Feature voting system
+        const USER_VOTES_KEY = 'user_feature_votes';
+
+        function getUserVotes() {
+            const votes = localStorage.getItem(USER_VOTES_KEY);
+            return votes ? JSON.parse(votes) : {};
+        }
+
+        function saveUserVotes(userVotes) {
+            localStorage.setItem(USER_VOTES_KEY, JSON.stringify(userVotes));
+        }
+
+        async function toggleVote(featureId) {
+            const userVotes = getUserVotes();
+            const hasVoted = userVotes[featureId];
+            const action = hasVoted ? 'remove' : 'add';
+
+            try {
+                const response = await fetch('/votes', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        feature_id: featureId,
+                        action: action
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Update user's vote status locally
+                    if (action === 'add') {
+                        userVotes[featureId] = true;
+                    } else {
+                        delete userVotes[featureId];
+                    }
+                    saveUserVotes(userVotes);
+
+                    // Update UI with new vote counts
+                    updateVoteUI(data.votes);
+                } else {
+                    console.error('Failed to vote:', data.error);
+                }
+            } catch (error) {
+                console.error('Error voting:', error);
+            }
+        }
+
+        async function loadVotes() {
+            try {
+                const response = await fetch('/votes');
+                const data = await response.json();
+
+                if (response.ok) {
+                    updateVoteUI(data.votes);
+                }
+            } catch (error) {
+                console.error('Error loading votes:', error);
+            }
+        }
+
+        function updateVoteUI(voteCounts) {
+            const userVotes = getUserVotes();
+
+            // Update all vote buttons
+            document.querySelectorAll('.vote-button').forEach(button => {
+                const featureId = button.getAttribute('data-feature');
+                const voted = userVotes[featureId];
+
+                if (voted) {
+                    button.classList.add('voted');
+                    button.querySelector('.vote-text').textContent = 'Voted';
+                } else {
+                    button.classList.remove('voted');
+                    button.querySelector('.vote-text').textContent = 'Vote';
+                }
+            });
+
+            // Update vote counts
+            if (voteCounts) {
+                document.querySelectorAll('.vote-count').forEach(countEl => {
+                    const featureId = countEl.getAttribute('data-feature');
+                    const count = voteCounts[featureId] || 0;
+                    countEl.textContent = `${count} vote${count !== 1 ? 's' : ''}`;
+                });
+            }
+        }
+
+        // Initialize voting UI on page load
+        loadVotes();
     </script>
 </body>
 </html>

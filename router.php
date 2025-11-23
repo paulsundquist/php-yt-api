@@ -9,7 +9,7 @@ if ($uri !== '/' && file_exists(__DIR__ . $uri)) {
 }
 
 // API endpoints
-if (preg_match('#^/(channels|videos|fetch|categories|groups|tours|tour-steps|api)#', $uri)) {
+if (preg_match('#^/(channels|videos|fetch|categories|groups|tours|tour-steps|votes|api)#', $uri)) {
     require __DIR__ . '/index.php';
     return true;
 }
