@@ -28,6 +28,12 @@
             justify-content: center;
             background: #000;
             position: relative;
+            min-height: 0;
+        }
+
+        .video-container > div {
+            width: 100%;
+            height: 100%;
         }
 
         .video-container iframe {
@@ -108,8 +114,12 @@
     <script src="https://www.youtube.com/iframe_api"></script>
     <script>
         let player1, player2;
+        let apiReady = false;
 
         function onYouTubeIframeAPIReady() {
+            console.log('YouTube API Ready');
+            apiReady = true;
+
             player1 = new YT.Player('player1', {
                 height: '100%',
                 width: '100%',
@@ -119,6 +129,14 @@
                     'controls': 1,
                     'modestbranding': 1,
                     'rel': 0
+                },
+                events: {
+                    'onReady': function(event) {
+                        console.log('Player 1 ready');
+                    },
+                    'onError': function(event) {
+                        console.error('Player 1 error:', event.data);
+                    }
                 }
             });
 
@@ -131,9 +149,30 @@
                     'controls': 1,
                     'modestbranding': 1,
                     'rel': 0
+                },
+                events: {
+                    'onReady': function(event) {
+                        console.log('Player 2 ready');
+                    },
+                    'onError': function(event) {
+                        console.error('Player 2 error:', event.data);
+                    }
                 }
             });
         }
+
+        // Fallback check for API loading
+        setTimeout(function() {
+            if (!apiReady) {
+                console.log('Checking if YouTube API is available...');
+                if (typeof YT !== 'undefined' && YT.Player) {
+                    console.log('API is available, calling onYouTubeIframeAPIReady manually');
+                    onYouTubeIframeAPIReady();
+                } else {
+                    console.error('YouTube API failed to load');
+                }
+            }
+        }, 3000);
 
         function playAll() {
             if (player1) player1.playVideo();
