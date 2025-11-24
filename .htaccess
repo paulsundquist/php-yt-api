@@ -9,5 +9,5 @@
     RewriteCond %{REQUEST_FILENAME} !-d
 
     # Route API endpoints to index.php
-    RewriteRule ^(channels|videos|fetch|groups|categories)(/.*)?$ /index.php [QSA,L]
+    RewriteRule ^(channels|videos|fetch|groups|categories|votes)(/.*)?$ /index.php [QSA,L]
 </IfModule>
