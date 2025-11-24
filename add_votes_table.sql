@@ -15,5 +15,6 @@ INSERT INTO feature_votes (feature_id, vote_count) VALUES
 ('shorts', 0),
 ('trailers', 0),
 ('popup-comments', 0),
-('7-degrees', 0)
+('7-degrees', 0),
+('fitness', 0)
 ON DUPLICATE KEY UPDATE feature_id=VALUES(feature_id);
