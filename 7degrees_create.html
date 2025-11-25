@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>7 Degrees - Chain Creator</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            color: #1f2937;
+            font-size: 28px;
+        }
+
+        .home-btn {
+            background: #6b7280;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .home-btn:hover {
+            background: #4b5563;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .search-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        .results {
+            max-height: 300px;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 10px;
+        }
+
+        .results .empty-state {
+            grid-column: 1 / -1;
+        }
+
+        .result-item {
+            padding: 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .result-item:hover {
+            background: #f9fafb;
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .result-title {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        .result-meta {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .chain-builder {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .chain-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .chain-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .chain-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-save {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-save:hover {
+            background: #059669;
+        }
+
+        .btn-clear {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-clear:hover {
+            background: #dc2626;
+        }
+
+        .chain-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .chain-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            padding: 15px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border: 2px solid #e5e7eb;
+        }
+
+        .chain-item.movie {
+            border-left: 4px solid #3b82f6;
+        }
+
+        .chain-item.actor {
+            border-left: 4px solid #10b981;
+        }
+
+        .item-image {
+            width: 100px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 6px;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .item-image-placeholder {
+            width: 100px;
+            height: 150px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            flex-shrink: 0;
+        }
+
+        .item-icon {
+            font-size: 24px;
+        }
+
+        .item-details {
+            flex: 1;
+        }
+
+        .item-title {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 2px;
+        }
+
+        .item-meta {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .item-remove {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .item-remove:hover {
+            background: #dc2626;
+        }
+
+        .cast-buttons {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .cast-btn {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #374151;
+            font-weight: 500;
+        }
+
+        .cast-btn:hover {
+            background: #10b981;
+            color: white;
+            border-color: #10b981;
+        }
+
+        .cast-btn.clicked {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .cast-label {
+            font-size: 11px;
+            color: #6b7280;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .connector {
+            width: 2px;
+            height: 20px;
+            background: #d1d5db;
+            margin: 0 auto;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .add-prompt {
+            background: #dbeafe;
+            border: 2px dashed #3b82f6;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            color: #2563eb;
+            font-weight: 500;
+        }
+
+        .api-notice {
+            background: #fef3c7;
+            border: 1px solid #fbbf24;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            color: #92400e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎭 7 Degrees - Chain Creator</h1>
+            <a href="/" class="home-btn">← Home</a>
+        </header>
+
+        <div class="main-content">
+            <div class="search-panel">
+                <div class="search-box">
+                    <input
+                        type="text"
+                        class="search-input"
+                        id="search-input"
+                        placeholder="Search for movies..."
+                        onkeyup="handleSearch(event)"
+                    >
+                </div>
+
+                <div class="results" id="results">
+                    <div class="empty-state">
+                        <div class="empty-icon">🔍</div>
+                        <p>Start typing to search</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chain-builder">
+                <div class="chain-header">
+                    <div class="chain-title">Your Chain</div>
+                    <div class="chain-actions">
+                        <button class="action-btn btn-save" onclick="saveChain()">💾 Save</button>
+                        <button class="action-btn btn-clear" onclick="clearChain()">🗑️ Clear</button>
+                    </div>
+                </div>
+
+                <div class="chain-container" id="chain-container">
+                    <div class="add-prompt">
+                        ➕ Search and click to add movies and actors to your chain
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer style="text-align: center; margin-top: 20px; padding: 15px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+            <div class="api-notice" style="margin: 0;">
+                ℹ️ Using TVDB API for movie and actor information.
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Configuration - using local TVDB service
+        const TVDB_API_BASE = '/tvdb';
+
+        let chain = [];
+        let searchTimeout;
+
+        function handleSearch(event) {
+            const query = event.target.value.trim();
+
+            clearTimeout(searchTimeout);
+
+            if (query.length < 2) {
+                document.getElementById('results').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🔍</div>
+                        <p>Start typing to search</p>
+                    </div>
+                `;
+                return;
+            }
+
+            searchTimeout = setTimeout(() => {
+                searchMovies(query);
+            }, 500);
+        }
+
+        async function searchMovies(query) {
+            try {
+                const response = await fetch(
+                    `${TVDB_API_BASE}/search?q=${encodeURIComponent(query)}&type=movie`
+                );
+                const data = await response.json();
+
+                if (!response.ok) {
+                    console.error('API Error:', response.status, data);
+                    document.getElementById('results').innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">❌</div>
+                            <p style="color: #dc2626; font-weight: 600;">API Error (${response.status})</p>
+                            <p style="font-size: 12px; margin-top: 10px;">
+                                ${data.error || 'Error searching TVDB'}
+                            </p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                displayMovieResults(data.results || []);
+            } catch (error) {
+                console.error('Error searching:', error);
+                document.getElementById('results').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">❌</div>
+                        <p>Error searching. Please try again.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function displayMovieResults(movies) {
+            const resultsEl = document.getElementById('results');
+
+            if (movies.length === 0) {
+                resultsEl.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🎬</div>
+                        <p>No movies found</p>
+                    </div>
+                `;
+                return;
+            }
+
+            resultsEl.innerHTML = movies.slice(0, 10).map(item => {
+                // Handle escaping for JSON in HTML attribute
+                const itemData = {
+                    type: 'movie',
+                    id: item.tvdb_id,
+                    title: item.name,
+                    year: item.year || 'N/A',
+                    image: item.image_url || item.thumbnail || ''
+                };
+
+                return `
+                    <div class="result-item" onclick='addToChain(${JSON.stringify(itemData).replace(/'/g, "&apos;")})'>
+                        <div class="result-title">${escapeHtml(item.name)}</div>
+                        <div class="result-meta">
+                            ${item.year || 'N/A'}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function addToChain(item) {
+            // If it's a movie, fetch the cast and ensure we have the image
+            if (item.type === 'movie') {
+                try {
+                    const response = await fetch(`${TVDB_API_BASE}/details?id=${item.id}&type=movie`);
+                    const data = await response.json();
+
+                    if (response.ok && data.success && data.data) {
+                        // Store movie image if not already set
+                        if (!item.image && data.data.image) {
+                            item.image = data.data.image;
+                        }
+
+                        // Extract first 8 cast members with valid names
+                        if (data.data.characters) {
+                            item.cast = data.data.characters
+                                .filter(c => c.personName)
+                                .slice(0, 8)
+                                .map(c => ({
+                                    id: c.peopleId || c.id,
+                                    name: c.personName,
+                                    role: c.name || c.personName,
+                                    image: c.personImgURL || ''
+                                }));
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error fetching cast:', error);
+                    // Continue without cast data
+                }
+            }
+
+            // If it's an actor, fetch their movies and ensure we have the image
+            if (item.type === 'actor') {
+                try {
+                    const response = await fetch(`${TVDB_API_BASE}/person?person_id=${item.id}`);
+                    const data = await response.json();
+
+                    if (response.ok && data.success && data.person) {
+                        // Store actor image if not already set
+                        if (!item.image && data.person.image) {
+                            item.image = data.person.image;
+                        }
+
+                        if (data.person.characters) {
+                            // Extract movies from characters, filter out series, take top 10
+                            const movies = data.person.characters
+                                .filter(c => c.movieId && c.movie)
+                                .slice(0, 10)
+                                .map(c => ({
+                                    id: c.movieId,
+                                    name: c.movie.name,
+                                    year: c.movie.year || 'N/A',
+                                    role: c.name || c.personName,
+                                    image: c.movie.image || ''
+                                }));
+
+                            // Remove duplicates by movie ID
+                            const uniqueMovies = [];
+                            const seenIds = new Set();
+                            for (const movie of movies) {
+                                if (!seenIds.has(movie.id)) {
+                                    seenIds.add(movie.id);
+                                    uniqueMovies.push(movie);
+                                }
+                            }
+
+                            item.movies = uniqueMovies.slice(0, 10);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error fetching actor movies:', error);
+                    // Continue without movies data
+                }
+            }
+
+            chain.push(item);
+            renderChain();
+        }
+
+        function removeFromChain(index) {
+            chain.splice(index, 1);
+            renderChain();
+        }
+
+        function renderChain() {
+            const container = document.getElementById('chain-container');
+
+            if (chain.length === 0) {
+                container.innerHTML = `
+                    <div class="add-prompt">
+                        ➕ Search and click to add movies and actors to your chain
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = chain.map((item, index) => {
+                const icon = item.type === 'movie' ? '🎬' : '🎭';
+                const meta = item.type === 'movie' ? item.year : item.known_for;
+
+                // Generate cast buttons if this is a movie with cast data
+                let relatedHtml = '';
+                if (item.type === 'movie' && item.cast && item.cast.length > 0) {
+                    const castButtons = item.cast.map(actor => {
+                        const actorData = {
+                            type: 'actor',
+                            id: actor.id,
+                            title: actor.name,
+                            known_for: 'Acting',
+                            role: actor.role || actor.name,
+                            image: actor.image || ''
+                        };
+                        return `<button class="cast-btn" onclick='this.classList.add("clicked"); addToChain(${JSON.stringify(actorData).replace(/'/g, "&apos;")})'>${escapeHtml(actor.name)}</button>`;
+                    }).join('');
+
+                    relatedHtml = `
+                        <div class="cast-buttons">
+                            <div class="cast-label">Cast:</div>
+                            ${castButtons}
+                        </div>
+                    `;
+                }
+
+                // Generate movie buttons if this is an actor with movie data
+                if (item.type === 'actor' && item.movies && item.movies.length > 0) {
+                    const movieButtons = item.movies.map(movie => {
+                        const movieData = {
+                            type: 'movie',
+                            id: movie.id,
+                            title: movie.name,
+                            year: movie.year,
+                            role: movie.role || movie.name,
+                            image: movie.image || ''
+                        };
+                        return `<button class="cast-btn" onclick='this.classList.add("clicked"); addToChain(${JSON.stringify(movieData).replace(/'/g, "&apos;")})'>${escapeHtml(movie.name)} (${movie.year})</button>`;
+                    }).join('');
+
+                    relatedHtml = `
+                        <div class="cast-buttons">
+                            <div class="cast-label">Movies:</div>
+                            ${movieButtons}
+                        </div>
+                    `;
+                }
+
+                // Generate image HTML
+                const imageHtml = item.image ?
+                    `<img src="${item.image}" alt="${escapeHtml(item.title)}" class="item-image" onerror="this.style.display='none'">` :
+                    `<div class="item-image item-image-placeholder">${icon}</div>`;
+
+                return `
+                    ${index > 0 ? '<div class="connector"></div>' : ''}
+                    <div class="chain-item ${item.type}">
+                        ${imageHtml}
+                        <div class="item-details">
+                            <div class="item-title">${escapeHtml(item.title)}</div>
+                            <div class="item-meta">${meta}</div>
+                            ${relatedHtml}
+                        </div>
+                        <button class="item-remove" onclick="removeFromChain(${index})">Remove</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function saveChain() {
+            if (chain.length === 0) {
+                alert('Your chain is empty! Add some movies and actors first.');
+                return;
+            }
+
+            // Prompt user for a chain name
+            const chainName = prompt('Enter a name for your chain:', 'My 7 Degrees Chain');
+
+            if (chainName === null) {
+                // User clicked cancel
+                return;
+            }
+
+            // Generate a unique chain ID
+            const chainId = Math.random().toString(36).substring(2, 10).toUpperCase();
+
+            const chainData = {
+                created: new Date().toISOString(),
+                chain: chain
+            };
+
+            try {
+                // Save to database
+                const response = await fetch('/chains', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        chain_id: chainId,
+                        chain_name: chainName.trim() || null,
+                        chain_data: chainData
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    // Save to localStorage
+                    localStorage.setItem('7degrees_chain', JSON.stringify(chainData));
+                    localStorage.setItem('7degrees_chain_id', chainId);
+                    localStorage.setItem('7degrees_chain_name', chainName);
+
+                    const displayName = chainName.trim() ? `"${chainName}"` : 'Untitled';
+                    alert(`Chain saved successfully!\n\nName: ${displayName}\nChain ID: ${chainId}\n\nYou can use this ID to load your chain later.`);
+                } else {
+                    alert('Error saving chain: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error saving chain:', error);
+                alert('Error saving chain. Please try again.');
+            }
+        }
+
+        function clearChain() {
+            if (confirm('Are you sure you want to clear your chain?')) {
+                chain = [];
+                renderChain();
+            }
+        }
+
+        // Load saved chain on page load
+        window.addEventListener('load', () => {
+            const saved = localStorage.getItem('7degrees_chain');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    chain = data.chain || [];
+                    renderChain();
+                } catch (e) {
+                    console.error('Error loading saved chain:', e);
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saved Chains - 7 Degrees</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            color: #1f2937;
+            font-size: 28px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .home-btn {
+            background: #6b7280;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .home-btn:hover {
+            background: #4b5563;
+        }
+
+        .create-btn {
+            background: #10b981;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .create-btn:hover {
+            background: #059669;
+        }
+
+        .chains-container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+            font-size: 18px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .chain-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.2s;
+            background: #f9fafb;
+        }
+
+        .chain-card:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+        }
+
+        .chain-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .chain-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        .chain-id {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #6b7280;
+            background: #e5e7eb;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .chain-meta {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 12px;
+        }
+
+        .chain-preview {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .preview-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .preview-item.movie {
+            border-left: 3px solid #3b82f6;
+        }
+
+        .preview-item.actor {
+            border-left: 3px solid #10b981;
+        }
+
+        .chain-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-view {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-view:hover {
+            background: #2563eb;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            background: #f3f4f6;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            flex: 1;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #3b82f6;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎭 Saved Chains</h1>
+            <div class="header-actions">
+                <a href="/7degrees_create.html" class="create-btn">➕ Create New Chain</a>
+                <a href="/" class="home-btn">← Home</a>
+            </div>
+        </header>
+
+        <div class="chains-container">
+            <div id="stats" style="display: none;">
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="total-chains">0</div>
+                        <div class="stat-label">Total Chains</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="total-items">0</div>
+                        <div class="stat-label">Total Items</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="loading" class="loading">
+                🔄 Loading chains...
+            </div>
+
+            <div id="chains-list"></div>
+        </div>
+    </div>
+
+    <script>
+        async function loadChains() {
+            try {
+                const response = await fetch('/chains');
+                const data = await response.json();
+
+                const loadingEl = document.getElementById('loading');
+                const chainsListEl = document.getElementById('chains-list');
+                const statsEl = document.getElementById('stats');
+
+                loadingEl.style.display = 'none';
+
+                if (!response.ok || !data.success) {
+                    chainsListEl.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">❌</div>
+                            <p>Error loading chains</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const chains = data.chains || [];
+
+                if (chains.length === 0) {
+                    chainsListEl.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">📭</div>
+                            <h2>No chains saved yet</h2>
+                            <p style="margin-top: 10px;">Create your first chain in the 7 Degrees builder!</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Show stats
+                statsEl.style.display = 'block';
+                document.getElementById('total-chains').textContent = chains.length;
+
+                let totalItems = 0;
+                chains.forEach(chain => {
+                    if (chain.chain_data && chain.chain_data.chain) {
+                        totalItems += chain.chain_data.chain.length;
+                    }
+                });
+                document.getElementById('total-items').textContent = totalItems;
+
+                // Render chains
+                chainsListEl.innerHTML = chains.map(chain => {
+                    const chainData = chain.chain_data || {};
+                    const chainItems = chainData.chain || [];
+                    const createdDate = new Date(chain.created_at).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+
+                    // Create preview of first few items
+                    const previewItems = chainItems.slice(0, 5).map(item => {
+                        const icon = item.type === 'movie' ? '🎬' : '🎭';
+                        return `
+                            <div class="preview-item ${item.type}">
+                                <span>${icon}</span>
+                                <span>${escapeHtml(item.title)}</span>
+                            </div>
+                        `;
+                    }).join('');
+
+                    const moreText = chainItems.length > 5 ? `<div class="preview-item">+${chainItems.length - 5} more</div>` : '';
+
+                    return `
+                        <div class="chain-card">
+                            <div class="chain-header">
+                                <div>
+                                    <div class="chain-title">${escapeHtml(chain.chain_name || 'Untitled Chain')}</div>
+                                    <div class="chain-id">ID: ${chain.chain_id}</div>
+                                </div>
+                            </div>
+                            <div class="chain-meta">
+                                📅 ${createdDate} • ${chainItems.length} item${chainItems.length !== 1 ? 's' : ''}
+                            </div>
+                            <div class="chain-preview">
+                                ${previewItems}
+                                ${moreText}
+                            </div>
+                            <div class="chain-actions">
+                                <a href="/chain_show.html?id=${chain.chain_id}" class="btn btn-view">
+                                    👁️ View Chain
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error('Error loading chains:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('chains-list').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">❌</div>
+                        <p>Error loading chains. Please try again.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Load chains on page load
+        loadChains();
+    </script>
+</body>
+</html>

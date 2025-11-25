@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chain View - 7 Degrees</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            color: #1f2937;
+            font-size: 28px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            background: #6b7280;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: #4b5563;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-play {
+            background: #10b981;
+        }
+
+        .btn-play:hover {
+            background: #059669;
+        }
+
+        .chain-info {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .chain-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .chain-meta {
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .chain-id {
+            font-family: 'Courier New', monospace;
+            background: #f3f4f6;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .loading {
+            background: white;
+            padding: 60px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            text-align: center;
+            color: #6b7280;
+            font-size: 18px;
+        }
+
+        .error-state {
+            background: white;
+            padding: 60px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .error-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .error-message {
+            color: #dc2626;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .chain-display {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .chain-flow {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .chain-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .item-card {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .item-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .item-card.movie {
+            border-top: 4px solid #3b82f6;
+        }
+
+        .item-card.actor {
+            border-top: 4px solid #10b981;
+        }
+
+        .item-image-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .item-image {
+            width: 200px;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .item-image-placeholder {
+            width: 200px;
+            height: 300px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .item-content {
+            text-align: center;
+        }
+
+        .item-type-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .item-type-badge.movie {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .item-type-badge.actor {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .item-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 6px;
+        }
+
+        .item-meta {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .connector {
+            width: 4px;
+            height: 40px;
+            background: linear-gradient(180deg, #3b82f6 0%, #10b981 100%);
+            border-radius: 2px;
+            opacity: 0.5;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: #f3f4f6;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #3b82f6;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎭 Chain View</h1>
+            <div class="header-actions">
+                <a href="#" id="play-btn" class="btn btn-play" style="display: none;">▶️ Play Mode</a>
+                <a href="/chains.html" class="btn">← All Chains</a>
+                <a href="/" class="btn btn-primary">Home</a>
+            </div>
+        </header>
+
+        <div id="loading" class="loading">
+            🔄 Loading chain...
+        </div>
+
+        <div id="error" style="display: none;"></div>
+
+        <div id="chain-info" style="display: none;"></div>
+
+        <div id="chain-display" style="display: none;"></div>
+    </div>
+
+    <script>
+        function getChainIdFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('id') || params.get('chain_id');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function loadChain() {
+            const chainId = getChainIdFromUrl();
+
+            if (!chainId) {
+                showError('No chain ID provided', 'Please provide a chain ID in the URL (e.g., ?id=ABC123)');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/chains?chain_id=${encodeURIComponent(chainId)}`);
+                const data = await response.json();
+
+                const loadingEl = document.getElementById('loading');
+                loadingEl.style.display = 'none';
+
+                if (!response.ok || !data.success) {
+                    showError('Chain not found', data.error || 'The requested chain could not be found.');
+                    return;
+                }
+
+                const chain = data.chain;
+                displayChain(chain);
+
+            } catch (error) {
+                console.error('Error loading chain:', error);
+                document.getElementById('loading').style.display = 'none';
+                showError('Error loading chain', 'An error occurred while loading the chain. Please try again.');
+            }
+        }
+
+        function showError(title, message) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('error').innerHTML = `
+                <div class="error-state">
+                    <div class="error-icon">❌</div>
+                    <div class="error-message">${escapeHtml(title)}</div>
+                    <p style="color: #6b7280;">${escapeHtml(message)}</p>
+                    <a href="/chains.html" class="btn" style="margin-top: 20px; display: inline-block;">← Back to Chains</a>
+                </div>
+            `;
+        }
+
+        function displayChain(chain) {
+            const chainData = chain.chain_data || {};
+            const chainItems = chainData.chain || [];
+
+            if (chainItems.length === 0) {
+                showError('Empty chain', 'This chain has no items.');
+                return;
+            }
+
+            // Show and setup play button
+            const playBtn = document.getElementById('play-btn');
+            playBtn.style.display = 'inline-block';
+            playBtn.href = `/chain_play.html?id=${chain.chain_id}`;
+
+            const createdDate = new Date(chain.created_at).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            // Count movies and actors
+            const movieCount = chainItems.filter(item => item.type === 'movie').length;
+            const actorCount = chainItems.filter(item => item.type === 'actor').length;
+
+            // Display chain info
+            const chainInfoEl = document.getElementById('chain-info');
+            chainInfoEl.style.display = 'block';
+            chainInfoEl.innerHTML = `
+                <div class="chain-name">${escapeHtml(chain.chain_name || 'Untitled Chain')}</div>
+                <div class="chain-meta">
+                    <span class="chain-id">ID: ${chain.chain_id}</span>
+                    <span>📅 ${createdDate}</span>
+                    <span>${chainItems.length} item${chainItems.length !== 1 ? 's' : ''}</span>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">${movieCount}</div>
+                        <div class="stat-label">Movies</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${actorCount}</div>
+                        <div class="stat-label">Actors</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${chainItems.length}</div>
+                        <div class="stat-label">Total Items</div>
+                    </div>
+                </div>
+            `;
+
+            // Display chain items
+            const chainDisplayEl = document.getElementById('chain-display');
+            chainDisplayEl.style.display = 'block';
+            chainDisplayEl.innerHTML = `
+                <div class="chain-display">
+                    <div class="chain-flow">
+                        ${chainItems.map((item, index) => {
+                            const icon = item.type === 'movie' ? '🎬' : '🎭';
+                            const meta = item.type === 'movie' ? item.year : (item.known_for || 'Actor');
+                            const typeLabel = item.type === 'movie' ? 'Movie' : 'Actor';
+
+                            const imageHtml = item.image ?
+                                `<img src="${item.image}" alt="${escapeHtml(item.title)}" class="item-image" onerror="this.outerHTML='<div class=\\'item-image-placeholder\\'>${icon}</div>'">` :
+                                `<div class="item-image-placeholder">${icon}</div>`;
+
+                            return `
+                                <div class="chain-item">
+                                    ${index > 0 ? '<div class="connector"></div>' : ''}
+                                    <div class="item-card ${item.type}">
+                                        <div class="item-image-container">
+                                            ${imageHtml}
+                                        </div>
+                                        <div class="item-content">
+                                            <div class="item-type-badge ${item.type}">${typeLabel}</div>
+                                            <div class="item-title">${escapeHtml(item.title)}</div>
+                                            <div class="item-meta">${escapeHtml(meta)}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Load chain on page load
+        window.addEventListener('load', loadChain);
+    </script>
+</body>
+</html>

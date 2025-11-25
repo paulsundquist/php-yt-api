@@ -112,6 +112,18 @@ CREATE TABLE `feature_votes` (
   UNIQUE KEY `feature_id` (`feature_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- 7 Degrees chains table
+CREATE TABLE IF NOT EXISTS `chains` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `chain_id` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `chain_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `chain_data` json NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `chain_id` (`chain_id`),
+  KEY `idx_created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Initialize feature votes
 INSERT INTO feature_votes (feature_id, vote_count) VALUES
 ('tours', 0),

@@ -5,6 +5,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 use App\Database;
 use App\YouTubeService;
 use App\TourService;
+use App\TVDBService;
 
 // Load environment variables from .env file
 if (file_exists(__DIR__ . '/.env')) {
@@ -448,6 +449,215 @@ try {
                     'message' => 'Tour created successfully',
                     'tour_id' => $tourId
                 ]);
+            } else {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+            }
+            break;
+
+        case '/tvdb/search':
+            if ($method !== 'GET') {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+                break;
+            }
+
+            $query = $_GET['q'] ?? $_GET['query'] ?? '';
+            $type = $_GET['type'] ?? 'series'; // series, movie, or people
+
+            if (empty($query)) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Query parameter "q" or "query" is required']);
+                break;
+            }
+
+            try {
+                $tvdbService = new TVDBService();
+
+                if ($type === 'people') {
+                    $results = $tvdbService->searchPeople($query);
+                } else {
+                    $results = $tvdbService->searchByName($query, $type);
+                }
+
+                echo json_encode([
+                    'success' => true,
+                    'query' => $query,
+                    'type' => $type,
+                    'count' => count($results),
+                    'results' => $results
+                ]);
+            } catch (\Exception $e) {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'error' => $e->getMessage()
+                ]);
+            }
+            break;
+
+        case '/tvdb/details':
+            if ($method !== 'GET') {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+                break;
+            }
+
+            $id = $_GET['id'] ?? '';
+            $type = $_GET['type'] ?? 'series';
+
+            if (empty($id)) {
+                http_response_code(400);
+                echo json_encode(['error' => 'ID parameter is required']);
+                break;
+            }
+
+            try {
+                $tvdbService = new TVDBService();
+                $details = $tvdbService->getDetails($id, $type);
+
+                echo json_encode([
+                    'success' => true,
+                    'data' => $details
+                ]);
+            } catch (\Exception $e) {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'error' => $e->getMessage()
+                ]);
+            }
+            break;
+
+        case '/tvdb/cast':
+            if ($method !== 'GET') {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+                break;
+            }
+
+            $seriesId = $_GET['series_id'] ?? $_GET['id'] ?? '';
+
+            if (empty($seriesId)) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Series ID parameter is required']);
+                break;
+            }
+
+            try {
+                $tvdbService = new TVDBService();
+                $cast = $tvdbService->getCast($seriesId);
+
+                echo json_encode([
+                    'success' => true,
+                    'series_id' => $seriesId,
+                    'cast' => $cast
+                ]);
+            } catch (\Exception $e) {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'error' => $e->getMessage()
+                ]);
+            }
+            break;
+
+        case '/tvdb/person':
+            if ($method !== 'GET') {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+                break;
+            }
+
+            $personId = $_GET['person_id'] ?? $_GET['id'] ?? '';
+
+            if (empty($personId)) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Person ID parameter is required']);
+                break;
+            }
+
+            try {
+                $tvdbService = new TVDBService();
+                $person = $tvdbService->getPersonDetails($personId);
+
+                echo json_encode([
+                    'success' => true,
+                    'person_id' => $personId,
+                    'person' => $person
+                ]);
+            } catch (\Exception $e) {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'error' => $e->getMessage()
+                ]);
+            }
+            break;
+
+        case '/chains':
+            if ($method === 'POST') {
+                // Save a chain
+                $input = json_decode(file_get_contents('php://input'), true);
+                $chainId = $input['chain_id'] ?? '';
+                $chainData = $input['chain_data'] ?? null;
+                $chainName = $input['chain_name'] ?? null;
+
+                if (empty($chainId) || empty($chainData)) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'Chain ID and chain data are required']);
+                    break;
+                }
+
+                try {
+                    $db->saveChain($chainId, $chainData, $chainName);
+                    echo json_encode([
+                        'success' => true,
+                        'chain_id' => $chainId,
+                        'chain_name' => $chainName,
+                        'message' => 'Chain saved successfully'
+                    ]);
+                } catch (\Exception $e) {
+                    http_response_code(500);
+                    echo json_encode([
+                        'success' => false,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            } elseif ($method === 'GET') {
+                // Get all chains or a specific chain
+                $chainId = $_GET['chain_id'] ?? '';
+
+                try {
+                    if ($chainId) {
+                        $chain = $db->getChain($chainId);
+                        if ($chain) {
+                            echo json_encode([
+                                'success' => true,
+                                'chain' => $chain
+                            ]);
+                        } else {
+                            http_response_code(404);
+                            echo json_encode([
+                                'success' => false,
+                                'error' => 'Chain not found'
+                            ]);
+                        }
+                    } else {
+                        $chains = $db->getAllChains();
+                        echo json_encode([
+                            'success' => true,
+                            'count' => count($chains),
+                            'chains' => $chains
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    http_response_code(500);
+                    echo json_encode([
+                        'success' => false,
+                        'error' => $e->getMessage()
+                    ]);
+                }
             } else {
                 http_response_code(405);
                 echo json_encode(['error' => 'Method not allowed']);

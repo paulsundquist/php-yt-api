@@ -165,4 +165,47 @@ class Database
         );
         return $stmt->execute([':feature_id' => $featureId]);
     }
+
+    public function saveChain($chainId, $chainData, $chainName = null)
+    {
+        $stmt = $this->connection->prepare(
+            "INSERT INTO chains (chain_id, chain_name, chain_data) VALUES (:chain_id, :chain_name, :chain_data)
+             ON DUPLICATE KEY UPDATE chain_name = VALUES(chain_name), chain_data = VALUES(chain_data)"
+        );
+        return $stmt->execute([
+            ':chain_id' => $chainId,
+            ':chain_name' => $chainName,
+            ':chain_data' => json_encode($chainData)
+        ]);
+    }
+
+    public function getChain($chainId)
+    {
+        $stmt = $this->connection->prepare(
+            "SELECT chain_id, chain_name, chain_data, created_at FROM chains WHERE chain_id = :chain_id"
+        );
+        $stmt->execute([':chain_id' => $chainId]);
+        $result = $stmt->fetch();
+
+        if ($result) {
+            $result['chain_data'] = json_decode($result['chain_data'], true);
+        }
+
+        return $result;
+    }
+
+    public function getAllChains()
+    {
+        $stmt = $this->connection->prepare(
+            "SELECT chain_id, chain_name, chain_data, created_at FROM chains ORDER BY created_at DESC"
+        );
+        $stmt->execute();
+        $results = $stmt->fetchAll();
+
+        foreach ($results as &$result) {
+            $result['chain_data'] = json_decode($result['chain_data'], true);
+        }
+
+        return $results;
+    }
 }
