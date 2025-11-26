@@ -460,9 +460,14 @@
 
             resultsEl.innerHTML = movies.slice(0, 10).map(item => {
                 // Handle escaping for JSON in HTML attribute
+                // Try different possible ID field names from TVDB API
+                const movieId = item.tvdb_id || item.id || item.objectID;
+                console.log('Movie:', item.name, 'ID:', movieId, 'Slug:', item.slug, 'Raw item:', item);
+
                 const itemData = {
                     type: 'movie',
-                    id: item.tvdb_id,
+                    id: movieId,
+                    slug: item.slug || '',
                     title: item.name,
                     year: item.year || 'N/A',
                     image: item.image_url || item.thumbnail || ''
@@ -505,6 +510,7 @@
                                 .slice(0, 8)
                                 .map(c => ({
                                     id: c.peopleId || c.id,
+                                    slug: c.personSlug || '',
                                     name: c.personName,
                                     role: c.name || c.personName,
                                     image: c.personImgURL || ''
@@ -536,6 +542,7 @@
                                 .slice(0, 10)
                                 .map(c => ({
                                     id: c.movieId,
+                                    slug: c.movie.slug || '',
                                     name: c.movie.name,
                                     year: c.movie.year || 'N/A',
                                     role: c.name || c.personName,
@@ -593,6 +600,7 @@
                         const actorData = {
                             type: 'actor',
                             id: actor.id,
+                            slug: actor.slug || '',
                             title: actor.name,
                             known_for: 'Acting',
                             role: actor.role || actor.name,
@@ -615,6 +623,7 @@
                         const movieData = {
                             type: 'movie',
                             id: movie.id,
+                            slug: movie.slug || '',
                             title: movie.name,
                             year: movie.year,
                             role: movie.role || movie.name,
@@ -672,6 +681,9 @@
                 created: new Date().toISOString(),
                 chain: chain
             };
+
+            console.log('Saving chain with data:', chainData);
+            console.log('Chain items:', chain.map(item => ({ title: item.title, type: item.type, id: item.id, slug: item.slug })));
 
             try {
                 // Save to database

@@ -180,6 +180,12 @@
             align-items: center;
             gap: 15px;
             max-width: 300px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .item-card:hover {
+            opacity: 0.8;
         }
 
         .chain-title-card {
@@ -452,6 +458,28 @@
             }
         }
 
+        function openTheTVDB(title, type, id, slug) {
+            // Use stored slug if available, otherwise generate from title
+            const finalSlug = slug || title.toLowerCase()
+                .replace(/[^a-z0-9\s-]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-')
+                .trim();
+
+            let url;
+            if (type === 'actor') {
+                url = `https://www.thetvdb.com/people/${id}-${finalSlug}#filmography`;
+            } else if (type === 'movie') {
+                url = `https://www.thetvdb.com/movies/${finalSlug}#castcrew`;
+            } else {
+                // Fallback to search
+                url = `https://www.thetvdb.com/search?query=${encodeURIComponent(title)}`;
+            }
+
+            console.log('Opening TheTVDB URL:', url);
+            window.open(url, '_blank');
+        }
+
         async function loadChain() {
             const chainId = getChainIdFromUrl();
 
@@ -496,6 +524,9 @@
         function displayChain(chain) {
             const chainData = chain.chain_data || {};
             const chainItems = chainData.chain || [];
+
+            console.log('Displaying chain:', chain);
+            console.log('Chain items:', chainItems.map(item => ({ title: item.title, type: item.type, id: item.id, slug: item.slug })));
 
             if (chainItems.length === 0) {
                 showError('Empty chain', 'This chain has no items.');
@@ -546,7 +577,7 @@
                         '';
 
                     const card = `
-                        <div class="item-card">
+                        <div class="item-card" onclick="openTheTVDB('${escapeHtml(item.title).replace(/'/g, "\\'")}', '${item.type}', '${item.id || ''}', '${item.slug || ''}')">
                             <div class="item-image-wrapper">
                                 ${imageHtml}
                             </div>
