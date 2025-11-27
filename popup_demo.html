@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Player - MyTubie</title>
+    <title>MyTubie Popup Demo</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <style>
         * {
@@ -35,13 +35,17 @@
 
         .overlay-text {
             position: absolute;
-            top: 50%;
+            top: 0;
             left: 50%;
-            transform: translate(-50%, -50%);
+            transform: translateX(-50%);
             color: white;
             font-size: 48px;
             font-weight: bold;
+            text-align: center;
             text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+            background: rgba(128, 128, 128, 0.5);
+            padding: 20px 40px;
+            border-radius: 0 0 8px 8px;
             opacity: 0;
             transition: opacity 0.5s ease;
             pointer-events: none;
@@ -66,7 +70,7 @@
         <div class="video-wrapper">
             <iframe
                 id="ytplayer"
-                src="https://www.youtube.com/embed/9AjkUyX0rVw?enablejsapi=1"
+                src="https://www.youtube.com/embed/9AjkUyX0rVw?enablejsapi=1&autoplay=1&mute=0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowfullscreen>
             </iframe>
@@ -84,17 +88,58 @@
 
         // Define overlays with their timing
         var overlays = [
-            { time: 2, text: 'We are the World', shown: false },
-            { time: 30, text: 'Lionel Richie', shown: false }
+            { time: 0, text: 'MyTubie\nPopup Video Demo', shown: false },
+            { time: 2, text: 'We are the World\nUSA for Africa', shown: false },
+            { time: 5, text: 'Recorded January 28, 1985', shown: false },
+            { time: 8, text: 'Written by\nMichael Jackson\nand Lionel Richie', shown: false },
+            { time: 11, text: 'Produced by Quincy Jones', shown: false },
+            { time: 14, text: 'It raised of $60 Million', shown: false },
+            { time: 17, text: 'Fastest-selling U.S. pop single in history at the time', shown: false },
+            { time: 20, text: 'Annotations were removed by YouTube in 2019', shown: false },
+            { time: 23, text: 'MyTubie Popup Video is\nBringing it Back!', shown: false },
+
+          
+            
+            { time: 28, text: 'Lionel Richie', shown: false },
+            { time: 38, text: 'Stevie Wonder', shown: false },
+            { time: 44, text: 'Paul Simon', shown: false },
+            { time: 50, text: 'Kenny Rogers', shown: false },
+            { time: 60, text: 'James Ingram', shown: false },
+            { time: 67, text: 'Tina Turner', shown: false },
+            { time: 73, text: 'Billy Joel', shown: false },
+            { time: 80, text: 'Michael Jackson', shown: false },
+            { time: 93, text: 'Diana Ross', shown: false },
+            { time: 109, text: 'Dionne Warwick', shown: false },
+            { time: 122, text: 'Willie Nelson', shown: false },
+            { time: 129, text: 'Al Jarreau', shown: false },
+            { time: 135, text: 'Bruce Springsteen', shown: false },
+            { time: 141, text: 'Kenny Loggins', shown: false },
+            { time: 148, text: 'Steve Perry', shown: false },
+            { time: 152, text: 'Daryl Hall', shown: false },
+            { time: 168, text: 'Huey Lewis', shown: false },
+            { time: 174, text: 'Cyndi Lauper', shown: false },
+            { time: 181, text: 'Kim Carnes', shown: false },
+            { time: 228, text: 'Bob Dylan', shown: false }
+            
         ];
 
         // Called when YouTube API is ready
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('ytplayer', {
+                playerVars: {
+                    'autoplay': 1,
+                    'mute': 0
+                },
                 events: {
-                    'onStateChange': onPlayerStateChange
+                    'onStateChange': onPlayerStateChange,
+                    'onReady': onPlayerReady
                 }
             });
+        }
+
+        function onPlayerReady(event) {
+            event.target.playVideo();
+            checkTime();
         }
 
         function onPlayerStateChange(event) {
