@@ -291,7 +291,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <a href="/tours.html" class="back-button">&larr; Back to Tours</a>
+            <a href="/pathways.html" class="back-button">&larr; Back to Tours</a>
             <h1 id="pageTitle">Create New Tour</h1>
             <div class="header-spacer"></div>
         </div>
@@ -771,7 +771,7 @@
                 }
 
                 alert('Tour saved successfully!');
-                window.location.href = '/tours.html';
+                window.location.href = '/pathways.html';
 
             } catch (error) {
                 console.error('Error saving tour:', error);
@@ -781,7 +781,7 @@
 
         function cancelEdit() {
             if (confirm('Are you sure you want to cancel? Any unsaved changes will be lost.')) {
-                window.location.href = '/tours.html';
+                window.location.href = '/pathways.html';
             }
         }
 

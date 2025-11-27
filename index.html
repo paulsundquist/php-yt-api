@@ -179,11 +179,7 @@
         <div class="cards-grid">
             <!-- Channel Viewer Card -->
             <a href="/channelsw.html" class="card">
-                <div class="card-icon">📺</div>
-                <div class="card-title">Channel Viewer</div>
-                <div class="card-description">
-                    Watch videos from your organized channel groups with a clean, distraction-free player. Track your progress and enjoy keyboard shortcuts.
-                </div>
+                <img src="/images/channel_viewer_card.png" alt="Channel Viewer" style="width: 100%; height: auto; border-radius: 4px; margin-bottom: 15px;">
                 <button href="/channelsManageGroup.html"
                    onclick="event.stopPropagation(); event.preventDefault(); window.location.href='/channelsManageGroup.html';"
                    style="display: inline-block; margin-top: 15px; padding: 8px 16px; background: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 14px; font-weight: 500; text-align: center;">
@@ -193,14 +189,10 @@
 
             <!-- 7 Degrees Card -->
             <a href="/7degrees.html" class="card">
-                <div class="card-icon">🎭</div>
-                <div class="card-title">7 Degrees</div>
-                <div class="card-description">
-                    Movies to Actors to Movies to..... It's so connected!
-                </div>
-               
-                <button href="http://localhost:8000/chain_play.html?id=SJPXCE2P"
-                   onclick="event.stopPropagation(); event.preventDefault(); window.location.href='/chain_play.html?id=FW88608P';"
+                <img src="/images/7degrees_card.png" alt="7 Degrees" style="width: 100%; height: auto; border-radius: 4px; margin-bottom: 15px;">
+
+                <button href="http://localhost:8000/7degrees_play.html?id=SJPXCE2P"
+                   onclick="event.stopPropagation(); event.preventDefault(); window.location.href='/7degrees_play.html?id=FW88608P';"
                    style="display: inline-block; margin-top: 15px; padding: 8px 16px; background: #10b981; color: white; text-decoration: none; border-radius: 6px; font-size: 14px; font-weight: 500; text-align: center; border: none; cursor: pointer;">
                     Jaws to Blazing Saddles
                 </button>
@@ -209,11 +201,7 @@
 
             <!-- Fitness Card (Coming Soon) -->
             <div class="card" style="opacity: 1; cursor: default;">
-                <div class="card-icon">🧘</div>
-                <div class="card-title">Fitness</div>
-                <div class="card-description">
-                    On-Demand Fitness classes such as running, strength training, and pilates
-                </div>
+                <img src="/images/fitness_card.png" alt="Fitness" style="width: 100%; height: auto; border-radius: 4px; margin-bottom: 15px;">
                 <a href="/2play.html"
                    style="display: inline-block; margin-top: 15px; padding: 8px 16px; background: #10b981; color: white; text-decoration: none; border-radius: 6px; font-size: 14px; font-weight: 500; text-align: center;">
                     Demo
@@ -245,12 +233,14 @@
                 </div>
             </div>
 
-            <!-- Tours Card -->
+            <!-- Pathways Card -->
             <div class="card" style="opacity: 1; cursor: default;">
-                <div class="card-icon">🎬</div>
-                <div class="card-title">Tours</div>
+                <div class="card-icon">
+                    <img src="/images/pathways.jpg" alt="Pathways" style="width: 64px; height: 64px; object-fit: cover; object-position: center bottom; border-radius: 8px;">
+                </div>
+                <div class="card-title">Pathways</div>
                 <div class="card-description">
-                    Create guided video tours with step-by-step playlists. Perfect for tutorials, lessons, or curated content experiences.
+                    Create guided video paths with step-by-step playlists. Perfect for tutorials, lessons, or curated content experiences.
                 </div>
                 <span class="card-badge coming-soon">Coming Soon</span>
                 <div class="vote-section">
@@ -335,6 +325,19 @@
                         <span class="vote-text">Vote</span>
                     </button>
                     <span class="vote-count" data-feature="run-pacer">0 votes</span>
+                </div>
+            </div>
+
+            <!-- Movie Trivia Card (Coming Soon) -->
+            <div class="card" style="opacity: 1; cursor: default;">
+                <img src="/images/movie_trivia_card.png" alt="Movie Trivia" style="width: 100%; height: auto; border-radius: 4px; margin-bottom: 15px;">
+                <span class="card-badge coming-soon">Coming Soon</span>
+                <div class="vote-section">
+                    <button class="vote-button" onclick="toggleVote('movie-trivia')" data-feature="movie-trivia">
+                        <span>👍</span>
+                        <span class="vote-text">Vote</span>
+                    </button>
+                    <span class="vote-count" data-feature="movie-trivia">0 votes</span>
                 </div>
             </div>
 

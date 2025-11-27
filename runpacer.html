@@ -418,7 +418,7 @@
                 utterance.voice = voices[voiceIndex];
             }
             utterance.rate = parseFloat(document.getElementById('voiceRate').value);
-            //utterance.pitch = 1;
+            utterance.pitch = 1;
             utterance.volume = 1;
 
             synth.speak(utterance);
