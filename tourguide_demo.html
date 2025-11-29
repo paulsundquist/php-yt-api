@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyTubie Tour Guide Demo</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDH3SIFb5W2_Ijd7A0okieQPTyqVpeEaAc&callback=initMap&v=weekly" defer></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #1f2937;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100%;
+        }
+
+        .map-panel {
+            flex: 4;
+            width: 100%;
+            min-height: 150px;
+            border-bottom: 2px solid #374151;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .text-panel {
+            flex: 0.5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-bottom: 2px solid #374151;
+        }
+
+        .text-panel h2 {
+            color: white;
+            font-size: 32px;
+            font-weight: 600;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            text-align: center;
+        }
+
+        .video-panel {
+            flex: 1.5;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+            padding: 20px;
+        }
+
+        .video-wrapper {
+            width: 100%;
+            max-width: 1280px;
+            aspect-ratio: 16 / 9;
+        }
+
+        .video-wrapper iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            border-radius: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .text-panel h2 {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Top Panel: Google Maps -->
+        <div class="map-panel">
+            <div id="map"></div>
+        </div>
+
+        <!-- Middle Panel: Text -->
+        <div class="text-panel">
+            <h2>Click on the locations on the map</h2>
+        </div>
+
+        <!-- Bottom Panel: YouTube Video -->
+        <div class="video-panel">
+            <div class="video-wrapper">
+                <iframe
+                    src="https://www.youtube.com/embed/BljaP-APqV4"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen>
+                </iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let map;
+        let infoWindows = [];
+
+        function initMap() {
+            // Center of the map
+            const center = { lat: 40.0953365, lng: -75.444845 };
+
+            // Create the map
+            map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 15,
+                center: center,
+                mapTypeId: 'satellite',
+                mapTypeControl: true,
+                mapTypeControlOptions: {
+                    style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+                    position: google.maps.ControlPosition.TOP_CENTER,
+                },
+            });
+
+            // Sample locations with information
+            const locations = [
+                {
+                    position: { lat: 40.0953365, lng: -75.444845 },
+                    title: "Valley Forge National Historical Park",
+                    description: "Historic site where George Washington's Continental Army spent the winter of 1777-78 during the Revolutionary War.",
+                    videoId: "BljaP-APqV4"
+                },
+                {
+                    position: { lat: 40.0985, lng: -75.4420 },
+                    title: "Washington Memorial Chapel",
+                    description: "A beautiful chapel dedicated to George Washington and the patriots who served with him.",
+                    videoId: "BljaP-APqV4"
+                },
+                {
+                    position: { lat: 40.0920, lng: -75.4500 },
+                    title: "Muhlenberg Brigade Huts",
+                    description: "Reconstructed soldier huts showing the living conditions during the encampment.",
+                    videoId: "BljaP-APqV4"
+                }
+            ];
+
+            // Add markers for each location
+            locations.forEach((location, index) => {
+                const marker = new google.maps.Marker({
+                    position: location.position,
+                    map: map,
+                    title: location.title,
+                    animation: google.maps.Animation.DROP,
+                });
+
+                // Create info window content
+                const contentString = `
+                    <div style="max-width: 300px; font-family: Arial, sans-serif;">
+                        <h3 style="margin: 0 0 10px 0; color: #1f2937;">${location.title}</h3>
+                        <p style="margin: 0 0 10px 0; color: #4b5563; line-height: 1.5;">${location.description}</p>
+                        <button
+                            onclick="loadVideo('${location.videoId}')"
+                            style="background: #667eea; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: 500;">
+                            Watch Video
+                        </button>
+                    </div>
+                `;
+
+                const infoWindow = new google.maps.InfoWindow({
+                    content: contentString,
+                });
+
+                infoWindows.push(infoWindow);
+
+                // Add click listener to marker
+                marker.addListener("click", () => {
+                    // Close all other info windows
+                    infoWindows.forEach(iw => iw.close());
+                    // Open this info window
+                    infoWindow.open(map, marker);
+                });
+            });
+        }
+
+        function loadVideo(videoId) {
+            // Update the video in the bottom panel
+            const videoWrapper = document.querySelector('.video-wrapper');
+            videoWrapper.innerHTML = `
+                <iframe
+                    src="https://www.youtube.com/embed/${videoId}"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen
+                    style="width: 100%; height: 100%; border: 0; border-radius: 8px;">
+                </iframe>
+            `;
+        }
+
+        // Make loadVideo globally accessible
+        window.loadVideo = loadVideo;
+    </script>
+</body>
+</html>
