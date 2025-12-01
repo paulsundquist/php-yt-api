@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MyTubie Tour Guide Demo</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-    <script src="https://maps.googleapis.com/maps/api/js?key=API_KEY&callback=initMap&v=weekly" defer></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <style>
         * {
             margin: 0;
@@ -134,29 +135,30 @@
 
     <script>
         let map;
-        let infoWindows = [];
         let locations = [];
+
+        // Initialize map when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initMap();
+        });
 
         function initMap() {
             // Center of the map
-            const center = { lat: 40.0953365, lng: -75.444845 };
+            const center = [40.0953365, -75.444845];
 
-            // Create the map
-            map = new google.maps.Map(document.getElementById("map"), {
-                zoom: 13,
-                center: center,
-                mapTypeId: 'roadmap',
-                mapTypeControl: true,
-                mapTypeControlOptions: {
-                    style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
-                    position: google.maps.ControlPosition.TOP_CENTER,
-                },
-            });
+            // Create the map with OpenStreetMap tiles
+            map = L.map('map').setView(center, 13);
+
+            // Add OpenStreetMap tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 19
+            }).addTo(map);
 
             // Sample locations with information
             locations = [
                 {
-                    position: { lat: 40.101479636783885, lng: -75.42233301623672 },
+                    position: [40.101479636783885, -75.42233301623672],
                     title: "Valley Forge National Historical Park",
                     description: "Historic site where George Washington's Continental Army spent the winter of 1777-78 during the Revolutionary War.",
                     videoId: "90PhzjPCm_8",
@@ -164,7 +166,7 @@
                     stopTime: null
                 },
                 {
-                    position: { lat: 40.0923, lng: -75.4384 },
+                    position: [40.0923, -75.4384],
                     title: "National Memorial Arch",
                     description: "In the style of the Arch of Titus in Rome",
                     videoId: "BljaP-APqV4",
@@ -172,7 +174,7 @@
                     stopTime: 95
                 },
                 {
-                    position: { lat: 40.1019, lng: -75.4611 },
+                    position: [40.1019, -75.4611],
                     title: "Washington's Headquarters",
                     description: "Visitors can tour the historic building used as a war room by the namesake general in 1777-78.",
                     videoId: "BljaP-APqV4",
@@ -183,15 +185,11 @@
 
             // Add markers for each location
             locations.forEach((location, index) => {
-                const marker = new google.maps.Marker({
-                    position: location.position,
-                    map: map,
-                    title: location.title,
-                    animation: google.maps.Animation.DROP,
-                });
+                // Create marker
+                const marker = L.marker(location.position).addTo(map);
 
-                // Create info window content
-                const contentString = `
+                // Create popup content
+                const popupContent = `
                     <div style="max-width: 300px; font-family: Arial, sans-serif;">
                         <h3 style="margin: 0 0 10px 0; color: #1f2937;">${location.title}</h3>
                         <p style="margin: 0 0 10px 0; color: #4b5563; line-height: 1.5;">${location.description}</p>
@@ -203,19 +201,8 @@
                     </div>
                 `;
 
-                const infoWindow = new google.maps.InfoWindow({
-                    content: contentString,
-                });
-
-                infoWindows.push(infoWindow);
-
-                // Add click listener to marker
-                marker.addListener("click", () => {
-                    // Close all other info windows
-                    infoWindows.forEach(iw => iw.close());
-                    // Open this info window
-                    infoWindow.open(map, marker);
-                });
+                // Bind popup to marker
+                marker.bindPopup(popupContent);
             });
         }
 
