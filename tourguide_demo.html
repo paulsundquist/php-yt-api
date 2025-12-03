@@ -136,10 +136,12 @@
     <script>
         let map;
         let locations = [];
+        let userLocationMarker = null;
 
         // Initialize map when page loads
         document.addEventListener('DOMContentLoaded', function() {
             initMap();
+            getUserLocation();
         });
 
         function initMap() {
@@ -235,6 +237,37 @@
 
         // Make loadVideo globally accessible
         window.loadVideo = loadVideo;
+
+        // Get user's current GPS location and display on map
+        function getUserLocation() {
+            if ('geolocation' in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        const userLat = position.coords.latitude;
+                        const userLng = position.coords.longitude;
+
+                        // Create a custom icon for user location (blue circle)
+                        const userIcon = L.divIcon({
+                            className: 'user-location-marker',
+                            html: '<div style="background: #3b82f6; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>',
+                            iconSize: [22, 22],
+                            iconAnchor: [11, 11]
+                        });
+
+                        // Add marker for user's location
+                        userLocationMarker = L.marker([userLat, userLng], { icon: userIcon }).addTo(map);
+
+                        // Add popup to show it's the user's location
+                        userLocationMarker.bindPopup('<div style="font-family: Arial, sans-serif;"><strong>Your Location</strong></div>');
+                    },
+                    function(error) {
+                        console.log('Error getting location:', error.message);
+                    }
+                );
+            } else {
+                console.log('Geolocation is not supported by this browser.');
+            }
+        }
     </script>
 </body>
 </html>
