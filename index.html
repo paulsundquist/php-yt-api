@@ -86,6 +86,75 @@
             flex: 1;
         }
 
+        /* Flip Card Styles */
+        .flip-container {
+            perspective: 1000px;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            margin-bottom: 15px;
+            cursor: pointer;
+        }
+
+        .flip-container.flipped .flipper {
+            transform: rotateY(180deg);
+        }
+
+        .flipper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+
+        .flip-front, .flip-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .flip-front img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        .flip-back {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transform: rotateY(180deg);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .flip-back h3 {
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .flip-back p {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 14px;
+            line-height: 1.6;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        @media (hover: hover) {
+            .flip-container:hover .flipper {
+                transform: rotateY(180deg);
+            }
+        }
+
         .card-badge {
             display: inline-block;
             background: #2563eb;
@@ -179,12 +248,32 @@
         <div class="cards-grid">
             <!-- Channel Viewer Card -->
             <a href="/channelsw.html" class="card">
-                <img src="/images/channel_viewer_card.png" alt="Channel Viewer" style="width: 100%; height: auto; border-radius: 4px; margin-bottom: 15px;">
+                <div class="flip-container">
+                    <div class="flipper">
+                        <div class="flip-front">
+                            <img src="/images/channel_viewer_card.png" alt="Channel Viewer">
+                        </div>
+                        <div class="flip-back">
+                            <h3>Channel Viewer</h3>
+                            <p>View videos from multiple YouTube channels in one organized feed. Perfect for keeping up with your favorite content creators.</p>
+                        </div>
+                    </div>
+                </div>
             </a>
 
             <!-- Tour Guide Card (Coming Soon) -->
             <div class="card" style="opacity: 1; cursor: default;">
-                <img src="/images/tourguide_card.png" alt="Tour Guide" style="width: 100%; height: auto; border-radius: 4px; margin-bottom: 15px;">
+                <div class="flip-container">
+                    <div class="flipper">
+                        <div class="flip-front">
+                            <img src="/images/tourguide_card.png" alt="Tour Guide">
+                        </div>
+                        <div class="flip-back">
+                            <h3>Tour Guide</h3>
+                            <p>Explore locations with interactive maps and curated video tours. Click markers to watch location-specific video segments.</p>
+                        </div>
+                    </div>
+                </div>
                 <a href="/tourguide_demo.html"
                    style="display: inline-block; margin-top: 15px; padding: 8px 16px; background: #10b981; color: white; text-decoration: none; border-radius: 6px; font-size: 14px; font-weight: 500; text-align: center;">
                     Demo
@@ -201,7 +290,17 @@
 
             <!-- Fitness Card (Coming Soon) -->
             <div class="card" style="opacity: 1; cursor: default;">
-                <img src="/images/fitness_card.png" alt="Fitness" style="width: 100%; height: auto; border-radius: 4px; margin-bottom: 15px;">
+                <div class="flip-container">
+                    <div class="flipper">
+                        <div class="flip-front">
+                            <img src="/images/fitness_card.png" alt="Fitness">
+                        </div>
+                        <div class="flip-back">
+                            <h3>Fitness</h3>
+                            <p>Track your workouts with video playback control and custom pace timing. Perfect for home fitness routines.</p>
+                        </div>
+                    </div>
+                </div>
                 <a href="/2play.html"
                    style="display: inline-block; margin-top: 15px; padding: 8px 16px; background: #10b981; color: white; text-decoration: none; border-radius: 6px; font-size: 14px; font-weight: 500; text-align: center;">
                     Demo
@@ -218,7 +317,17 @@
 
             <!-- Popup Annotations Card (Coming Soon) -->
             <div class="card" style="opacity: 1; cursor: default;">
-                <img src="/images/popup_card.png" alt="Popup Annotations" style="width: 100%; height: auto; border-radius: 4px; margin-bottom: 15px;">
+                <div class="flip-container">
+                    <div class="flipper">
+                        <div class="flip-front">
+                            <img src="/images/popup_card.png" alt="Popup Annotations">
+                        </div>
+                        <div class="flip-back">
+                            <h3>Popup Annotations</h3>
+                            <p>Add interactive popup annotations to YouTube videos at specific timestamps. Create engaging, informative overlays.</p>
+                        </div>
+                    </div>
+                </div>
                 <a href="/popup_demo.html"
                    style="display: inline-block; margin-top: 15px; padding: 8px 16px; background: #10b981; color: white; text-decoration: none; border-radius: 6px; font-size: 14px; font-weight: 500; text-align: center;">
                     Demo
@@ -235,7 +344,17 @@
 
             <!-- Run Pacer Card (Coming Soon) -->
             <div class="card" style="opacity: 1; cursor: default;">
-                <img src="/images/runpacer_card.png" alt="Run Pacer" style="width: 100%; height: auto; border-radius: 4px; margin-bottom: 15px;">
+                <div class="flip-container">
+                    <div class="flipper">
+                        <div class="flip-front">
+                            <img src="/images/runpacer_card.png" alt="Run Pacer">
+                        </div>
+                        <div class="flip-back">
+                            <h3>Run Pacer</h3>
+                            <p>Audio timing companion for runners with customizable pace alerts and interval notifications to maintain your target pace.</p>
+                        </div>
+                    </div>
+                </div>
                 <a href="/runpacer.html"
                    style="display: inline-block; margin-top: 15px; padding: 8px 16px; background: #10b981; color: white; text-decoration: none; border-radius: 6px; font-size: 14px; font-weight: 500; text-align: center;">
                     Demo
@@ -252,7 +371,17 @@
 
             <!-- 7 Degrees Card -->
             <a href="/7degrees.html" class="card">
-                <img src="/images/7degrees_card.png" alt="7 Degrees" style="width: 100%; height: auto; border-radius: 4px; margin-bottom: 15px;">
+                <div class="flip-container">
+                    <div class="flipper">
+                        <div class="flip-front">
+                            <img src="/images/7degrees_card.png" alt="7 Degrees">
+                        </div>
+                        <div class="flip-back">
+                            <h3>7 Degrees</h3>
+                            <p>Discover connections between movies through actors. Navigate from one film to another in 6 steps or less, like Six Degrees of Kevin Bacon.</p>
+                        </div>
+                    </div>
+                </div>
 
                 <button href="http://localhost:8000/7degrees_play.html?id=SJPXCE2P"
                    onclick="event.stopPropagation(); event.preventDefault(); window.location.href='/7degrees_play.html?id=FW88608P';"
@@ -264,7 +393,17 @@
 
             <!-- Pathways Card -->
             <div class="card" style="opacity: 1; cursor: default;">
-                <img src="/images/pathways_card.png" alt="Pathways" style="width: 100%; height: auto; border-radius: 4px; margin-bottom: 15px;">
+                <div class="flip-container">
+                    <div class="flipper">
+                        <div class="flip-front">
+                            <img src="/images/pathways_card.png" alt="Pathways">
+                        </div>
+                        <div class="flip-back">
+                            <h3>Pathways</h3>
+                            <p>Create guided video paths with step-by-step playlists. Perfect for tutorials, lessons, and curated learning experiences.</p>
+                        </div>
+                    </div>
+                </div>
                 <span class="card-badge coming-soon">Coming Soon</span>
                 <div class="vote-section">
                     <button class="vote-button" onclick="toggleVote('tours')" data-feature="tours">
@@ -277,7 +416,17 @@
 
             <!-- Shorts Viewer Card (Coming Soon) -->
             <div class="card" style="opacity: 1; cursor: default;">
-                <img src="/images/shorts_card.png" alt="Shorts Viewer" style="width: 100%; height: auto; border-radius: 4px; margin-bottom: 15px;">
+                <div class="flip-container">
+                    <div class="flipper">
+                        <div class="flip-front">
+                            <img src="/images/shorts_card.png" alt="Shorts Viewer">
+                        </div>
+                        <div class="flip-back">
+                            <h3>Shorts Viewer</h3>
+                            <p>Browse YouTube Shorts from your favorite channels with speed control. Only see the latest short-form content.</p>
+                        </div>
+                    </div>
+                </div>
                 <span class="card-badge coming-soon">Coming Soon</span>
                 <div class="vote-section">
                     <button class="vote-button" onclick="toggleVote('shorts')" data-feature="shorts">
@@ -290,7 +439,17 @@
 
             <!-- Trailer Viewer Card (Coming Soon) -->
             <div class="card" style="opacity: 1; cursor: default;">
-                <img src="/images/trailers_card.png" alt="Trailer Viewer" style="width: 100%; height: auto; border-radius: 4px; margin-bottom: 15px;">
+                <div class="flip-container">
+                    <div class="flipper">
+                        <div class="flip-front">
+                            <img src="/images/trailers_card.png" alt="Trailer Viewer">
+                        </div>
+                        <div class="flip-back">
+                            <h3>Trailer Viewer</h3>
+                            <p>Discover the latest movie and TV show trailers from top entertainment channels in one convenient place.</p>
+                        </div>
+                    </div>
+                </div>
                 <span class="card-badge coming-soon">Coming Soon</span>
                 <div class="vote-section">
                     <button class="vote-button" onclick="toggleVote('trailers')" data-feature="trailers">
@@ -303,7 +462,17 @@
 
             <!-- Movie Trivia Card (Coming Soon) -->
             <div class="card" style="opacity: 1; cursor: default;">
-                <img src="/images/movie_trivia_card.png" alt="Movie Trivia" style="width: 100%; height: auto; border-radius: 4px; margin-bottom: 15px;">
+                <div class="flip-container">
+                    <div class="flipper">
+                        <div class="flip-front">
+                            <img src="/images/movie_trivia_card.png" alt="Movie Trivia">
+                        </div>
+                        <div class="flip-back">
+                            <h3>Movie Trivia</h3>
+                            <p>Test your movie knowledge with interactive trivia challenges. Fun facts and questions about your favorite films.</p>
+                        </div>
+                    </div>
+                </div>
                 <span class="card-badge coming-soon">Coming Soon</span>
                 <div class="vote-section">
                     <button class="vote-button" onclick="toggleVote('movie-trivia')" data-feature="movie-trivia">
@@ -506,6 +675,21 @@
                 });
             }
         }
+
+        // Flip card functionality for mobile
+        document.addEventListener('DOMContentLoaded', function() {
+            const flipContainers = document.querySelectorAll('.flip-container');
+
+            flipContainers.forEach(container => {
+                container.addEventListener('click', function(e) {
+                    // Only toggle on touch devices
+                    if ('ontouchstart' in window) {
+                        e.preventDefault();
+                        this.classList.toggle('flipped');
+                    }
+                });
+            });
+        });
 
         // Initialize voting UI on page load
         loadVotes();
