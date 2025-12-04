@@ -137,11 +137,13 @@
         let map;
         let locations = [];
         let userLocationMarker = null;
+        let watchId = null;
 
         // Initialize map when page loads
         document.addEventListener('DOMContentLoaded', function() {
             initMap();
             getUserLocation();
+            setupVisibilityTracking();
         });
 
         function initMap() {
@@ -241,7 +243,8 @@
         // Get user's current GPS location and display on map
         function getUserLocation() {
             if ('geolocation' in navigator) {
-                navigator.geolocation.getCurrentPosition(
+                // Watch position for real-time updates
+                watchId = navigator.geolocation.watchPosition(
                     function(position) {
                         const userLat = position.coords.latitude;
                         const userLng = position.coords.longitude;
@@ -254,19 +257,48 @@
                             iconAnchor: [11, 11]
                         });
 
-                        // Add marker for user's location
-                        userLocationMarker = L.marker([userLat, userLng], { icon: userIcon }).addTo(map);
-
-                        // Add popup to show it's the user's location
-                        userLocationMarker.bindPopup('<div style="font-family: Arial, sans-serif;"><strong>Your Location</strong></div>');
+                        // Update marker position if it already exists, otherwise create it
+                        if (userLocationMarker) {
+                            userLocationMarker.setLatLng([userLat, userLng]);
+                        } else {
+                            userLocationMarker = L.marker([userLat, userLng], { icon: userIcon }).addTo(map);
+                            userLocationMarker.bindPopup('<div style="font-family: Arial, sans-serif;"><strong>Your Location</strong></div>');
+                        }
                     },
                     function(error) {
                         console.log('Error getting location:', error.message);
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        maximumAge: 0
                     }
                 );
             } else {
                 console.log('Geolocation is not supported by this browser.');
             }
+        }
+
+        // Stop tracking location
+        function stopLocationTracking() {
+            if (watchId !== null) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+        }
+
+        // Setup page visibility tracking to pause/resume GPS updates
+        function setupVisibilityTracking() {
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden) {
+                    // Page is in background, stop tracking
+                    stopLocationTracking();
+                } else {
+                    // Page is in foreground, resume tracking
+                    if (watchId === null) {
+                        getUserLocation();
+                    }
+                }
+            });
         }
     </script>
 </body>
