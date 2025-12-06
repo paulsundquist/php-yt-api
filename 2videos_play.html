@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dual Video Player</title>
+    <title>MyTubie Fitness Demo</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <style>
         * {
@@ -21,6 +21,14 @@
             overflow: hidden;
         }
 
+        body.horizontal-layout {
+            flex-direction: row;
+        }
+
+        body.inset-layout {
+            flex-direction: column;
+        }
+
         .video-container {
             flex: 1;
             display: flex;
@@ -29,6 +37,7 @@
             background: #000;
             position: relative;
             min-height: 0;
+            min-width: 0;
         }
 
         .video-container > div {
@@ -45,6 +54,45 @@
         .divider {
             height: 2px;
             background: #333;
+            flex-shrink: 0;
+        }
+
+        body.horizontal-layout .divider {
+            height: 100%;
+            width: 2px;
+        }
+
+        /* Inset layout styles */
+        body.inset-layout #video-container-1 {
+            flex: 1;
+        }
+
+        body.inset-layout #video-container-2 {
+            position: absolute;
+            top: 70px;
+            right: 20px;
+            width: 30%;
+            height: 30%;
+            max-width: 400px;
+            max-height: 300px;
+            z-index: 10;
+            border: 3px solid #2563eb;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        body.inset-layout .divider {
+            display: none;
+        }
+
+        /* Video 1 Only layout styles */
+        body.video1only-layout #video-container-2 {
+            display: none;
+        }
+
+        body.video1only-layout .divider {
+            display: none;
         }
 
         .controls {
@@ -94,7 +142,7 @@
     </style>
 </head>
 <body>
-    <a href="/" class="home-btn">← Home</a>
+    <a href="#" id="back-btn" class="home-btn">← Back</a>
 
     <div class="controls">
         <button class="control-btn" onclick="playAll()">Play All</button>
@@ -116,6 +164,31 @@
         let player1, player2;
         let apiReady = false;
 
+        // Get video IDs from URL parameters
+        function getUrlParameter(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        const videoId1 = getUrlParameter('v1') || '1ZYbU82GVz4';
+        const videoId2 = getUrlParameter('v2') || 'Lo613EEnKzs';
+        const layout = getUrlParameter('layout') || 'vertical';
+        const volume1 = getUrlParameter('vol1') || '100';
+        const volume2 = getUrlParameter('vol2') || '100';
+
+        // Apply layout
+        if (layout === 'horizontal') {
+            document.body.classList.add('horizontal-layout');
+        } else if (layout === 'inset') {
+            document.body.classList.add('inset-layout');
+        } else if (layout === 'video1only') {
+            document.body.classList.add('video1only-layout');
+        }
+
+        // Set back button URL with current parameters
+        const backBtn = document.getElementById('back-btn');
+        backBtn.href = `/2videos.html?v1=${videoId1}&v2=${videoId2}&layout=${layout}&vol1=${volume1}&vol2=${volume2}`;
+
         function onYouTubeIframeAPIReady() {
             console.log('YouTube API Ready');
             apiReady = true;
@@ -123,7 +196,7 @@
             player1 = new YT.Player('player1', {
                 height: '100%',
                 width: '100%',
-                videoId: '1ZYbU82GVz4',
+                videoId: videoId1,
                 playerVars: {
                     'autoplay': 0,
                     'controls': 1,
@@ -133,6 +206,7 @@
                 events: {
                     'onReady': function(event) {
                         console.log('Player 1 ready');
+                        event.target.setVolume(parseInt(volume1));
                     },
                     'onError': function(event) {
                         console.error('Player 1 error:', event.data);
@@ -143,7 +217,7 @@
             player2 = new YT.Player('player2', {
                 height: '100%',
                 width: '100%',
-                videoId: 'Lo613EEnKzs',
+                videoId: videoId2,
                 playerVars: {
                     'autoplay': 0,
                     'controls': 1,
@@ -153,6 +227,7 @@
                 events: {
                     'onReady': function(event) {
                         console.log('Player 2 ready');
+                        event.target.setVolume(parseInt(volume2));
                     },
                     'onError': function(event) {
                         console.error('Player 2 error:', event.data);

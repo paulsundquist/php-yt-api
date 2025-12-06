@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2 Videos - MyTubie</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #1f2937;
+            font-size: 32px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            font-size: 16px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #374151;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        input[type="text"]::placeholder {
+            color: #9ca3af;
+        }
+
+        .watch-button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+
+        .watch-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .watch-button:active {
+            transform: translateY(0);
+        }
+
+        .error-message {
+            color: #dc2626;
+            font-size: 14px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .hint {
+            color: #6b7280;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .home-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: white;
+            color: #667eea;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            z-index: 1000;
+        }
+
+        .home-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .url-preview {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f3f4f6;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .url-preview.show {
+            display: block;
+        }
+
+        .url-preview-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+
+        .url-display {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .url-text {
+            flex: 1;
+            padding: 10px;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #374151;
+            font-family: monospace;
+            word-break: break-all;
+        }
+
+        .copy-btn {
+            padding: 10px 16px;
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: #059669;
+        }
+
+        .copy-btn.copied {
+            background: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="home-btn">← Home</a>
+
+    <div class="container">
+        <h1>2 Videos</h1>
+        <p class="subtitle">Play 2 videos at the same time</p>
+
+        <form id="videoForm">
+            <div class="input-group">
+                <label>Layout</label>
+                <div style="display: flex; gap: 15px; margin-top: 8px; flex-wrap: wrap;">
+                    <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input type="radio" name="layout" value="vertical" checked style="margin-right: 8px;">
+                        <span>Above/Below</span>
+                    </label>
+                    <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input type="radio" name="layout" value="horizontal" style="margin-right: 8px;">
+                        <span>Left/Right</span>
+                    </label>
+                    <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input type="radio" name="layout" value="inset" style="margin-right: 8px;">
+                        <span>Inset (PIP)</span>
+                    </label>
+                    <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input type="radio" name="layout" value="video1only" style="margin-right: 8px;">
+                        <span>Video 1 Only</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="video1">Video 1 YouTube Link</label>
+                <input
+                    type="text"
+                    id="video1"
+                    name="video1"
+                    placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                    required
+                >
+                <p class="hint">Paste the full YouTube URL</p>
+                <div style="margin-top: 10px; display: flex; align-items: center; gap: 10px;">
+                    <label for="volume1" style="margin: 0; font-size: 13px; color: #6b7280;">Volume:</label>
+                    <input
+                        type="range"
+                        id="volume1"
+                        name="volume1"
+                        min="0"
+                        max="100"
+                        value="100"
+                        style="flex: 1;"
+                        oninput="document.getElementById('volume1-value').textContent = this.value + '%'"
+                    >
+                    <span id="volume1-value" style="font-size: 13px; color: #374151; min-width: 45px;">100%</span>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="video2">Video 2 YouTube Link</label>
+                <input
+                    type="text"
+                    id="video2"
+                    name="video2"
+                    placeholder="https://www.youtube.com/watch?v=jNQXAC9IVRw"
+                    required
+                >
+                <p class="hint">Paste the full YouTube URL</p>
+                <div style="margin-top: 10px; display: flex; align-items: center; gap: 10px;">
+                    <label for="volume2" style="margin: 0; font-size: 13px; color: #6b7280;">Volume:</label>
+                    <input
+                        type="range"
+                        id="volume2"
+                        name="volume2"
+                        min="0"
+                        max="100"
+                        value="100"
+                        style="flex: 1;"
+                        oninput="document.getElementById('volume2-value').textContent = this.value + '%'"
+                    >
+                    <span id="volume2-value" style="font-size: 13px; color: #374151; min-width: 45px;">100%</span>
+                </div>
+            </div>
+
+            <button type="submit" class="watch-button">Watch Videos</button>
+            <p class="error-message" id="errorMessage"></p>
+
+            <div class="url-preview" id="urlPreview">
+                <div class="url-preview-label">Generated URL:</div>
+                <div class="url-display">
+                    <div class="url-text" id="urlText"></div>
+                    <button type="button" class="copy-btn" id="copyBtn" onclick="copyUrl()">Copy</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function extractVideoId(url) {
+            // Handle various YouTube URL formats including Shorts
+            const patterns = [
+                /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([^&\?\/]+)/,
+                /^([a-zA-Z0-9_-]{11})$/  // Direct video ID
+            ];
+
+            for (const pattern of patterns) {
+                const match = url.match(pattern);
+                if (match) {
+                    return match[1];
+                }
+            }
+            return null;
+        }
+
+        // Pre-fill form from URL parameters
+        function getUrlParameter(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        // Update URL preview
+        function updateUrlPreview() {
+            const video1Input = document.getElementById('video1').value.trim();
+            const video2Input = document.getElementById('video2').value.trim();
+            const layout = document.querySelector('input[name="layout"]:checked').value;
+            const volume1 = document.getElementById('volume1').value;
+            const volume2 = document.getElementById('volume2').value;
+            const urlPreview = document.getElementById('urlPreview');
+            const urlText = document.getElementById('urlText');
+
+            // Only show preview if both videos have values
+            if (!video1Input || !video2Input) {
+                urlPreview.classList.remove('show');
+                return;
+            }
+
+            const videoId1 = extractVideoId(video1Input);
+            const videoId2 = extractVideoId(video2Input);
+
+            if (!videoId1 || !videoId2) {
+                urlPreview.classList.remove('show');
+                return;
+            }
+
+            // Generate URL
+            const baseUrl = window.location.origin;
+            const url = `${baseUrl}/2videos_play.html?v1=${videoId1}&v2=${videoId2}&layout=${layout}&vol1=${volume1}&vol2=${volume2}`;
+
+            urlText.textContent = url;
+            urlPreview.classList.add('show');
+        }
+
+        // Copy URL to clipboard
+        function copyUrl() {
+            const urlText = document.getElementById('urlText').textContent;
+            const copyBtn = document.getElementById('copyBtn');
+
+            navigator.clipboard.writeText(urlText).then(function() {
+                copyBtn.textContent = 'Copied!';
+                copyBtn.classList.add('copied');
+
+                setTimeout(function() {
+                    copyBtn.textContent = 'Copy';
+                    copyBtn.classList.remove('copied');
+                }, 2000);
+            }).catch(function(err) {
+                console.error('Failed to copy:', err);
+            });
+        }
+
+        // On page load, check for parameters and pre-fill
+        window.addEventListener('DOMContentLoaded', function() {
+            const v1 = getUrlParameter('v1');
+            const v2 = getUrlParameter('v2');
+            const layout = getUrlParameter('layout');
+            const vol1 = getUrlParameter('vol1');
+            const vol2 = getUrlParameter('vol2');
+
+            if (v1) {
+                document.getElementById('video1').value = `https://www.youtube.com/watch?v=${v1}`;
+            }
+            if (v2) {
+                document.getElementById('video2').value = `https://www.youtube.com/watch?v=${v2}`;
+            }
+            if (layout) {
+                const layoutRadio = document.querySelector(`input[name="layout"][value="${layout}"]`);
+                if (layoutRadio) {
+                    layoutRadio.checked = true;
+                }
+            }
+            if (vol1) {
+                document.getElementById('volume1').value = vol1;
+                document.getElementById('volume1-value').textContent = vol1 + '%';
+            }
+            if (vol2) {
+                document.getElementById('volume2').value = vol2;
+                document.getElementById('volume2-value').textContent = vol2 + '%';
+            }
+
+            // Add event listeners to update URL preview
+            document.getElementById('video1').addEventListener('input', updateUrlPreview);
+            document.getElementById('video2').addEventListener('input', updateUrlPreview);
+            document.querySelectorAll('input[name="layout"]').forEach(radio => {
+                radio.addEventListener('change', updateUrlPreview);
+            });
+            document.getElementById('volume1').addEventListener('input', updateUrlPreview);
+            document.getElementById('volume2').addEventListener('input', updateUrlPreview);
+
+            // Initial update
+            updateUrlPreview();
+        });
+
+        document.getElementById('videoForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const video1Input = document.getElementById('video1').value.trim();
+            const video2Input = document.getElementById('video2').value.trim();
+            const layout = document.querySelector('input[name="layout"]:checked').value;
+            const volume1 = document.getElementById('volume1').value;
+            const volume2 = document.getElementById('volume2').value;
+            const errorMessage = document.getElementById('errorMessage');
+
+            // Extract video IDs
+            const videoId1 = extractVideoId(video1Input);
+            const videoId2 = extractVideoId(video2Input);
+
+            // Validate
+            if (!videoId1 || !videoId2) {
+                errorMessage.textContent = 'Please enter valid YouTube URLs';
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            // Clear error
+            errorMessage.style.display = 'none';
+
+            // Open the player page with video IDs, layout, and volumes
+            window.location.href = `/2videos_play.html?v1=${videoId1}&v2=${videoId2}&layout=${layout}&vol1=${volume1}&vol2=${volume2}`;
+        });
+    </script>
+</body>
+</html>
