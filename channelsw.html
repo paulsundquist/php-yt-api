@@ -565,6 +565,7 @@
         let currentOffset = 0;
         let isLoadingMore = false;
         let hasMoreVideos = true;
+        let currentChannelId = null;
         const VIDEOS_PER_PAGE = 5;
 
         async function selectChannel(index) {
@@ -583,6 +584,7 @@
             currentOffset = 0;
             hasMoreVideos = true;
             currentVideos = [];
+            currentChannelId = channel.channel_id;
 
             // Show loading
             contentArea.innerHTML = `
@@ -654,13 +656,7 @@
         async function loadMoreVideos() {
             if (isLoadingMore) return;
             if (!hasMoreVideos) return;
-            if (channels.length === 0) return;
-
-            const activeChannel = document.querySelector('.channel-item.active');
-            if (!activeChannel) return;
-
-            const index = Array.from(document.querySelectorAll('.channel-item')).indexOf(activeChannel);
-            const channel = channels[index];
+            if (!currentChannelId) return;
 
             isLoadingMore = true;
             const loadingIndicator = document.getElementById('loading-more');
@@ -669,7 +665,7 @@
             }
 
             try {
-                const url = `/videos?channel_id=${encodeURIComponent(channel.channel_id)}&limit=${VIDEOS_PER_PAGE}&offset=${currentOffset}`;
+                const url = `/videos?channel_id=${encodeURIComponent(currentChannelId)}&limit=${VIDEOS_PER_PAGE}&offset=${currentOffset}`;
                 const response = await fetch(url);
                 const data = await response.json();
 
@@ -1340,6 +1336,7 @@
             currentOffset = 0;
             hasMoreVideos = true;
             currentVideos = [];
+            currentChannelId = channel.channel_id;
 
             // Show loading
             contentArea.innerHTML = `
