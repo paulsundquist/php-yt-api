@@ -596,6 +596,8 @@
                 const response = await fetch(`/videos?channel_id=${encodeURIComponent(channel.channel_id)}&limit=${VIDEOS_PER_PAGE}&offset=${currentOffset}`);
                 const data = await response.json();
 
+                console.log(`Initial load: Received ${data.videos?.length || 0} videos`);
+
                 if (!data.videos || data.videos.length === 0) {
                     contentArea.innerHTML = `
                         <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
@@ -668,6 +670,8 @@
                 const url = `/videos?channel_id=${encodeURIComponent(channel.channel_id)}&limit=${VIDEOS_PER_PAGE}&offset=${currentOffset}`;
                 const response = await fetch(url);
                 const data = await response.json();
+
+                console.log(`Load more: Received ${data.videos?.length || 0} videos (offset: ${currentOffset})`);
 
                 if (!data.videos || data.videos.length === 0) {
                     hasMoreVideos = false;
