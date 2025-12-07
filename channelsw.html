@@ -641,6 +641,8 @@
 
                 contentArea.innerHTML = videosHTML + '<div id="loading-more" style="display: none; padding: 20px; text-align: center;"><div class="spinner"></div><p>Loading more...</p></div>';
 
+                console.log(`Added ${data.videos.length} videos to panel. Total videos in panel: ${currentVideos.length}`);
+
             } catch (error) {
                 console.error('Error loading videos:', error);
                 contentArea.innerHTML = `
@@ -717,6 +719,8 @@
                     loadingIndicator.insertAdjacentHTML('beforebegin', videosHTML);
                     loadingIndicator.style.display = 'none';
                 }
+
+                console.log(`Added ${data.videos.length} videos to panel. Total videos in panel: ${currentVideos.length}`);
 
             } catch (error) {
                 console.error('Error loading more videos:', error);
