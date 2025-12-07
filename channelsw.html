@@ -1336,6 +1336,11 @@
 
             const contentArea = document.getElementById('content-area');
 
+            // Reset pagination state
+            currentOffset = 0;
+            hasMoreVideos = true;
+            currentVideos = [];
+
             // Show loading
             contentArea.innerHTML = `
                 <div class="loading">
@@ -1344,9 +1349,11 @@
                 </div>
             `;
 
-            fetch(`/videos?channel_id=${encodeURIComponent(channel.channel_id)}`)
+            fetch(`/videos?channel_id=${encodeURIComponent(channel.channel_id)}&limit=${VIDEOS_PER_PAGE}&offset=${currentOffset}`)
                 .then(response => response.json())
                 .then(data => {
+                    console.log(`Initial load: Received ${data.videos?.length || 0} videos`);
+
                     if (!data.videos || data.videos.length === 0) {
                         contentArea.innerHTML = `
                             <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
@@ -1354,11 +1361,14 @@
                                 <p style="color: #6b7280;">No videos found for this channel</p>
                             </div>
                         `;
+                        hasMoreVideos = false;
                         return;
                     }
 
                     // Store videos for navigation
                     currentVideos = data.videos;
+                    currentOffset += data.videos.length;
+                    hasMoreVideos = data.videos.length >= VIDEOS_PER_PAGE;
 
                     const videosHTML = data.videos.map((video, idx) => {
                         const watched = isVideoWatched(video.video_id);
@@ -1384,7 +1394,9 @@
                     `;
                     }).join('');
 
-                    contentArea.innerHTML = videosHTML;
+                    contentArea.innerHTML = videosHTML + '<div id="loading-more" style="display: none; padding: 20px; text-align: center;"><div class="spinner"></div><p>Loading more...</p></div>';
+
+                    console.log(`Added ${data.videos.length} videos to panel. Total videos in panel: ${currentVideos.length}`);
                 })
                 .catch(error => {
                     console.error('Error loading videos:', error);
