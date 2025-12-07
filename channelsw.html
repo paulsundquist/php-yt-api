@@ -609,7 +609,8 @@
                 // Store videos for navigation
                 currentVideos = data.videos;
                 currentOffset += data.videos.length;
-                hasMoreVideos = data.videos.length === VIDEOS_PER_PAGE;
+                // Only assume no more videos if we got less than a full page
+                hasMoreVideos = data.videos.length >= VIDEOS_PER_PAGE;
 
                 const videosHTML = data.videos.map((video, idx) => {
                     const watched = isVideoWatched(video.video_id);
@@ -646,7 +647,9 @@
         }
 
         async function loadMoreVideos() {
-            if (isLoadingMore || !hasMoreVideos || channels.length === 0) return;
+            if (isLoadingMore) return;
+            if (!hasMoreVideos) return;
+            if (channels.length === 0) return;
 
             const activeChannel = document.querySelector('.channel-item.active');
             if (!activeChannel) return;
@@ -661,7 +664,8 @@
             }
 
             try {
-                const response = await fetch(`/videos?channel_id=${encodeURIComponent(channel.channel_id)}&limit=${VIDEOS_PER_PAGE}&offset=${currentOffset}`);
+                const url = `/videos?channel_id=${encodeURIComponent(channel.channel_id)}&limit=${VIDEOS_PER_PAGE}&offset=${currentOffset}`;
+                const response = await fetch(url);
                 const data = await response.json();
 
                 if (!data.videos || data.videos.length === 0) {
@@ -676,7 +680,7 @@
                 const startIdx = currentVideos.length;
                 currentVideos.push(...data.videos);
                 currentOffset += data.videos.length;
-                hasMoreVideos = data.videos.length === VIDEOS_PER_PAGE;
+                hasMoreVideos = data.videos.length >= VIDEOS_PER_PAGE;
 
                 // Create HTML for new videos
                 const videosHTML = data.videos.map((video, idx) => {
@@ -1398,9 +1402,10 @@
                 const scrollTop = videoListContainer.scrollTop;
                 const scrollHeight = videoListContainer.scrollHeight;
                 const clientHeight = videoListContainer.clientHeight;
+                const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
 
-                // Trigger load more when user is within 300px of the bottom
-                if (scrollHeight - scrollTop - clientHeight < 300) {
+                // Trigger load more when user is within 100px of the bottom
+                if (distanceFromBottom < 100) {
                     loadMoreVideos();
                 }
             });
