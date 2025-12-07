@@ -560,6 +560,12 @@
             }
         }
 
+        // Pagination state
+        let currentOffset = 0;
+        let isLoadingMore = false;
+        let hasMoreVideos = true;
+        const VIDEOS_PER_PAGE = 20;
+
         async function selectChannel(index) {
             // Remove active class from all items
             document.querySelectorAll('.channel-item').forEach(item => {
@@ -572,6 +578,11 @@
             const channel = channels[index];
             const contentArea = document.getElementById('content-area');
 
+            // Reset pagination state
+            currentOffset = 0;
+            hasMoreVideos = true;
+            currentVideos = [];
+
             // Show loading
             contentArea.innerHTML = `
                 <div class="loading">
@@ -581,7 +592,7 @@
             `;
 
             try {
-                const response = await fetch(`/videos?channel_id=${encodeURIComponent(channel.channel_id)}`);
+                const response = await fetch(`/videos?channel_id=${encodeURIComponent(channel.channel_id)}&limit=${VIDEOS_PER_PAGE}&offset=${currentOffset}`);
                 const data = await response.json();
 
                 if (!data.videos || data.videos.length === 0) {
@@ -591,11 +602,14 @@
                             <p style="color: #6b7280;">No videos found for this channel</p>
                         </div>
                     `;
+                    hasMoreVideos = false;
                     return;
                 }
 
                 // Store videos for navigation
                 currentVideos = data.videos;
+                currentOffset += data.videos.length;
+                hasMoreVideos = data.videos.length === VIDEOS_PER_PAGE;
 
                 const videosHTML = data.videos.map((video, idx) => {
                     const watched = isVideoWatched(video.video_id);
@@ -621,13 +635,87 @@
                 `;
                 }).join('');
 
-                contentArea.innerHTML = videosHTML;
+                contentArea.innerHTML = videosHTML + '<div id="loading-more" style="display: none; padding: 20px; text-align: center;"><div class="spinner"></div><p>Loading more...</p></div>';
 
             } catch (error) {
                 console.error('Error loading videos:', error);
                 contentArea.innerHTML = `
                     <div class="error">Failed to load videos. Please try again.</div>
                 `;
+            }
+        }
+
+        async function loadMoreVideos() {
+            if (isLoadingMore || !hasMoreVideos || channels.length === 0) return;
+
+            const activeChannel = document.querySelector('.channel-item.active');
+            if (!activeChannel) return;
+
+            const index = Array.from(document.querySelectorAll('.channel-item')).indexOf(activeChannel);
+            const channel = channels[index];
+
+            isLoadingMore = true;
+            const loadingIndicator = document.getElementById('loading-more');
+            if (loadingIndicator) {
+                loadingIndicator.style.display = 'block';
+            }
+
+            try {
+                const response = await fetch(`/videos?channel_id=${encodeURIComponent(channel.channel_id)}&limit=${VIDEOS_PER_PAGE}&offset=${currentOffset}`);
+                const data = await response.json();
+
+                if (!data.videos || data.videos.length === 0) {
+                    hasMoreVideos = false;
+                    if (loadingIndicator) {
+                        loadingIndicator.style.display = 'none';
+                    }
+                    return;
+                }
+
+                // Append new videos to currentVideos array
+                const startIdx = currentVideos.length;
+                currentVideos.push(...data.videos);
+                currentOffset += data.videos.length;
+                hasMoreVideos = data.videos.length === VIDEOS_PER_PAGE;
+
+                // Create HTML for new videos
+                const videosHTML = data.videos.map((video, idx) => {
+                    const watched = isVideoWatched(video.video_id);
+                    const watchedClass = watched ? ' watched' : '';
+                    return `
+                    <div class="video-item${watchedClass}"
+                         data-video-id="${escapeHtml(video.video_id)}"
+                         style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 15px; cursor: pointer;"
+                         onclick="playVideo('${escapeHtml(video.video_id)}', ${startIdx + idx})">
+                        ${video.thumbnail_url ? `
+                            <img src="${escapeHtml(video.thumbnail_url)}"
+                                 alt="Thumbnail"
+                                 loading="lazy"
+                                 style="width: 100%; height: auto; object-fit: cover; border-radius: 6px; margin-bottom: 10px;">
+                        ` : ''}
+                        <h3 style="color: #1f2937; font-size: 14px; line-height: 1.4; margin: 0 0 5px 0;">
+                            ${escapeHtml(video.title)}
+                        </h3>
+                        <div style="color: #6b7280; font-size: 12px;">
+                            ${getTimeAgo(video.published_at)}
+                        </div>
+                    </div>
+                `;
+                }).join('');
+
+                // Insert before loading indicator
+                if (loadingIndicator) {
+                    loadingIndicator.insertAdjacentHTML('beforebegin', videosHTML);
+                    loadingIndicator.style.display = 'none';
+                }
+
+            } catch (error) {
+                console.error('Error loading more videos:', error);
+                if (loadingIndicator) {
+                    loadingIndicator.innerHTML = '<p style="color: #dc2626;">Failed to load more videos</p>';
+                }
+            } finally {
+                isLoadingMore = false;
             }
         }
 
@@ -1302,6 +1390,21 @@
                 dropdown.classList.remove('show');
             }
         });
+
+        // Infinite scroll: detect when user scrolls to bottom of video list
+        const videoListContainer = document.querySelector('.video-list');
+        if (videoListContainer) {
+            videoListContainer.addEventListener('scroll', () => {
+                const scrollTop = videoListContainer.scrollTop;
+                const scrollHeight = videoListContainer.scrollHeight;
+                const clientHeight = videoListContainer.clientHeight;
+
+                // Trigger load more when user is within 300px of the bottom
+                if (scrollHeight - scrollTop - clientHeight < 300) {
+                    loadMoreVideos();
+                }
+            });
+        }
 
         // Load channels first (will be filtered by loadGroupsDropdown if needed)
         channels = [];
