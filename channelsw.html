@@ -566,7 +566,7 @@
         let isLoadingMore = false;
         let hasMoreVideos = true;
         let currentChannelId = null;
-        const VIDEOS_PER_PAGE = 5;
+        const VIDEOS_PER_PAGE = 10;
 
         async function selectChannel(index) {
             // Remove active class from all items
@@ -1404,8 +1404,9 @@
                             <h3 style="color: #1f2937; font-size: 14px; line-height: 1.4; margin: 0 0 5px 0;">
                                 ${escapeHtml(video.title)}
                             </h3>
-                            <div style="color: #6b7280; font-size: 12px;">
-                                ${getTimeAgo(video.published_at)}
+                            <div style="color: #6b7280; font-size: 12px; display: flex; justify-content: space-between; align-items: center;">
+                                <span>${getTimeAgo(video.published_at)}</span>
+                                ${video.duration ? `<span>${formatDuration(video.duration)}</span>` : ''}
                             </div>
                         </div>
                     `;
