@@ -287,6 +287,10 @@ try {
                 ? ($_POST['schedule'] ?? null)
                 : ($_GET['schedule'] ?? null);
 
+            $channelId = $method === 'POST'
+                ? ($_POST['channel_id'] ?? null)
+                : ($_GET['channel_id'] ?? null);
+
             // Validate schedule if provided
             if ($schedule !== null && !in_array($schedule, ['hourly', 'daily', 'weekly'])) {
                 http_response_code(400);
@@ -299,8 +303,25 @@ try {
 
             $youtubeService = new YouTubeService();
 
-            // Get channels based on schedule filter
-            if ($schedule) {
+            // Get channels based on filters
+            if ($channelId) {
+                // Fetch specific channel
+                $allChannels = $db->getActiveChannels();
+                $channels = array_filter($allChannels, function($channel) use ($channelId) {
+                    return $channel['channel_id'] === $channelId;
+                });
+                $channels = array_values($channels); // Re-index array
+
+                if (empty($channels)) {
+                    http_response_code(404);
+                    echo json_encode([
+                        'success' => false,
+                        'error' => "No active channel found with ID: {$channelId}"
+                    ]);
+                    break;
+                }
+                $stats = $youtubeService->fetchAndStoreVideosForChannels($db, $channels, $maxResults);
+            } elseif ($schedule) {
                 $channels = $db->getActiveChannelsBySchedule($schedule);
                 $stats = $youtubeService->fetchAndStoreVideosForChannels($db, $channels, $maxResults);
             } else {
