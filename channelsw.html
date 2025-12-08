@@ -634,8 +634,9 @@
                         <h3 style="color: #1f2937; font-size: 14px; line-height: 1.4; margin: 0 0 5px 0;">
                             ${escapeHtml(video.title)}
                         </h3>
-                        <div style="color: #6b7280; font-size: 12px;">
-                            ${getTimeAgo(video.published_at)}
+                        <div style="color: #6b7280; font-size: 12px; display: flex; justify-content: space-between; align-items: center;">
+                            <span>${getTimeAgo(video.published_at)}</span>
+                            ${video.duration ? `<span>${formatDuration(video.duration)}</span>` : ''}
                         </div>
                     </div>
                 `;
@@ -703,8 +704,9 @@
                         <h3 style="color: #1f2937; font-size: 14px; line-height: 1.4; margin: 0 0 5px 0;">
                             ${escapeHtml(video.title)}
                         </h3>
-                        <div style="color: #6b7280; font-size: 12px;">
-                            ${getTimeAgo(video.published_at)}
+                        <div style="color: #6b7280; font-size: 12px; display: flex; justify-content: space-between; align-items: center;">
+                            <span>${getTimeAgo(video.published_at)}</span>
+                            ${video.duration ? `<span>${formatDuration(video.duration)}</span>` : ''}
                         </div>
                     </div>
                 `;
@@ -819,6 +821,24 @@
                 return `${diffMonths} month${diffMonths !== 1 ? 's' : ''} ago`;
             } else {
                 return `${diffYears} year${diffYears !== 1 ? 's' : ''} ago`;
+            }
+        }
+
+        function formatDuration(duration) {
+            if (!duration) return '';
+
+            // Parse ISO 8601 duration format (e.g., "PT4M13S" or "PT1H2M30S")
+            const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+            if (!match) return '';
+
+            const hours = parseInt(match[1] || 0);
+            const minutes = parseInt(match[2] || 0);
+            const seconds = parseInt(match[3] || 0);
+
+            if (hours > 0) {
+                return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            } else {
+                return `${minutes}:${seconds.toString().padStart(2, '0')}`;
             }
         }
 
