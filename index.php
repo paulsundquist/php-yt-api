@@ -283,8 +283,29 @@ try {
                 ? (isset($_POST['max_results']) ? (int)$_POST['max_results'] : 10)
                 : (isset($_GET['max_results']) ? (int)$_GET['max_results'] : 10);
 
+            $schedule = $method === 'POST'
+                ? ($_POST['schedule'] ?? null)
+                : ($_GET['schedule'] ?? null);
+
+            // Validate schedule if provided
+            if ($schedule !== null && !in_array($schedule, ['hourly', 'daily', 'weekly'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Invalid schedule value. Must be hourly, daily, or weekly'
+                ]);
+                break;
+            }
+
             $youtubeService = new YouTubeService();
-            $stats = $youtubeService->fetchAndStoreVideos($db, $maxResults);
+
+            // Get channels based on schedule filter
+            if ($schedule) {
+                $channels = $db->getActiveChannelsBySchedule($schedule);
+                $stats = $youtubeService->fetchAndStoreVideosForChannels($db, $channels, $maxResults);
+            } else {
+                $stats = $youtubeService->fetchAndStoreVideos($db, $maxResults);
+            }
 
             echo json_encode([
                 'success' => true,
