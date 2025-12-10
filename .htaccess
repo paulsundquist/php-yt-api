@@ -1,13 +1,15 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
+    RewriteBase /
 
     # Set index.html as directory index
     DirectoryIndex index.html
 
+    # Route /2v/{short_id} to 2v.php handler (must come before file/directory checks)
+    RewriteRule ^2v/([A-Z0-9]{8})$ 2v.php?id=$1 [NC,QSA,L]
+
     # Route API endpoints to index.php
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-
-    # Route API endpoints to index.php
-    RewriteRule ^(channels|videos|fetch|groups|categories|votes|tvdb|chains)(/.*)?$ /index.php [QSA,L]
+    RewriteRule ^(api|channels|videos|fetch|groups|categories|votes|tvdb|chains)(/.*)?$ index.php [QSA,L]
 </IfModule>
