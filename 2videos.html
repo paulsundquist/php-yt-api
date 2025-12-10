@@ -221,7 +221,7 @@
                 </div>
             </div>
 
-            <div class="input-group">
+            <div class="input-group" style="background: #d1f4e0; padding: 20px; border-radius: 8px;">
                 <label for="video1">Video 1 YouTube Link</label>
                 <input
                     type="text"
@@ -245,9 +245,21 @@
                     >
                     <span id="volume1-value" style="font-size: 13px; color: #374151; min-width: 45px;">100%</span>
                 </div>
+                <div id="video1-preview" style="margin-top: 15px; display: none;">
+                    <iframe
+                        id="video1-frame"
+                        width="100%"
+                        height="200"
+                        src=""
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen
+                        style="border-radius: 8px; border: 2px solid #10b981;">
+                    </iframe>
+                </div>
             </div>
 
-            <div class="input-group">
+            <div class="input-group" style="background: #dbeafe; padding: 20px; border-radius: 8px;">
                 <label for="video2">Video 2 YouTube Link</label>
                 <input
                     type="text"
@@ -271,9 +283,20 @@
                     >
                     <span id="volume2-value" style="font-size: 13px; color: #374151; min-width: 45px;">100%</span>
                 </div>
+                <div id="video2-preview" style="margin-top: 15px; display: none;">
+                    <iframe
+                        id="video2-frame"
+                        width="100%"
+                        height="200"
+                        src=""
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen
+                        style="border-radius: 8px; border: 2px solid #3b82f6;">
+                    </iframe>
+                </div>
             </div>
 
-            <button type="submit" class="watch-button">Watch Videos</button>
             <p class="error-message" id="errorMessage"></p>
 
             <div class="url-preview" id="urlPreview">
@@ -282,22 +305,60 @@
                     <div class="url-text" id="urlText"></div>
                     <button type="button" class="copy-btn" id="copyBtn" onclick="copyUrl()">Copy</button>
                 </div>
+                <button type="submit" class="watch-button" style="margin-top: 15px;">Open in New Tab</button>
+            </div>
+
+            <div class="url-preview" id="publicSaveSection" style="margin-top: 20px;">
+                <div class="url-preview-label">Public Save:</div>
+                <p style="font-size: 12px; color: #6b7280; margin-bottom: 10px;">Save this configuration publicly and get a shareable short URL</p>
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <input
+                        type="text"
+                        id="saveName"
+                        placeholder="Give it a name (optional)"
+                        style="flex: 1; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;"
+                    >
+                    <button
+                        type="button"
+                        class="copy-btn"
+                        id="saveBtn"
+                        onclick="saveConfiguration()"
+                        style="background: #8b5cf6; white-space: nowrap;"
+                    >
+                        Save
+                    </button>
+                </div>
+                <div id="saveResult" style="display: none; padding: 10px; background: #f0fdf4; border: 1px solid #86efac; border-radius: 6px; margin-top: 10px;">
+                    <div style="font-size: 12px; font-weight: 600; color: #166534; margin-bottom: 5px;">Saved successfully!</div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <div id="savedUrl" style="flex: 1; font-size: 13px; color: #374151; font-family: monospace; word-break: break-all;"></div>
+                        <button
+                            type="button"
+                            class="copy-btn"
+                            id="copySavedBtn"
+                            onclick="copySavedUrl()"
+                            style="background: #10b981;"
+                        >
+                            Copy
+                        </button>
+                    </div>
+                </div>
             </div>
         </form>
 
         <div style="margin-top: 40px; padding-top: 30px; border-top: 2px solid rgba(255,255,255,0.2);">
-            <h2 style="color: white; font-size: 24px; margin-bottom: 20px; text-align: center;">How to Use</h2>
+            <h2 style="color: #1e3a8a; font-size: 24px; margin-bottom: 20px; text-align: center;">How to Use</h2>
             <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 8px; margin-bottom: 30px;">
                 <ol style="color: #1e3a8a; line-height: 1.8; margin-left: 20px;">
                     <li>Choose your layout (Above/Below, Left/Right, Inset PIP, or Video 1 Only)</li>
                     <li>Paste the YouTube URL for each video</li>
                     <li>Adjust the starting volume for each video, or 0% to mute.</li>
-                    <li>Click "Watch Videos" or copy the URL to share</li>
+                    <li>Click "Open URL in New Tab" to watch, or copy the URL to share</li>
                     <li>Use Play All/Pause All buttons to control both videos at once</li>
                 </ol>
             </div>
 
-            <h2 style="color: white; font-size: 24px; margin-bottom: 20px; text-align: center;">Why Use 2 Videos?</h2>
+            <h2 style="color: #1e3a8a; font-size: 24px; margin-bottom: 20px; text-align: center;">Why Use 2 Videos?</h2>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 30px;">
 
                 <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
@@ -348,6 +409,36 @@
             return urlParams.get(name);
         }
 
+        // Update video preview frames
+        function updateVideoPreview() {
+            const video1Input = document.getElementById('video1').value.trim();
+            const video2Input = document.getElementById('video2').value.trim();
+
+            // Update video 1 preview
+            const videoId1 = extractVideoId(video1Input);
+            const video1Preview = document.getElementById('video1-preview');
+            const video1Frame = document.getElementById('video1-frame');
+
+            if (videoId1) {
+                video1Frame.src = `https://www.youtube.com/embed/${videoId1}`;
+                video1Preview.style.display = 'block';
+            } else {
+                video1Preview.style.display = 'none';
+            }
+
+            // Update video 2 preview
+            const videoId2 = extractVideoId(video2Input);
+            const video2Preview = document.getElementById('video2-preview');
+            const video2Frame = document.getElementById('video2-frame');
+
+            if (videoId2) {
+                video2Frame.src = `https://www.youtube.com/embed/${videoId2}`;
+                video2Preview.style.display = 'block';
+            } else {
+                video2Preview.style.display = 'none';
+            }
+        }
+
         // Update URL preview
         function updateUrlPreview() {
             const video1Input = document.getElementById('video1').value.trim();
@@ -356,11 +447,16 @@
             const volume1 = document.getElementById('volume1').value;
             const volume2 = document.getElementById('volume2').value;
             const urlPreview = document.getElementById('urlPreview');
+            const publicSaveSection = document.getElementById('publicSaveSection');
             const urlText = document.getElementById('urlText');
+
+            // Update video previews
+            updateVideoPreview();
 
             // Only show preview if both videos have values
             if (!video1Input || !video2Input) {
                 urlPreview.classList.remove('show');
+                publicSaveSection.classList.remove('show');
                 return;
             }
 
@@ -369,6 +465,7 @@
 
             if (!videoId1 || !videoId2) {
                 urlPreview.classList.remove('show');
+                publicSaveSection.classList.remove('show');
                 return;
             }
 
@@ -378,6 +475,7 @@
 
             urlText.textContent = url;
             urlPreview.classList.add('show');
+            publicSaveSection.classList.add('show');
         }
 
         // Copy URL to clipboard
@@ -392,6 +490,83 @@
                 setTimeout(function() {
                     copyBtn.textContent = 'Copy';
                     copyBtn.classList.remove('copied');
+                }, 2000);
+            }).catch(function(err) {
+                console.error('Failed to copy:', err);
+            });
+        }
+
+        // Save configuration to database
+        async function saveConfiguration() {
+            const video1Input = document.getElementById('video1').value.trim();
+            const video2Input = document.getElementById('video2').value.trim();
+            const layout = document.querySelector('input[name="layout"]:checked').value;
+            const volume1 = document.getElementById('volume1').value;
+            const volume2 = document.getElementById('volume2').value;
+            const saveName = document.getElementById('saveName').value.trim();
+            const saveBtn = document.getElementById('saveBtn');
+            const saveResult = document.getElementById('saveResult');
+
+            // Extract video IDs
+            const videoId1 = extractVideoId(video1Input);
+            const videoId2 = extractVideoId(video2Input);
+
+            if (!videoId1 || !videoId2) {
+                alert('Please enter valid YouTube URLs before saving');
+                return;
+            }
+
+            // Disable button
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
+
+            try {
+                const response = await fetch('/api/save-2videos', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: saveName || null,
+                        video1: videoId1,
+                        video2: videoId2,
+                        layout: layout,
+                        volume1: volume1,
+                        volume2: volume2
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    const baseUrl = window.location.origin;
+                    const shortUrl = `${baseUrl}/2v/${data.short_id}`;
+                    document.getElementById('savedUrl').textContent = shortUrl;
+                    saveResult.style.display = 'block';
+                } else {
+                    alert('Failed to save: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error saving configuration:', error);
+                alert('Failed to save configuration');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Save';
+            }
+        }
+
+        // Copy saved URL to clipboard
+        function copySavedUrl() {
+            const savedUrl = document.getElementById('savedUrl').textContent;
+            const copySavedBtn = document.getElementById('copySavedBtn');
+
+            navigator.clipboard.writeText(savedUrl).then(function() {
+                copySavedBtn.textContent = 'Copied!';
+                copySavedBtn.classList.add('copied');
+
+                setTimeout(function() {
+                    copySavedBtn.textContent = 'Copy';
+                    copySavedBtn.classList.remove('copied');
                 }, 2000);
             }).catch(function(err) {
                 console.error('Failed to copy:', err);
@@ -464,8 +639,8 @@
             // Clear error
             errorMessage.style.display = 'none';
 
-            // Open the player page with video IDs, layout, and volumes
-            window.location.href = `/2videos_play.html?v1=${videoId1}&v2=${videoId2}&layout=${layout}&vol1=${volume1}&vol2=${volume2}`;
+            // Open the player page in a new tab with video IDs, layout, and volumes
+            window.open(`/2videos_play.html?v1=${videoId1}&v2=${videoId2}&layout=${layout}&vol1=${volume1}&vol2=${volume2}`, '_blank');
         });
     </script>
 </body>

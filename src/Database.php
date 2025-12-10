@@ -208,4 +208,31 @@ class Database
 
         return $results;
     }
+
+    public function save2VideosConfig($shortId, $name, $video1, $video2, $layout, $volume1, $volume2)
+    {
+        $stmt = $this->connection->prepare(
+            "INSERT INTO saved_2videos (short_id, name, video1, video2, layout, volume1, volume2)
+             VALUES (:short_id, :name, :video1, :video2, :layout, :volume1, :volume2)"
+        );
+        return $stmt->execute([
+            ':short_id' => $shortId,
+            ':name' => $name,
+            ':video1' => $video1,
+            ':video2' => $video2,
+            ':layout' => $layout,
+            ':volume1' => $volume1,
+            ':volume2' => $volume2
+        ]);
+    }
+
+    public function get2VideosConfig($shortId)
+    {
+        $stmt = $this->connection->prepare(
+            "SELECT short_id, name, video1, video2, layout, volume1, volume2, created_at
+             FROM saved_2videos WHERE short_id = :short_id"
+        );
+        $stmt->execute([':short_id' => $shortId]);
+        return $stmt->fetch();
+    }
 }

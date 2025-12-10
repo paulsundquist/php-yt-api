@@ -706,6 +706,46 @@ try {
             }
             break;
 
+        case '/api/save-2videos':
+            if ($method === 'POST') {
+                $input = json_decode(file_get_contents('php://input'), true);
+                $name = $input['name'] ?? null;
+                $video1 = $input['video1'] ?? '';
+                $video2 = $input['video2'] ?? '';
+                $layout = $input['layout'] ?? 'vertical';
+                $volume1 = $input['volume1'] ?? 100;
+                $volume2 = $input['volume2'] ?? 100;
+
+                if (empty($video1) || empty($video2)) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'video1 and video2 are required']);
+                    break;
+                }
+
+                // Generate a unique 8-character ID
+                $shortId = strtoupper(substr(bin2hex(random_bytes(4)), 0, 8));
+
+                try {
+                    $db->save2VideosConfig($shortId, $name, $video1, $video2, $layout, $volume1, $volume2);
+                    http_response_code(201);
+                    echo json_encode([
+                        'success' => true,
+                        'short_id' => $shortId,
+                        'message' => '2videos configuration saved successfully'
+                    ]);
+                } catch (\Exception $e) {
+                    http_response_code(500);
+                    echo json_encode([
+                        'success' => false,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            } else {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+            }
+            break;
+
         default:
             // Check for dynamic tour routes
             if (preg_match('#^/api/tours/([A-Z0-9]{8})$#', $path, $matches)) {
