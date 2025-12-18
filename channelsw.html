@@ -266,6 +266,26 @@
             filter: grayscale(50%);
         }
 
+        .video-item.currently-playing {
+            border: 3px solid #2563eb !important;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4) !important;
+            opacity: 1 !important;
+        }
+
+        .video-item.currently-playing::before {
+            content: '▶ Now Playing';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(37, 99, 235, 0.95);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            z-index: 1;
+        }
+
         .speed-notification,
         .volume-notification {
             position: fixed;
@@ -397,6 +417,10 @@
                 <div class="shortcut-item">
                     <span class="shortcut-key">N</span>
                     <span class="shortcut-description">Next video</span>
+                </div>
+                <div class="shortcut-item">
+                    <span class="shortcut-key">C</span>
+                    <span class="shortcut-description">Next channel</span>
                 </div>
             </div>
 
@@ -645,6 +669,12 @@
                 contentArea.innerHTML = videosHTML + '<div id="loading-more" style="display: none; padding: 20px; text-align: center;"><div class="spinner"></div><p>Loading more...</p></div>';
 
                 console.log(`Added ${data.videos.length} videos to panel. Total videos in panel: ${currentVideos.length}`);
+
+                // Automatically play the first video
+                if (data.videos.length > 0) {
+                    const firstVideo = data.videos[0];
+                    playVideo(firstVideo.video_id, 0);
+                }
 
             } catch (error) {
                 console.error('Error loading videos:', error);
@@ -918,6 +948,9 @@
                 // Update the UI to show watched status
                 updateVideoWatchedStatus(videoId);
 
+                // Highlight the currently playing video
+                updateCurrentlyPlayingStatus(videoId);
+
                 // Scroll the video into view
                 scrollToCurrentVideo(videoId);
 
@@ -952,12 +985,43 @@
             }
         }
 
+        function moveToNextChannel() {
+            // Find all channel items
+            const channelItems = Array.from(document.querySelectorAll('.channel-item'));
+            if (channelItems.length === 0) {
+                return;
+            }
+
+            // Find the currently active channel
+            const activeIndex = channelItems.findIndex(item => item.classList.contains('active'));
+
+            // Calculate next index (wrap around to first if at the end)
+            const nextIndex = (activeIndex + 1) % channelItems.length;
+
+            // Click the next channel item to select it
+            channelItems[nextIndex].click();
+        }
+
         function updateVideoWatchedStatus(videoId) {
             // Find all video elements with this video ID and update their appearance
             const videoElements = document.querySelectorAll(`[data-video-id="${videoId}"]`);
             videoElements.forEach(el => {
                 el.classList.add('watched');
             });
+        }
+
+        function updateCurrentlyPlayingStatus(videoId) {
+            // Remove currently-playing class from all videos
+            const allVideos = document.querySelectorAll('.video-item');
+            allVideos.forEach(el => {
+                el.classList.remove('currently-playing');
+            });
+
+            // Add currently-playing class to the current video
+            const currentVideo = document.querySelector(`[data-video-id="${videoId}"]`);
+            if (currentVideo) {
+                currentVideo.classList.add('currently-playing');
+            }
         }
 
         function showSpeedNotification(speed) {
@@ -1079,6 +1143,13 @@
                 keyHandled = true;
                 e.preventDefault();
                 playNextVideo();
+            }
+
+            // C key - next channel
+            if (e.code === 'KeyC' || e.keyCode === 67) {
+                keyHandled = true;
+                e.preventDefault();
+                moveToNextChannel();
             }
 
             // > key - increase playback speed
@@ -1415,6 +1486,12 @@
                     contentArea.innerHTML = videosHTML + '<div id="loading-more" style="display: none; padding: 20px; text-align: center;"><div class="spinner"></div><p>Loading more...</p></div>';
 
                     console.log(`Added ${data.videos.length} videos to panel. Total videos in panel: ${currentVideos.length}`);
+
+                    // Automatically play the first video
+                    if (data.videos.length > 0) {
+                        const firstVideo = data.videos[0];
+                        playVideo(firstVideo.video_id, 0);
+                    }
                 })
                 .catch(error => {
                     console.error('Error loading videos:', error);
