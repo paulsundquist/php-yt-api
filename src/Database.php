@@ -235,4 +235,76 @@ class Database
         $stmt->execute([':short_id' => $shortId]);
         return $stmt->fetch();
     }
+
+    public function addPlaylist($playlistId, $playlistName, $category, $url)
+    {
+        $stmt = $this->connection->prepare(
+            "INSERT INTO playlists (playlist_id, playlist_name, category, url)
+             VALUES (:playlist_id, :playlist_name, :category, :url)
+             ON DUPLICATE KEY UPDATE
+             playlist_name = VALUES(playlist_name),
+             category = VALUES(category),
+             url = VALUES(url)"
+        );
+        return $stmt->execute([
+            ':playlist_id' => $playlistId,
+            ':playlist_name' => $playlistName,
+            ':category' => $category,
+            ':url' => $url
+        ]);
+    }
+
+    public function getAllPlaylists($category = null, $sortBy = 'created_at')
+    {
+        $allowedSort = ['created_at', 'vote_count', 'playlist_name'];
+        $orderBy = in_array($sortBy, $allowedSort) ? $sortBy : 'created_at';
+        $orderDirection = ($sortBy === 'vote_count') ? 'DESC' : 'DESC';
+
+        if ($category) {
+            $stmt = $this->connection->prepare(
+                "SELECT id, playlist_id, playlist_name, category, url, last_synced_at, vote_count, created_at
+                 FROM playlists WHERE category = :category ORDER BY {$orderBy} {$orderDirection}"
+            );
+            $stmt->execute([':category' => $category]);
+        } else {
+            $stmt = $this->connection->prepare(
+                "SELECT id, playlist_id, playlist_name, category, url, last_synced_at, vote_count, created_at
+                 FROM playlists ORDER BY {$orderBy} {$orderDirection}"
+            );
+            $stmt->execute();
+        }
+        return $stmt->fetchAll();
+    }
+
+    public function getPlaylist($playlistId)
+    {
+        $stmt = $this->connection->prepare(
+            "SELECT id, playlist_id, playlist_name, category, url, last_synced_at, vote_count, created_at
+             FROM playlists WHERE playlist_id = :playlist_id"
+        );
+        $stmt->execute([':playlist_id' => $playlistId]);
+        return $stmt->fetch();
+    }
+
+    public function updatePlaylistSyncTime($playlistId)
+    {
+        $stmt = $this->connection->prepare(
+            "UPDATE playlists SET last_synced_at = CURRENT_TIMESTAMP WHERE playlist_id = :playlist_id"
+        );
+        return $stmt->execute([':playlist_id' => $playlistId]);
+    }
+
+    public function votePlaylist($playlistId, $action = 'add')
+    {
+        if ($action === 'add') {
+            $stmt = $this->connection->prepare(
+                "UPDATE playlists SET vote_count = vote_count + 1 WHERE playlist_id = :playlist_id"
+            );
+        } else {
+            $stmt = $this->connection->prepare(
+                "UPDATE playlists SET vote_count = GREATEST(vote_count - 1, 0) WHERE playlist_id = :playlist_id"
+            );
+        }
+        return $stmt->execute([':playlist_id' => $playlistId]);
+    }
 }

@@ -706,6 +706,88 @@ try {
             }
             break;
 
+        case '/api/playlists':
+            if ($method === 'GET') {
+                $category = $_GET['category'] ?? null;
+                $sortBy = $_GET['sort'] ?? 'created_at';
+                $playlists = $db->getAllPlaylists($category, $sortBy);
+                echo json_encode([
+                    'success' => true,
+                    'count' => count($playlists),
+                    'playlists' => $playlists
+                ]);
+            } elseif ($method === 'POST') {
+                $input = json_decode(file_get_contents('php://input'), true);
+                $playlistId = $input['playlist_id'] ?? '';
+                $playlistName = $input['playlist_name'] ?? '';
+                $category = $input['category'] ?? '';
+                $url = $input['url'] ?? '';
+
+                if (empty($playlistId) || empty($playlistName) || empty($category)) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'playlist_id, playlist_name, and category are required']);
+                    break;
+                }
+
+                try {
+                    $db->addPlaylist($playlistId, $playlistName, $category, $url);
+                    http_response_code(201);
+                    echo json_encode([
+                        'success' => true,
+                        'message' => 'Playlist added successfully'
+                    ]);
+                } catch (\Exception $e) {
+                    http_response_code(500);
+                    echo json_encode([
+                        'success' => false,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            } else {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+            }
+            break;
+
+        case '/api/playlists/vote':
+            if ($method === 'POST') {
+                $input = json_decode(file_get_contents('php://input'), true);
+                $playlistId = $input['playlist_id'] ?? '';
+                $action = $input['action'] ?? 'add';
+
+                if (empty($playlistId)) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'playlist_id is required']);
+                    break;
+                }
+
+                if (!in_array($action, ['add', 'remove'])) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'Invalid action. Must be "add" or "remove"']);
+                    break;
+                }
+
+                try {
+                    $db->votePlaylist($playlistId, $action);
+                    $playlist = $db->getPlaylist($playlistId);
+
+                    echo json_encode([
+                        'success' => true,
+                        'vote_count' => $playlist ? (int)$playlist['vote_count'] : 0
+                    ]);
+                } catch (\Exception $e) {
+                    http_response_code(500);
+                    echo json_encode([
+                        'success' => false,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            } else {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+            }
+            break;
+
         case '/api/save-2videos':
             if ($method === 'POST') {
                 $input = json_decode(file_get_contents('php://input'), true);
