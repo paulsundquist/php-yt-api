@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyTubie Run Pacer Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: white;
+            font-size: 36px;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        .timer-display {
+            text-align: center;
+            font-size: 72px;
+            font-weight: 700;
+            color: #1f2937;
+            margin: 30px 0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .status {
+            text-align: center;
+            font-size: 18px;
+            color: #6b7280;
+            margin-bottom: 20px;
+        }
+
+        .status.running {
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.secondary {
+            background: #6b7280;
+        }
+
+        button.secondary:hover {
+            background: #4b5563;
+        }
+
+        button.danger {
+            background: #ef4444;
+        }
+
+        button.danger:hover {
+            background: #dc2626;
+        }
+
+        button:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .settings-group {
+            margin-bottom: 20px;
+        }
+
+        .settings-group label {
+            display: block;
+            color: #374151;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .settings-group input,
+        .settings-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .settings-group small {
+            display: block;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+
+        .back-link {
+            display: inline-block;
+            color: white;
+            text-decoration: none;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: #f3f4f6;
+            border-radius: 8px;
+        }
+
+        .stat-label {
+            color: #6b7280;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            color: #1f2937;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .interval-list {
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        .interval-item {
+            padding: 8px;
+            margin-bottom: 5px;
+            background: #f9fafb;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .interval-item:last-child {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/runpacer.html" class="back-link">← Back to Run Pacer</a>
+
+        <header>
+            <h1>🏃 Run Pacer Guide</h1>
+            <p class="subtitle">Audio Timing Companion for Runners</p>
+        </header>
+
+        <div class="card">
+            <div class="timer-display" id="timer">00:00</div>
+            <div class="status" id="status">Ready to start</div>
+
+            <div class="controls">
+                <button id="startBtn" onclick="startTimer()">Start</button>
+                <button id="pauseBtn" onclick="pauseTimer()" disabled>Pause</button>
+                <button id="resetBtn" onclick="resetTimer()" class="secondary">Reset</button>
+            </div>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-label">Intervals</div>
+                    <div class="stat-value" id="intervalCount">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Next Alert</div>
+                    <div class="stat-value" id="nextAlert">--</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 style="margin-bottom: 15px; color: #1f2937;">Settings</h2>
+
+            <div style="display: grid; grid-template-columns: 140px 1fr; gap: 12px; align-items: center; margin-bottom: 12px;">
+                <label for="voiceSelect" style="color: #374151; font-weight: 600; font-size: 14px; text-align: right;">Voice</label>
+                <select id="voiceSelect" style="padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;"></select>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 140px 1fr; gap: 12px; align-items: center; margin-bottom: 12px;">
+                <label for="voiceRate" style="color: #374151; font-weight: 600; font-size: 14px; text-align: right;">Speech Rate</label>
+                <select id="voiceRate" style="padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
+                    <option value="0.7">0.7x</option>
+                    <option value="1" selected>1.0x</option>
+                    <option value="1.3">1.3x</option>
+                    <option value="1.5">1.5x</option>
+                    <option value="2">2.0x</option>
+                </select>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 140px 1fr; gap: 12px; align-items: center; margin-bottom: 12px;">
+                <label style="color: #374151; font-weight: 600; font-size: 14px; text-align: right;">Motivational</label>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="encouragement" checked style="width: auto;">
+                    <label for="encouragement" style="color: #6b7280; font-size: 13px; margin: 0; font-weight: 400;">Enable messages</label>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 140px 1fr; gap: 12px; align-items: center;">
+                <div></div>
+                <button onclick="testSpeech()" class="secondary" style="padding: 10px;">Test Voice</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let timerInterval = null;
+        let startTime = null;
+        let elapsedTime = 0;
+        let isPaused = false;
+        let intervalCount = 0;
+        let lastAnnouncedMinute = 0;
+        let synth = window.speechSynthesis;
+        let voices = [];
+
+        const encouragementMessages = [
+            "Great pace!",
+            "Keep it up!",
+            "You're doing awesome!",
+            "Strong work!",
+            "Excellent form!",
+            "You've got this!",
+            "Looking good!",
+            "Stay strong!",
+            "Keep pushing!",
+            "You're crushing it!"
+        ];
+
+        // Load available voices
+        function loadVoices() {
+            voices = synth.getVoices();
+            console.log('Voices loaded:', voices.length);
+
+            const voiceSelect = document.getElementById('voiceSelect');
+
+            if (voices.length === 0) {
+                voiceSelect.innerHTML = '<option>Loading voices...</option>';
+                return;
+            }
+
+            voiceSelect.innerHTML = '';
+
+            // Score voices based on quality indicators
+            function getVoiceQuality(voice) {
+                let score = 0;
+                const name = voice.name.toLowerCase();
+                const lang = voice.lang.toLowerCase();
+
+                // Premium quality indicators (highest priority)
+                if (name.includes('google') && name.includes('natural')) score += 100;
+                if (name.includes('neural')) score += 90;
+                if (name.includes('premium')) score += 80;
+                if (name.includes('enhanced')) score += 70;
+
+                // Good quality voices
+                if (name.includes('google')) score += 50;
+                if (name.includes('samantha')) score += 45;
+                if (name.includes('alex') && !name.includes('alexis')) score += 40;
+                if (name.includes('natural')) score += 35;
+
+                // Prefer English
+                if (lang.startsWith('en-us')) score += 20;
+                if (lang.startsWith('en-gb')) score += 18;
+                if (lang.startsWith('en')) score += 15;
+
+                // Avoid lower quality voices
+                if (name.includes('microsoft') && name.includes('david')) score -= 20;
+                if (name.includes('compact')) score -= 30;
+
+                return score;
+            }
+
+            // Sort voices by quality score
+            const sortedVoices = [...voices].sort((a, b) => {
+                return getVoiceQuality(b) - getVoiceQuality(a);
+            });
+
+            // Add quality indicator emoji
+            sortedVoices.forEach((voice) => {
+                const actualIndex = voices.indexOf(voice);
+                const option = document.createElement('option');
+                option.value = actualIndex;
+
+                const name = voice.name.toLowerCase();
+                let prefix = '';
+
+                if (name.includes('google') || name.includes('neural') ||
+                    name.includes('premium') || name.includes('enhanced') ||
+                    name.includes('samantha') || name.includes('natural')) {
+                    prefix = '⭐ '; // Mark high-quality voices
+                }
+
+                option.textContent = `${prefix}${voice.name} (${voice.lang})`;
+
+                // Auto-select the best quality voice
+                if (actualIndex === voices.indexOf(sortedVoices[0])) {
+                    option.selected = true;
+                }
+
+                voiceSelect.appendChild(option);
+            });
+
+            console.log('Best voice selected:', sortedVoices[0]?.name);
+        }
+
+        // Load voices when they're ready - try multiple methods
+        if (synth.onvoiceschanged !== undefined) {
+            synth.onvoiceschanged = loadVoices;
+        }
+
+        // Immediate load attempt
+        loadVoices();
+
+        // Retry after a short delay (fixes Chrome issue)
+        setTimeout(loadVoices, 100);
+        setTimeout(loadVoices, 500);
+
+        function speak(text) {
+            // Cancel any ongoing speech
+            synth.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(text);
+
+            // Apply settings
+            const voiceIndex = document.getElementById('voiceSelect').value;
+            if (voices[voiceIndex]) {
+                utterance.voice = voices[voiceIndex];
+            }
+            utterance.rate = parseFloat(document.getElementById('voiceRate').value);
+            utterance.pitch = 1;
+            utterance.volume = 1;
+
+            synth.speak(utterance);
+        }
+
+        function testSpeech() {
+            speak("This is your run pacer. You're doing great!");
+        }
+
+        function getIntervalMinutes() {
+            const minutes = parseInt(document.getElementById('intervalMinutes').value) || 0;
+            const seconds = parseInt(document.getElementById('intervalSeconds').value) || 0;
+            return minutes + (seconds / 60);
+        }
+
+        function formatTime(ms) {
+            const totalSeconds = Math.floor(ms / 1000);
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        function updateTimer() {
+            const currentTime = Date.now();
+            const totalElapsed = elapsedTime + (currentTime - startTime);
+
+            document.getElementById('timer').textContent = formatTime(totalElapsed);
+
+            // Check for interval announcements
+            const totalMinutes = totalElapsed / (1000 * 60);
+            const intervalMinutes = getIntervalMinutes();
+            const currentInterval = Math.floor(totalMinutes / intervalMinutes);
+
+            if (currentInterval > lastAnnouncedMinute) {
+                lastAnnouncedMinute = currentInterval;
+                intervalCount++;
+                announceTime(totalElapsed);
+                updateNextAlert();
+            }
+        }
+
+        function announceTime(ms) {
+            const totalSeconds = Math.floor(ms / 1000);
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+
+            let announcement = '';
+            if (minutes > 0) {
+                announcement = `${minutes} minute${minutes !== 1 ? 's' : ''}`;
+                if (seconds > 0) {
+                    announcement += ` ${seconds} seconds`;
+                }
+            } else {
+                announcement = `${seconds} seconds`;
+            }
+
+            // Add encouragement randomly
+            if (document.getElementById('encouragement').checked && Math.random() > 0.5) {
+                const encouragement = encouragementMessages[Math.floor(Math.random() * encouragementMessages.length)];
+                announcement += `. ${encouragement}`;
+            }
+
+            speak(announcement);
+
+            // Add to interval list
+            addIntervalToList(minutes, seconds);
+            document.getElementById('intervalCount').textContent = intervalCount;
+        }
+
+        function addIntervalToList(minutes, seconds) {
+            const list = document.getElementById('intervalList');
+
+            // Remove placeholder
+            if (intervalCount === 1) {
+                list.innerHTML = '';
+            }
+
+            const item = document.createElement('div');
+            item.className = 'interval-item';
+            item.textContent = `Interval ${intervalCount}: ${minutes}:${String(seconds).padStart(2, '0')}`;
+            list.insertBefore(item, list.firstChild);
+
+            // Keep only last 10 intervals
+            while (list.children.length > 10) {
+                list.removeChild(list.lastChild);
+            }
+        }
+
+        function updateNextAlert() {
+            const intervalMinutes = getIntervalMinutes();
+            const nextIntervalTime = (lastAnnouncedMinute + 1) * intervalMinutes;
+
+            if (nextIntervalTime < 60) {
+                const mins = Math.floor(nextIntervalTime);
+                const secs = Math.round((nextIntervalTime - mins) * 60);
+                if (secs > 0) {
+                    document.getElementById('nextAlert').textContent = `${mins}m ${secs}s`;
+                } else {
+                    document.getElementById('nextAlert').textContent = `${mins}m`;
+                }
+            } else {
+                const hours = Math.floor(nextIntervalTime / 60);
+                const mins = Math.floor(nextIntervalTime % 60);
+                document.getElementById('nextAlert').textContent = `${hours}h ${mins}m`;
+            }
+        }
+
+        function startTimer() {
+            if (!timerInterval) {
+                startTime = Date.now();
+                timerInterval = setInterval(updateTimer, 100);
+
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('pauseBtn').disabled = false;
+                document.getElementById('status').textContent = 'Running...';
+                document.getElementById('status').classList.add('running');
+
+                speak("Starting now");
+                updateNextAlert();
+            }
+        }
+
+        function pauseTimer() {
+            if (timerInterval) {
+                const currentTime = Date.now();
+                elapsedTime += currentTime - startTime;
+
+                clearInterval(timerInterval);
+                timerInterval = null;
+
+                document.getElementById('startBtn').disabled = false;
+                document.getElementById('pauseBtn').disabled = true;
+                document.getElementById('status').textContent = 'Paused';
+                document.getElementById('status').classList.remove('running');
+
+                speak("Paused");
+            }
+        }
+
+        function resetTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+
+            startTime = null;
+            elapsedTime = 0;
+            isPaused = false;
+            intervalCount = 0;
+            lastAnnouncedMinute = 0;
+
+            document.getElementById('timer').textContent = '00:00';
+            document.getElementById('status').textContent = 'Ready to start';
+            document.getElementById('status').classList.remove('running');
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+            document.getElementById('intervalCount').textContent = '0';
+            document.getElementById('nextAlert').textContent = '--';
+            document.getElementById('intervalList').innerHTML = '<div style="text-align: center; color: #9ca3af;">No intervals yet</div>';
+
+            synth.cancel();
+        }
+
+        // Prevent issues when page is closed
+        window.addEventListener('beforeunload', () => {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+            synth.cancel();
+        });
+    </script>
+</body>
+</html>
