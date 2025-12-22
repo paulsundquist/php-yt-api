@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Run Pacer Guide Editor</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        h1 {
+            color: white;
+            font-size: 36px;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            margin: 0;
+            flex: 1;
+            text-align: center;
+        }
+
+        .back-button {
+            display: inline-block;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateX(-5px);
+        }
+
+        .header-spacer {
+            width: 120px;
+        }
+
+        .input-section {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            color: #374151;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .input-group input,
+        .input-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+            font-family: inherit;
+        }
+
+        .input-group textarea {
+            resize: vertical;
+        }
+
+        .step-form textarea {
+            min-height: auto;
+            height: 46px;
+        }
+
+        .input-group input:focus,
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        .load-button {
+            background: #2563eb;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .load-button:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+        }
+
+        .btn-add-step {
+            background: #10b981;
+            color: white;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+        }
+
+        .btn-add-step:hover {
+            background: #059669;
+            transform: scale(1.1);
+        }
+
+        .guide-section {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+        }
+
+        .guide-section h2 {
+            color: #1f2937;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .guide-section h3 {
+            color: #374151;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .step-form {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 100px 1fr auto;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: flex-end;
+        }
+
+        .form-row .input-group {
+            margin-bottom: 0;
+        }
+
+        .step-list {
+            margin-bottom: 30px;
+        }
+
+        #stepListContainer {
+            overflow-x: auto;
+        }
+
+        .step-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .step-table thead {
+            background: #f9fafb;
+        }
+
+        .step-table th {
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .step-table td {
+            padding: 12px 15px;
+            color: #1f2937;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .step-table tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .step-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .step-table .order-col {
+            width: 80px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .step-table .location-col {
+            width: 120px;
+        }
+
+        .step-table .comment-col {
+            max-width: 400px;
+        }
+
+        .step-table .actions-col {
+            width: 100px;
+            text-align: right;
+        }
+
+        .step-item-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .editable-cell {
+            cursor: text;
+            position: relative;
+        }
+
+        .editable-cell:hover {
+            background: #f3f4f6;
+            outline: 1px solid #d1d5db;
+        }
+
+        .editable-cell input,
+        .editable-cell textarea {
+            width: 100%;
+            padding: 4px 8px;
+            border: 2px solid #2563eb;
+            border-radius: 4px;
+            font-size: inherit;
+            font-family: inherit;
+            background: white;
+        }
+
+        .editable-cell input:focus,
+        .editable-cell textarea:focus {
+            outline: none;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn-edit {
+            background: transparent;
+            color: #374151;
+            font-size: 16px;
+            padding: 6px 10px;
+        }
+
+        .btn-edit:hover {
+            background: #f3f4f6;
+            color: #1f2937;
+        }
+
+        .btn-edit i {
+            pointer-events: none;
+        }
+
+        .btn-delete {
+            background: transparent;
+            color: #dc2626;
+            font-size: 16px;
+            padding: 6px 10px;
+        }
+
+        .btn-delete:hover {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .btn-delete i {
+            pointer-events: none;
+        }
+
+        .save-load-section {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .saved-guides {
+            margin-top: 20px;
+        }
+
+        .guide-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #10b981;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .guide-item-info {
+            flex: 1;
+        }
+
+        .guide-item-name {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 5px;
+        }
+
+        .guide-item-details {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .guide-item-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-load {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-load:hover {
+            background: #059669;
+        }
+
+        .empty-message {
+            color: #9ca3af;
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            h1 {
+                font-size: 28px;
+                order: -1;
+            }
+
+            .back-button {
+                align-self: flex-start;
+            }
+
+            .header-spacer {
+                display: none;
+            }
+
+            .input-section, .guide-section {
+                padding: 20px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .step-table {
+                font-size: 14px;
+            }
+
+            .step-table th,
+            .step-table td {
+                padding: 8px 10px;
+            }
+
+            .step-table .comment-col {
+                max-width: 150px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .guide-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .guide-item-actions {
+                width: 100%;
+            }
+
+            .guide-item-actions .btn-small {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="/" class="back-button">&larr; Back to Home</a>
+            <h1>Run Pacer Guide Editor</h1>
+            <div class="header-spacer"></div>
+        </div>
+
+        <!-- Input Section -->
+        <div class="input-section" id="inputSection">
+            <div class="input-group">
+                <label for="guide-name-input">Guide Name:</label>
+                <input
+                    type="text"
+                    id="guide-name-input"
+                    placeholder="Enter guide name (e.g., 5K Training Plan)"
+                    autofocus
+                >
+            </div>
+            <div class="input-group">
+                <label for="guide-maplink-input">Map Link:</label>
+                <input
+                    type="url"
+                    id="guide-maplink-input"
+                    placeholder="Enter map link (e.g., Google Maps URL)"
+                >
+            </div>
+            <div class="input-group">
+                <label for="guide-description-input">Guide Description:</label>
+                <textarea
+                    id="guide-description-input"
+                    placeholder="Enter guide description"
+                ></textarea>
+            </div>
+            <button class="load-button" onclick="createGuide()">Create Guide</button>
+        </div>
+
+        <!-- Guide Section -->
+        <div class="guide-section" id="guideSection" style="display: none;">
+            <h2 id="currentGuideName">Guide Steps</h2>
+
+            <!-- Map Link Display -->
+            <div style="margin-bottom: 20px;">
+                <label for="guide-maplink-display" style="display: block; color: #374151; font-size: 14px; font-weight: 600; margin-bottom: 8px;">Map Link:</label>
+                <div style="display: flex; gap: 10px;">
+                    <input
+                        type="url"
+                        id="guide-maplink-display"
+                        placeholder="Enter map link (e.g., Google Maps URL)"
+                        readonly
+                        style="flex: 1; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 16px; background-color: #f9fafb;"
+                    >
+                    <button class="load-button" onclick="openMapLink()" style="padding: 12px 24px; white-space: nowrap;">View</button>
+                </div>
+            </div>
+
+            <!-- Step List -->
+            <div class="step-list">
+                <h3>Steps</h3>
+                <div id="stepListContainer">
+                    <p class="empty-message">No steps yet. Add one below!</p>
+                </div>
+            </div>
+
+            <!-- Add Step Form -->
+            <div class="step-form">
+                <div class="form-row">
+                    <div class="input-group">
+                        <label for="step-location">Distance:</label>
+                        <input type="number" id="step-location" placeholder="0.0" min="0" step="0.1">
+                    </div>
+                    <div class="input-group">
+                        <label for="step-comment">Say:</label>
+                        <textarea id="step-comment" placeholder="Enter step comment" rows="1"></textarea>
+                    </div>
+                    <button class="btn-add-step" onclick="addStep()" title="Add Step">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Save/Load Section -->
+            <div class="save-load-section">
+                <h3>Save & Load Guides</h3>
+                <div class="input-group">
+                    <label for="save-guide-name">Guide Name:</label>
+                    <input type="text" id="save-guide-name" placeholder="Guide name">
+                </div>
+                <button class="load-button" onclick="saveGuide()">Save Guide</button>
+                <div class="saved-guides" id="savedGuidesContainer">
+                    <p class="empty-message">No saved guides</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var steps = [];
+        var stepIdCounter = 0;
+        var editingStepId = null;
+        var currentGuideId = null;
+
+        function generateUniqueId() {
+            const characters = '0123456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+            let id = '';
+            for (let i = 0; i < 8; i++) {
+                id += characters.charAt(Math.floor(Math.random() * characters.length));
+            }
+            return id;
+        }
+
+        function createGuide() {
+            const guideName = document.getElementById('guide-name-input').value.trim();
+            const guideDescription = document.getElementById('guide-description-input').value.trim();
+            const guideMapLink = document.getElementById('guide-maplink-input').value.trim();
+
+            if (!guideName) {
+                alert('Please enter a guide name');
+                return;
+            }
+
+            // Hide input section, show guide section
+            document.getElementById('inputSection').style.display = 'none';
+            document.getElementById('guideSection').style.display = 'block';
+
+            // Set current guide name and map link
+            document.getElementById('currentGuideName').textContent = guideName;
+            document.getElementById('save-guide-name').value = guideName;
+            document.getElementById('guide-maplink-display').value = guideMapLink;
+
+            // Don't set currentGuideId here - it will be set after first successful save
+            // currentGuideId will remain null for new guides until saved
+
+            console.log('Guide created:', guideName, guideDescription, guideMapLink);
+        }
+
+        function addStep() {
+            const location = parseFloat(document.getElementById('step-location').value);
+            const comment = document.getElementById('step-comment').value.trim();
+
+            if (isNaN(location)) {
+                alert('Please enter a valid step location');
+                return;
+            }
+
+            if (!comment) {
+                alert('Please enter a step comment');
+                return;
+            }
+
+            if (editingStepId !== null) {
+                // Edit existing step
+                const stepIndex = steps.findIndex(s => s.id === editingStepId);
+                if (stepIndex !== -1) {
+                    steps[stepIndex] = {
+                        id: editingStepId,
+                        location: location,
+                        comment: comment
+                    };
+                }
+                editingStepId = null;
+            } else {
+                // Add new step
+                const step = {
+                    id: stepIdCounter++,
+                    location: location,
+                    comment: comment
+                };
+                steps.push(step);
+            }
+
+            // Clear form
+            document.getElementById('step-location').value = '';
+            document.getElementById('step-comment').value = '';
+
+            // Focus on distance field
+            document.getElementById('step-location').focus();
+
+            // Update button state
+            updateAddButtonState();
+
+            renderStepList();
+            console.log('Current steps:', steps);
+        }
+
+        function editStep(id) {
+            const step = steps.find(s => s.id === id);
+            if (!step) return;
+
+            document.getElementById('step-location').value = step.location;
+            document.getElementById('step-comment').value = step.comment;
+
+            editingStepId = id;
+
+            // Scroll to form
+            document.querySelector('.step-form').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function deleteStep(id) {
+            if (confirm('Are you sure you want to delete this step?')) {
+                steps = steps.filter(s => s.id !== id);
+                renderStepList();
+                console.log('Step deleted. Current steps:', steps);
+            }
+        }
+
+        function renderStepList() {
+            const container = document.getElementById('stepListContainer');
+
+            if (steps.length === 0) {
+                container.innerHTML = '<p class="empty-message">No steps yet. Add one below!</p>';
+                return;
+            }
+
+            // Sort steps by location in ascending order
+            const sortedSteps = [...steps].sort((a, b) => a.location - b.location);
+
+            const tableRows = sortedSteps.map((step, index) => `
+                <tr>
+                    <td class="order-col">${index + 1}</td>
+                    <td class="location-col editable-cell" data-step-id="${step.id}" data-field="location" onclick="makeEditable(this, 'number')">${step.location} mi</td>
+                    <td class="comment-col editable-cell" data-step-id="${step.id}" data-field="comment" onclick="makeEditable(this, 'text')">${step.comment}</td>
+                    <td class="actions-col">
+                        <div class="step-item-actions">
+                            <button class="btn-small btn-edit" onclick="editStep(${step.id})"><i class="fa-solid fa-pen"></i></button>
+                            <button class="btn-small btn-delete" onclick="deleteStep(${step.id})"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+
+            container.innerHTML = `
+                <table class="step-table">
+                    <thead>
+                        <tr>
+                            <th>Order</th>
+                            <th>Location</th>
+                            <th>Comment</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tableRows}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // Inline Editing Functions
+        function makeEditable(cell, type) {
+            // Prevent double-editing
+            if (cell.querySelector('input') || cell.querySelector('textarea')) return;
+
+            const stepId = parseInt(cell.dataset.stepId);
+            const field = cell.dataset.field;
+            const step = steps.find(s => s.id === stepId);
+            if (!step) return;
+
+            // Get current value (remove suffix like 'mi')
+            let currentValue = step[field];
+
+            // Create input element
+            let input;
+            if (type === 'text') {
+                input = document.createElement('textarea');
+                input.rows = 2;
+            } else {
+                input = document.createElement('input');
+                input.type = type;
+                if (type === 'number') {
+                    input.step = '0.1';
+                    input.min = '0';
+                }
+            }
+            input.value = currentValue;
+
+            // Replace cell content with input
+            const originalContent = cell.innerHTML;
+            cell.innerHTML = '';
+            cell.appendChild(input);
+            input.focus();
+            if (type !== 'text') {
+                input.select();
+            }
+
+            // Save on Enter or blur
+            const saveEdit = () => {
+                let newValue = input.value.trim();
+
+                if (type === 'number') {
+                    newValue = parseFloat(newValue);
+                    if (isNaN(newValue) || newValue < 0) {
+                        cell.innerHTML = originalContent;
+                        return;
+                    }
+                } else if (newValue === '') {
+                    cell.innerHTML = originalContent;
+                    return;
+                }
+
+                // Update step
+                step[field] = newValue;
+
+                // Re-render the list to show updated value and re-sort
+                renderStepList();
+
+                console.log('Updated step:', step);
+            };
+
+            input.addEventListener('blur', saveEdit);
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && type !== 'text') {
+                    e.preventDefault();
+                    input.blur();
+                }
+            });
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    cell.innerHTML = originalContent;
+                }
+            });
+        }
+
+        async function saveGuide() {
+            const guideName = document.getElementById('save-guide-name').value.trim();
+
+            if (!guideName) {
+                alert('Please enter a guide name');
+                return;
+            }
+
+            if (steps.length === 0) {
+                alert('Please add at least one step before saving');
+                return;
+            }
+
+            const guideData = {
+                id: currentGuideId || generateUniqueId(),
+                name: guideName,
+                description: document.getElementById('guide-description-input').value.trim(),
+                mapLink: document.getElementById('guide-maplink-input').value.trim(),
+                steps: JSON.parse(JSON.stringify(steps)) // Deep copy
+            };
+
+            try {
+                let response;
+                if (currentGuideId) {
+                    // Update existing guide
+                    response = await fetch('/api_rp_guide.php', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(guideData)
+                    });
+                } else {
+                    // Create new guide
+                    response = await fetch('/api_rp_guide.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(guideData)
+                    });
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    currentGuideId = result.id;
+                    alert(`Guide "${guideName}" saved successfully! (ID: ${result.id})`);
+                    renderSavedGuides();
+                    console.log('Guide saved:', result);
+                } else {
+                    alert('Failed to save guide: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error saving guide:', error);
+                alert('Failed to save guide: ' + error.message);
+            }
+        }
+
+        async function loadGuide(id) {
+            try {
+                const response = await fetch(`/api_rp_guide.php?action=get&id=${id}`);
+                const guide = await response.json();
+
+                if (!guide || guide.error) {
+                    alert('Guide not found');
+                    return;
+                }
+
+                // Load guide data
+                document.getElementById('guide-name-input').value = guide.name;
+                document.getElementById('guide-description-input').value = guide.description || '';
+                document.getElementById('guide-maplink-input').value = guide.map_link || '';
+                document.getElementById('save-guide-name').value = guide.name;
+
+                // Load steps - convert database fields to frontend format
+                steps = guide.steps.map(step => ({
+                    id: step.id,
+                    location: parseFloat(step.location),
+                    comment: step.comment
+                }));
+                stepIdCounter = Math.max(...steps.map(s => s.id), 0) + 1;
+
+                // Set current guide ID
+                currentGuideId = guide.id;
+
+                // Show guide section
+                document.getElementById('inputSection').style.display = 'none';
+                document.getElementById('guideSection').style.display = 'block';
+                document.getElementById('currentGuideName').textContent = guide.name;
+                document.getElementById('guide-maplink-display').value = guide.map_link || '';
+
+                // Render step list
+                renderStepList();
+
+                alert(`Guide "${guide.name}" loaded successfully!`);
+                console.log('Guide loaded:', guide);
+            } catch (error) {
+                console.error('Error loading guide:', error);
+                alert('Failed to load guide: ' + error.message);
+            }
+        }
+
+        async function deleteGuide(id, name) {
+            if (!confirm(`Are you sure you want to delete guide "${name}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api_rp_guide.php?id=${id}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('Guide deleted successfully!');
+                    renderSavedGuides();
+                    console.log('Guide deleted:', id);
+                } else {
+                    alert('Failed to delete guide: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error deleting guide:', error);
+                alert('Failed to delete guide: ' + error.message);
+            }
+        }
+
+        async function renderSavedGuides() {
+            const container = document.getElementById('savedGuidesContainer');
+
+            try {
+                const response = await fetch('/api_rp_guide.php?action=list');
+                const guideArray = await response.json();
+
+                if (!Array.isArray(guideArray) || guideArray.length === 0) {
+                    container.innerHTML = '<p class="empty-message">No saved guides</p>';
+                    return;
+                }
+
+                container.innerHTML = guideArray.map(guide => {
+                    const date = new Date(guide.created_at);
+                    const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+                    const stepCount = parseInt(guide.step_count) || 0;
+
+                    return `
+                        <div class="guide-item">
+                            <div class="guide-item-info">
+                                <div class="guide-item-name">${escapeHtml(guide.name)}</div>
+                                <div class="guide-item-details">
+                                    ID: ${guide.id} | Steps: ${stepCount} | Created: ${dateStr}
+                                </div>
+                            </div>
+                            <div class="guide-item-actions">
+                                <button class="btn-small btn-load" onclick="loadGuide('${guide.id}')">Load</button>
+                                <button class="btn-small btn-delete" onclick="deleteGuide('${guide.id}', '${escapeHtml(guide.name)}')"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Error loading guides:', error);
+                container.innerHTML = '<p class="empty-message">Error loading guides</p>';
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Open map link in new tab
+        function openMapLink() {
+            const mapLink = document.getElementById('guide-maplink-display').value.trim();
+            if (mapLink) {
+                window.open(mapLink, '_blank');
+            } else {
+                alert('No map link available');
+            }
+        }
+
+        // Update add button state based on comment field
+        function updateAddButtonState() {
+            const commentValue = document.getElementById('step-comment').value.trim();
+            const addButton = document.querySelector('.btn-add-step');
+
+            if (commentValue === '') {
+                addButton.disabled = true;
+                addButton.style.opacity = '0.5';
+                addButton.style.cursor = 'not-allowed';
+            } else {
+                addButton.disabled = false;
+                addButton.style.opacity = '1';
+                addButton.style.cursor = 'pointer';
+            }
+        }
+
+        // Add event listeners for step form
+        document.addEventListener('DOMContentLoaded', function() {
+            const stepLocation = document.getElementById('step-location');
+            const stepComment = document.getElementById('step-comment');
+            const addButton = document.querySelector('.btn-add-step');
+
+            // Update button state when comment field changes
+            stepComment.addEventListener('input', updateAddButtonState);
+
+            // Handle Enter key on distance field
+            stepLocation.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    stepComment.focus();
+                }
+            });
+
+            // Handle Enter key on comment field
+            stepComment.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (stepComment.value.trim() !== '') {
+                        addStep();
+                    }
+                }
+            });
+
+            // Initialize button state
+            updateAddButtonState();
+        });
+
+        // Initialize: Load saved guides on page load
+        renderSavedGuides();
+    </script>
+</body>
+</html>

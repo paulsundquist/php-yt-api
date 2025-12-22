@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Run Pacer Guide Player</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: white;
+            font-size: 36px;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        .timer-display {
+            text-align: center;
+            font-size: 72px;
+            font-weight: 700;
+            color: #1f2937;
+            margin: 30px 0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .status {
+            text-align: center;
+            font-size: 18px;
+            color: #6b7280;
+            margin-bottom: 20px;
+        }
+
+        .status.running {
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.secondary {
+            background: #6b7280;
+        }
+
+        button.secondary:hover {
+            background: #4b5563;
+        }
+
+        button:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .settings-group {
+            margin-bottom: 20px;
+        }
+
+        .settings-group label {
+            display: block;
+            color: #374151;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .settings-group select, .settings-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .settings-group small {
+            display: block;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+
+        .back-link {
+            display: inline-block;
+            color: white;
+            text-decoration: none;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: #f3f4f6;
+            border-radius: 8px;
+        }
+
+        .stat-label {
+            color: #6b7280;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            color: #1f2937;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .steps-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        .step-item {
+            padding: 12px;
+            margin-bottom: 8px;
+            background: #f9fafb;
+            border-radius: 4px;
+            border-left: 4px solid #d1d5db;
+        }
+
+        .step-item.completed {
+            border-left-color: #10b981;
+            background: #d1fae5;
+        }
+
+        .step-item.active {
+            border-left-color: #2563eb;
+            background: #dbeafe;
+        }
+
+        .step-location {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        .step-comment {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .step-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .map-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            background: #f3f4f6;
+            color: #374151;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
+
+        .map-link:hover {
+            background: #e5e7eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/runpacer_guide.html" class="back-link">← Back to Guides</a>
+
+        <header>
+            <h1 id="guideName">Run Pacer Guide</h1>
+            <p class="subtitle" id="guideDescription"></p>
+        </header>
+
+        <div class="card" id="mapLinkCard" style="display: none; text-align: center;">
+            <a href="#" id="mapLink" target="_blank" class="map-link">📍 View Map</a>
+        </div>
+
+        <div class="card">
+            <div class="timer-display" id="timer">00:00</div>
+            <div class="timer-display" id="distance" style="font-size: 48px; margin: 10px 0; color: #2563eb;">0.00 mi</div>
+            <div class="status" id="status">Ready to start</div>
+
+            <div class="controls">
+                <button id="startBtn" onclick="startTimer()">Start</button>
+                <button id="pauseBtn" onclick="pauseTimer()" disabled>Pause</button>
+                <button id="resetBtn" onclick="resetTimer()" class="secondary">Reset</button>
+            </div>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-label">Steps Completed</div>
+                    <div class="stat-value" id="stepsCompleted">0/<span id="totalSteps">0</span></div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Next Step</div>
+                    <div class="stat-value" id="nextStep">--</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 style="margin-bottom: 20px; color: #1f2937;">Settings</h2>
+
+            <div class="settings-group">
+                <label for="paceInput">Your Pace (Miles Per Hour)</label>
+                <input type="number" id="paceInput" value="6.0" min="1" max="15" step="0.1">
+                <small>Average running pace (e.g., 6 mph = 10 min/mile)</small>
+            </div>
+
+            <div class="settings-group">
+                <label for="voiceSelect">Voice</label>
+                <select id="voiceSelect"></select>
+                <small>⭐ = Higher quality, more natural sounding voices</small>
+            </div>
+
+            <div class="settings-group">
+                <label for="voiceRate">Speech Rate</label>
+                <input type="range" id="voiceRate" min="0.5" max="2" value="1" step="0.1">
+                <small>Current: <span id="rateValue">1.0</span>x</small>
+            </div>
+
+            <div class="settings-group checkbox-group">
+                <input type="checkbox" id="encouragement">
+                <label for="encouragement">Include motivational messages</label>
+            </div>
+
+            <div class="settings-group checkbox-group">
+                <input type="checkbox" id="repeat">
+                <label for="repeat">Repeat</label>
+            </div>
+
+            <div class="settings-group">
+                <button onclick="testSpeech()" class="secondary" style="width: 100%;">Test Voice</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-bottom: 15px; color: #1f2937;">Guide Steps</h3>
+            <div class="steps-list" id="stepsList">
+                <div style="text-align: center; color: #9ca3af;">No guide loaded</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let timerInterval = null;
+        let startTime = null;
+        let elapsedTime = 0;
+        let currentStepIndex = 0;
+        let iterationNumber = 1;
+        let guide = null;
+        let steps = [];
+        let synth = window.speechSynthesis;
+        let voices = [];
+
+        const encouragementMessages = [
+            "Great pace!",
+            "Keep it up!",
+            "You're doing awesome!",
+            "Strong work!",
+            "Excellent form!",
+            "You've got this!",
+            "Looking good!",
+            "Stay strong!",
+            "Keep pushing!",
+            "You're crushing it!"
+        ];
+
+        // Load guide from URL parameter
+        async function loadGuide() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const guideId = urlParams.get('id');
+
+            if (!guideId) {
+                alert('No guide ID provided');
+                window.location.href = '/runpacer_guide.html';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api_rp_guide.php?action=get&id=${guideId}`);
+                guide = await response.json();
+
+                if (!guide || guide.error) {
+                    alert('Guide not found');
+                    window.location.href = '/runpacer_guide.html';
+                    return;
+                }
+
+                // Set guide info
+                document.getElementById('guideName').textContent = guide.name;
+                document.getElementById('guideDescription').textContent = guide.description || '';
+
+                // Show map link if available
+                if (guide.map_link) {
+                    document.getElementById('mapLink').href = guide.map_link;
+                    document.getElementById('mapLinkCard').style.display = 'block';
+                }
+
+                // Load and sort steps
+                steps = guide.steps.sort((a, b) => parseFloat(a.location) - parseFloat(b.location));
+                document.getElementById('totalSteps').textContent = steps.length;
+
+                renderSteps();
+                updateNextStep();
+            } catch (error) {
+                console.error('Error loading guide:', error);
+                alert('Failed to load guide: ' + error.message);
+                window.location.href = '/runpacer_guide.html';
+            }
+        }
+
+        function renderSteps() {
+            const container = document.getElementById('stepsList');
+
+            if (steps.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #9ca3af;">No steps in this guide</div>';
+                return;
+            }
+
+            container.innerHTML = steps.map((step, index) => {
+                let className = 'step-item';
+                if (index < currentStepIndex) className += ' completed';
+                if (index === currentStepIndex) className += ' active';
+
+                return `
+                    <div class="${className}">
+                        <div class="step-location">${step.location} miles</div>
+                        <div class="step-comment">${step.comment}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateNextStep() {
+            if (currentStepIndex < steps.length) {
+                document.getElementById('nextStep').textContent = steps[currentStepIndex].location + ' mi';
+            } else {
+                document.getElementById('nextStep').textContent = 'Done!';
+            }
+            document.getElementById('stepsCompleted').innerHTML = `${currentStepIndex}/<span id="totalSteps">${steps.length}</span>`;
+        }
+
+        // Load voices
+        function loadVoices() {
+            voices = synth.getVoices();
+            console.log('Voices loaded:', voices.length);
+
+            const voiceSelect = document.getElementById('voiceSelect');
+
+            if (voices.length === 0) {
+                voiceSelect.innerHTML = '<option>Loading voices...</option>';
+                return;
+            }
+
+            voiceSelect.innerHTML = '';
+
+            // Score voices based on quality
+            function getVoiceQuality(voice) {
+                let score = 0;
+                const name = voice.name.toLowerCase();
+                const lang = voice.lang.toLowerCase();
+
+                if (name.includes('google') && name.includes('natural')) score += 100;
+                if (name.includes('neural')) score += 90;
+                if (name.includes('premium')) score += 80;
+                if (name.includes('enhanced')) score += 70;
+                if (name.includes('google')) score += 50;
+                if (name.includes('samantha')) score += 45;
+                if (name.includes('alex') && !name.includes('alexis')) score += 40;
+                if (lang.startsWith('en-us')) score += 20;
+                if (lang.startsWith('en-gb')) score += 18;
+                if (lang.startsWith('en')) score += 15;
+
+                return score;
+            }
+
+            const sortedVoices = [...voices].sort((a, b) => getVoiceQuality(b) - getVoiceQuality(a));
+
+            sortedVoices.forEach((voice) => {
+                const actualIndex = voices.indexOf(voice);
+                const option = document.createElement('option');
+                option.value = actualIndex;
+
+                const name = voice.name.toLowerCase();
+                let prefix = '';
+
+                if (name.includes('google') || name.includes('neural') ||
+                    name.includes('premium') || name.includes('enhanced') ||
+                    name.includes('samantha') || name.includes('natural')) {
+                    prefix = '⭐ ';
+                }
+
+                option.textContent = `${prefix}${voice.name} (${voice.lang})`;
+
+                if (actualIndex === voices.indexOf(sortedVoices[0])) {
+                    option.selected = true;
+                }
+
+                voiceSelect.appendChild(option);
+            });
+        }
+
+        if (synth.onvoiceschanged !== undefined) {
+            synth.onvoiceschanged = loadVoices;
+        }
+
+        loadVoices();
+        setTimeout(loadVoices, 100);
+        setTimeout(loadVoices, 500);
+
+        // Update rate display
+        document.getElementById('voiceRate').addEventListener('input', (e) => {
+            document.getElementById('rateValue').textContent = e.target.value;
+        });
+
+        function speak(text) {
+            synth.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(text);
+
+            const voiceIndex = document.getElementById('voiceSelect').value;
+            if (voices[voiceIndex]) {
+                utterance.voice = voices[voiceIndex];
+            }
+            utterance.rate = parseFloat(document.getElementById('voiceRate').value);
+            utterance.pitch = 1;
+            utterance.volume = 1;
+
+            synth.speak(utterance);
+        }
+
+        function testSpeech() {
+            speak("This is your run pacer guide. You're doing great!");
+        }
+
+        function formatTime(ms) {
+            const totalSeconds = Math.floor(ms / 1000);
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        function updateTimer() {
+            const currentTime = Date.now();
+            const totalElapsed = elapsedTime + (currentTime - startTime);
+
+            // Display time
+            document.getElementById('timer').textContent = formatTime(totalElapsed);
+
+            // Calculate distance based on pace (MPH)
+            const pace = parseFloat(document.getElementById('paceInput').value) || 6.0;
+            const hoursElapsed = totalElapsed / (1000 * 60 * 60);
+            const currentDistance = hoursElapsed * pace;
+
+            // Display distance
+            document.getElementById('distance').textContent = currentDistance.toFixed(2) + ' mi';
+
+            // Check if we've reached the next step
+            if (currentStepIndex < steps.length) {
+                const nextStep = steps[currentStepIndex];
+
+                if (currentDistance >= nextStep.location) {
+                    announceStep(nextStep);
+                    currentStepIndex++;
+                    updateNextStep();
+                    renderSteps();
+
+                    // Check if we just completed all steps and repeat is enabled
+                    if (currentStepIndex >= steps.length && document.getElementById('repeat').checked) {
+                        // Reset to beginning
+                        iterationNumber++;
+                        currentStepIndex = 0;
+                        updateNextStep();
+                        renderSteps();
+                        speak("Iteration " + iterationNumber);
+                    }
+                }
+            }
+        }
+
+        function announceStep(step) {
+            let announcement = step.comment;
+
+            // Add encouragement randomly
+            if (document.getElementById('encouragement').checked && Math.random() > 0.5) {
+                const encouragement = encouragementMessages[Math.floor(Math.random() * encouragementMessages.length)];
+                announcement += `. ${encouragement}`;
+            }
+
+            speak(announcement);
+        }
+
+        function startTimer() {
+            if (!timerInterval) {
+                startTime = Date.now();
+                timerInterval = setInterval(updateTimer, 100);
+
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('pauseBtn').disabled = false;
+                document.getElementById('status').textContent = 'Running...';
+                document.getElementById('status').classList.add('running');
+
+                speak("Starting now");
+            }
+        }
+
+        function pauseTimer() {
+            if (timerInterval) {
+                const currentTime = Date.now();
+                elapsedTime += currentTime - startTime;
+
+                clearInterval(timerInterval);
+                timerInterval = null;
+
+                document.getElementById('startBtn').disabled = false;
+                document.getElementById('pauseBtn').disabled = true;
+                document.getElementById('status').textContent = 'Paused';
+                document.getElementById('status').classList.remove('running');
+
+                speak("Paused");
+            }
+        }
+
+        function resetTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+
+            startTime = null;
+            elapsedTime = 0;
+            currentStepIndex = 0;
+            iterationNumber = 1;
+
+            document.getElementById('timer').textContent = '00:00';
+            document.getElementById('distance').textContent = '0.00 mi';
+            document.getElementById('status').textContent = 'Ready to start';
+            document.getElementById('status').classList.remove('running');
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+
+            updateNextStep();
+            renderSteps();
+
+            synth.cancel();
+        }
+
+        // Prevent issues when page is closed
+        window.addEventListener('beforeunload', () => {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+            synth.cancel();
+        });
+
+        // Load guide on page load
+        loadGuide();
+    </script>
+</body>
+</html>
