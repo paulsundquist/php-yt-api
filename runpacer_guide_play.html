@@ -332,6 +332,7 @@
         let elapsedTime = 0;
         let currentStepIndex = 0;
         let iterationNumber = 1;
+        let lapStartDistance = 0;
         let guide = null;
         let steps = [];
         let synth = window.speechSynthesis;
@@ -544,22 +545,19 @@
             if (currentStepIndex < steps.length) {
                 const nextStep = steps[currentStepIndex];
 
-                if (currentDistance >= nextStep.location) {
+                if (currentDistance >= nextStep.location + lapStartDistance) {
                     announceStep(nextStep);
                     currentStepIndex++;
                     updateNextStep();
                     renderSteps();
-
-                    // Check if we just completed all steps and repeat is enabled
-                    if (currentStepIndex >= steps.length && document.getElementById('repeat').checked) {
-                        // Reset to beginning
-                        iterationNumber++;
-                        currentStepIndex = 0;
-                        updateNextStep();
-                        renderSteps();
-                        speak("Iteration " + iterationNumber);
-                    }
                 }
+            } else if (document.getElementById('repeat').checked) {
+                // All steps completed and repeat is enabled - restart from beginning
+                lapStartDistance = currentDistance;
+                iterationNumber++;
+                currentStepIndex = 0;
+                updateNextStep();
+                renderSteps();
             }
         }
 
@@ -616,6 +614,7 @@
             elapsedTime = 0;
             currentStepIndex = 0;
             iterationNumber = 1;
+            lapStartDistance = 0;
 
             document.getElementById('timer').textContent = '00:00';
             document.getElementById('distance').textContent = '0.00 mi';
