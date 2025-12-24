@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyTubie</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f9fafb;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .bottom-section {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .channels-panel {
+            width: 200px;
+            padding: 15px;
+            overflow-y: auto;
+            height: 100%;
+            background: white;
+            border-right: 1px solid #e5e7eb;
+        }
+
+        .channels-panel h3 {
+            color: #1f2937;
+            font-size: 16px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .channel-list-item {
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #374151;
+            font-size: 13px;
+            background: #f9fafb;
+            border-radius: 6px;
+            border: 2px solid transparent;
+        }
+
+        .channel-list-item:hover {
+            background: #f3f4f6;
+        }
+
+        .channel-list-item.active {
+            background: #dbeafe;
+            color: #1d4ed8;
+            border-color: #2563eb;
+            font-weight: 500;
+        }
+
+        .video-list {
+            width: 250px;
+            padding: 20px;
+            overflow-y: auto;
+            height: 100%;
+        }
+
+        .video-player {
+            flex: 1;
+            background: black;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+            padding: 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #youtube-player {
+            width: 100%;
+            height: 100%;
+        }
+
+        header {
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #1f2937;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            font-size: 16px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #2563eb;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .video-item {
+            position: relative;
+        }
+
+        .video-item.watched {
+            opacity: 0.6;
+        }
+
+        .video-item.watched::after {
+            content: '✓ Watched';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(37, 99, 235, 0.9);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .video-item.watched img {
+            filter: grayscale(50%);
+        }
+
+        .video-item.currently-playing {
+            border: 3px solid #2563eb !important;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4) !important;
+            opacity: 1 !important;
+        }
+
+        .video-item.currently-playing::before {
+            content: '▶ Now Playing';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(37, 99, 235, 0.95);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            z-index: 1;
+        }
+
+        .speed-notification,
+        .volume-notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 20px 40px;
+            border-radius: 8px;
+            font-size: 24px;
+            font-weight: 600;
+            z-index: 10000;
+            pointer-events: none;
+            animation: fadeInOut 1s ease-in-out;
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        .shortcuts-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 10001;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .shortcuts-modal.show {
+            display: flex;
+        }
+
+        .shortcuts-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .shortcuts-header {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .shortcuts-section {
+            margin-bottom: 20px;
+        }
+
+        .shortcuts-section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .shortcut-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+        }
+
+        .shortcut-key {
+            background: #f3f4f6;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+            border: 1px solid #d1d5db;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .shortcut-description {
+            color: #6b7280;
+            font-size: 14px;
+            flex: 1;
+            margin-left: 16px;
+        }
+
+        .shortcuts-close {
+            margin-top: 20px;
+            width: 100%;
+            padding: 10px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .shortcuts-close:hover {
+            background: #1d4ed8;
+        }
+    </style>
+</head>
+<body>
+    <!-- Keyboard Shortcuts Modal -->
+    <div id="shortcuts-modal" class="shortcuts-modal" onclick="hideShortcuts()">
+        <div class="shortcuts-content" onclick="event.stopPropagation()">
+            <div class="shortcuts-header">Keyboard Shortcuts</div>
+
+            <div class="shortcuts-section">
+                <div class="shortcuts-section-title">Playback Control</div>
+                <div class="shortcut-item">
+                    <span class="shortcut-key">Space / K</span>
+                    <span class="shortcut-description">Play/Pause</span>
+                </div>
+                <div class="shortcut-item">
+                    <span class="shortcut-key">N</span>
+                    <span class="shortcut-description">Next video</span>
+                </div>
+                <div class="shortcut-item">
+                    <span class="shortcut-key">C</span>
+                    <span class="shortcut-description">Next channel</span>
+                </div>
+            </div>
+
+            <div class="shortcuts-section">
+                <div class="shortcuts-section-title">Seeking</div>
+                <div class="shortcut-item">
+                    <span class="shortcut-key">J</span>
+                    <span class="shortcut-description">Rewind 10 seconds</span>
+                </div>
+                <div class="shortcut-item">
+                    <span class="shortcut-key">L</span>
+                    <span class="shortcut-description">Forward 10 seconds</span>
+                </div>
+                <div class="shortcut-item">
+                    <span class="shortcut-key">← Left Arrow</span>
+                    <span class="shortcut-description">Rewind 5 seconds</span>
+                </div>
+                <div class="shortcut-item">
+                    <span class="shortcut-key">→ Right Arrow</span>
+                    <span class="shortcut-description">Forward 5 seconds</span>
+                </div>
+            </div>
+
+            <div class="shortcuts-section">
+                <div class="shortcuts-section-title">Volume</div>
+                <div class="shortcut-item">
+                    <span class="shortcut-key">↑ Up Arrow</span>
+                    <span class="shortcut-description">Increase volume by 5%</span>
+                </div>
+                <div class="shortcut-item">
+                    <span class="shortcut-key">↓ Down Arrow</span>
+                    <span class="shortcut-description">Decrease volume by 5%</span>
+                </div>
+            </div>
+
+            <div class="shortcuts-section">
+                <div class="shortcuts-section-title">Playback Speed</div>
+                <div class="shortcut-item">
+                    <span class="shortcut-key">&gt; or .</span>
+                    <span class="shortcut-description">Increase speed</span>
+                </div>
+                <div class="shortcut-item">
+                    <span class="shortcut-key">&lt; or ,</span>
+                    <span class="shortcut-description">Decrease speed</span>
+                </div>
+            </div>
+
+            <div class="shortcuts-section">
+                <div class="shortcuts-section-title">Other</div>
+                <div class="shortcut-item">
+                    <span class="shortcut-key">F</span>
+                    <span class="shortcut-description">Toggle fullscreen</span>
+                </div>
+                <div class="shortcut-item">
+                    <span class="shortcut-key">?</span>
+                    <span class="shortcut-description">Show this help</span>
+                </div>
+            </div>
+
+            <button class="shortcuts-close" onclick="hideShortcuts()">Close</button>
+        </div>
+    </div>
+
+    <div class="bottom-section">
+        <div class="channels-panel">
+            <h3>All Channels</h3>
+            <div id="all-channels-list">
+                <div class="loading">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="video-list">
+            <div id="content-area">
+                <p style="color: #6b7280;">Select a channel from the left</p>
+            </div>
+        </div>
+
+        <div class="video-player" id="video-player">
+            <div id="youtube-player"></div>
+        </div>
+    </div>
+
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script>
+        let channels = [];
+        let player;
+        let currentVideos = [];
+        let currentVideoIndex = -1;
+
+        // Watch history management
+        const WATCH_HISTORY_KEY = 'youtube_watched_videos';
+
+        function getWatchedVideos() {
+            const watched = localStorage.getItem(WATCH_HISTORY_KEY);
+            return watched ? JSON.parse(watched) : {};
+        }
+
+        function markVideoAsWatched(videoId) {
+            const watched = getWatchedVideos();
+            watched[videoId] = new Date().toISOString();
+            localStorage.setItem(WATCH_HISTORY_KEY, JSON.stringify(watched));
+        }
+
+        function isVideoWatched(videoId) {
+            const watched = getWatchedVideos();
+            return !!watched[videoId];
+        }
+
+        async function loadAllChannelsPanel() {
+            try {
+                const response = await fetch('/channels');
+                const data = await response.json();
+
+                const container = document.getElementById('all-channels-list');
+
+                if (!data.channels || data.channels.length === 0) {
+                    container.innerHTML = '<p style="color: #6b7280; font-size: 12px;">No channels found</p>';
+                    return;
+                }
+
+                channels = data.channels;
+
+                // Show all channels in the left panel
+                const channelsHTML = channels.map((channel, index) => `
+                    <div class="channel-list-item" onclick="selectChannelFromPanel(${index})">
+                        ${escapeHtml(channel.channel_name)}
+                    </div>
+                `).join('');
+
+                container.innerHTML = channelsHTML;
+
+            } catch (error) {
+                console.error('Error loading channels:', error);
+                document.getElementById('all-channels-list').innerHTML =
+                    '<p style="color: #991b1b; font-size: 12px;">Failed to load channels</p>';
+            }
+        }
+
+
+        // Pagination state
+        let currentOffset = 0;
+        let isLoadingMore = false;
+        let hasMoreVideos = true;
+        let currentChannelId = null;
+        const VIDEOS_PER_PAGE = 10;
+
+        async function selectChannelFromPanel(index) {
+            // Remove active class from all channel list items in the panel
+            document.querySelectorAll('.channel-list-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            // Add active class to selected item
+            document.querySelectorAll('.channel-list-item')[index].classList.add('active');
+
+            const channel = channels[index];
+            const contentArea = document.getElementById('content-area');
+
+            // Reset pagination state
+            currentOffset = 0;
+            hasMoreVideos = true;
+            currentVideos = [];
+            currentChannelId = channel.channel_id;
+
+            // Show loading
+            contentArea.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading videos...</p>
+                </div>
+            `;
+
+            try {
+                const response = await fetch(`/videos?channel_id=${encodeURIComponent(channel.channel_id)}&limit=${VIDEOS_PER_PAGE}&offset=${currentOffset}`);
+                const data = await response.json();
+
+                console.log(`Initial load: Received ${data.videos?.length || 0} videos`);
+
+                if (!data.videos || data.videos.length === 0) {
+                    contentArea.innerHTML = `
+                        <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                            <h2 style="color: #1f2937; margin-bottom: 20px;">${escapeHtml(channel.channel_name)}</h2>
+                            <p style="color: #6b7280;">No videos found for this channel</p>
+                        </div>
+                    `;
+                    hasMoreVideos = false;
+                    return;
+                }
+
+                // Store videos for navigation
+                currentVideos = data.videos;
+                currentOffset += data.videos.length;
+                // Only assume no more videos if we got less than a full page
+                hasMoreVideos = data.videos.length >= VIDEOS_PER_PAGE;
+
+                const videosHTML = data.videos.map((video, idx) => {
+                    const watched = isVideoWatched(video.video_id);
+                    const watchedClass = watched ? ' watched' : '';
+                    return `
+                    <div class="video-item${watchedClass}"
+                         data-video-id="${escapeHtml(video.video_id)}"
+                         style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 15px; cursor: pointer;"
+                         onclick="playVideo('${escapeHtml(video.video_id)}', ${idx})">
+                        ${video.thumbnail_url ? `
+                            <img src="${escapeHtml(video.thumbnail_url)}"
+                                 alt="Thumbnail"
+                                 loading="lazy"
+                                 style="width: 100%; height: auto; object-fit: cover; border-radius: 6px; margin-bottom: 10px;">
+                        ` : ''}
+                        <h3 style="color: #1f2937; font-size: 14px; line-height: 1.4; margin: 0 0 5px 0;">
+                            ${escapeHtml(video.title)}
+                        </h3>
+                        <div style="color: #6b7280; font-size: 12px; display: flex; justify-content: space-between; align-items: center;">
+                            <span>${getTimeAgo(video.published_at)}</span>
+                            ${video.duration ? `<span>${formatDuration(video.duration)}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+                }).join('');
+
+                contentArea.innerHTML = videosHTML + '<div id="loading-more" style="display: none; padding: 20px; text-align: center;"><div class="spinner"></div><p>Loading more...</p></div>';
+
+                console.log(`Added ${data.videos.length} videos to panel. Total videos in panel: ${currentVideos.length}`);
+
+                // Automatically play the first video
+                if (data.videos.length > 0) {
+                    const firstVideo = data.videos[0];
+                    playVideo(firstVideo.video_id, 0);
+                }
+
+            } catch (error) {
+                console.error('Error loading videos:', error);
+                contentArea.innerHTML = `
+                    <div class="error">Failed to load videos. Please try again.</div>
+                `;
+            }
+        }
+
+
+        async function loadMoreVideos() {
+            if (isLoadingMore) return;
+            if (!hasMoreVideos) return;
+            if (!currentChannelId) return;
+
+            isLoadingMore = true;
+            const loadingIndicator = document.getElementById('loading-more');
+            if (loadingIndicator) {
+                loadingIndicator.style.display = 'block';
+            }
+
+            try {
+                const url = `/videos?channel_id=${encodeURIComponent(currentChannelId)}&limit=${VIDEOS_PER_PAGE}&offset=${currentOffset}`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                console.log(`Load more: Received ${data.videos?.length || 0} videos (offset: ${currentOffset})`);
+
+                if (!data.videos || data.videos.length === 0) {
+                    hasMoreVideos = false;
+                    if (loadingIndicator) {
+                        loadingIndicator.style.display = 'none';
+                    }
+                    return;
+                }
+
+                // Append new videos to currentVideos array
+                const startIdx = currentVideos.length;
+                currentVideos.push(...data.videos);
+                currentOffset += data.videos.length;
+                hasMoreVideos = data.videos.length >= VIDEOS_PER_PAGE;
+
+                // Create HTML for new videos
+                const videosHTML = data.videos.map((video, idx) => {
+                    const watched = isVideoWatched(video.video_id);
+                    const watchedClass = watched ? ' watched' : '';
+                    return `
+                    <div class="video-item${watchedClass}"
+                         data-video-id="${escapeHtml(video.video_id)}"
+                         style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 15px; cursor: pointer;"
+                         onclick="playVideo('${escapeHtml(video.video_id)}', ${startIdx + idx})">
+                        ${video.thumbnail_url ? `
+                            <img src="${escapeHtml(video.thumbnail_url)}"
+                                 alt="Thumbnail"
+                                 loading="lazy"
+                                 style="width: 100%; height: auto; object-fit: cover; border-radius: 6px; margin-bottom: 10px;">
+                        ` : ''}
+                        <h3 style="color: #1f2937; font-size: 14px; line-height: 1.4; margin: 0 0 5px 0;">
+                            ${escapeHtml(video.title)}
+                        </h3>
+                        <div style="color: #6b7280; font-size: 12px; display: flex; justify-content: space-between; align-items: center;">
+                            <span>${getTimeAgo(video.published_at)}</span>
+                            ${video.duration ? `<span>${formatDuration(video.duration)}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+                }).join('');
+
+                // Insert before loading indicator
+                if (loadingIndicator) {
+                    loadingIndicator.insertAdjacentHTML('beforebegin', videosHTML);
+                    loadingIndicator.style.display = 'none';
+                }
+
+                console.log(`Added ${data.videos.length} videos to panel. Total videos in panel: ${currentVideos.length}`);
+
+            } catch (error) {
+                console.error('Error loading more videos:', error);
+                if (loadingIndicator) {
+                    loadingIndicator.innerHTML = '<p style="color: #dc2626;">Failed to load more videos</p>';
+                }
+            } finally {
+                isLoadingMore = false;
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatDate(dateString) {
+            // Ensure we parse as UTC by appending 'Z' if not present
+            let utcString = dateString;
+            if (!dateString.endsWith('Z') && !dateString.includes('+') && !dateString.includes('T')) {
+                // Convert space to 'T' and add 'Z' for UTC
+                utcString = dateString.replace(' ', 'T') + 'Z';
+            } else if (dateString.includes('T') && !dateString.endsWith('Z') && !dateString.includes('+')) {
+                utcString = dateString + 'Z';
+            }
+
+            const date = new Date(utcString);
+            return date.toLocaleString(undefined, {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZoneName: 'short'
+            });
+        }
+
+        function formatDateUTC(dateString) {
+            // Ensure we parse as UTC by appending 'Z' if not present
+            let utcString = dateString;
+            if (!dateString.endsWith('Z') && !dateString.includes('+') && !dateString.includes('T')) {
+                // Convert space to 'T' and add 'Z' for UTC
+                utcString = dateString.replace(' ', 'T') + 'Z';
+            } else if (dateString.includes('T') && !dateString.endsWith('Z') && !dateString.includes('+')) {
+                utcString = dateString + 'Z';
+            }
+
+            const date = new Date(utcString);
+            return date.toLocaleString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZone: 'UTC',
+                timeZoneName: 'short'
+            });
+        }
+
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'M';
+            }
+            if (num >= 1000) {
+                return (num / 1000).toFixed(1) + 'K';
+            }
+            return num.toString();
+        }
+
+        function getTimeAgo(dateString) {
+            const now = new Date();
+
+            // Ensure we parse as UTC by appending 'Z' if not present
+            let utcString = dateString;
+            if (!dateString.endsWith('Z') && !dateString.includes('+') && !dateString.includes('T')) {
+                // Convert space to 'T' and add 'Z' for UTC
+                utcString = dateString.replace(' ', 'T') + 'Z';
+            } else if (dateString.includes('T') && !dateString.endsWith('Z') && !dateString.includes('+')) {
+                utcString = dateString + 'Z';
+            }
+
+            const published = new Date(utcString);
+            const diffMs = now - published;
+            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+            const diffDays = Math.floor(diffHours / 24);
+            const diffWeeks = Math.floor(diffDays / 7);
+            const diffMonths = Math.floor(diffDays / 30);
+            const diffYears = Math.floor(diffDays / 365);
+
+            if (diffHours < 1) {
+                return 'Just now';
+            } else if (diffHours < 24) {
+                return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+            } else if (diffDays < 7) {
+                return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+            } else if (diffWeeks < 4) {
+                return `${diffWeeks} week${diffWeeks !== 1 ? 's' : ''} ago`;
+            } else if (diffMonths < 12) {
+                return `${diffMonths} month${diffMonths !== 1 ? 's' : ''} ago`;
+            } else {
+                return `${diffYears} year${diffYears !== 1 ? 's' : ''} ago`;
+            }
+        }
+
+        function formatDuration(duration) {
+            if (!duration) return '';
+
+            // Parse ISO 8601 duration format (e.g., "PT4M13S" or "PT1H2M30S")
+            const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+            if (!match) return '';
+
+            const hours = parseInt(match[1] || 0);
+            const minutes = parseInt(match[2] || 0);
+            const seconds = parseInt(match[3] || 0);
+
+            if (hours > 0) {
+                return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            } else {
+                return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }
+
+        let playerReady = false;
+        let initAttempted = false;
+
+        function initializePlayer() {
+            if (initAttempted) return;
+            initAttempted = true;
+
+            console.log('YouTube API ready, initializing player...');
+            player = new YT.Player('youtube-player', {
+                height: '100%',
+                width: '100%',
+                videoId: '',
+                playerVars: {
+                    'autoplay': 0,
+                    'modestbranding': 1,
+                    'rel': 0
+                },
+                events: {
+                    'onReady': onPlayerReady,
+                    'onError': onPlayerError
+                }
+            });
+        }
+
+        function onYouTubeIframeAPIReady() {
+            initializePlayer();
+        }
+
+        // Fallback: Check if API is already loaded (for cached loads)
+        function checkYouTubeAPI() {
+            if (typeof YT !== 'undefined' && YT.Player) {
+                console.log('YouTube API already loaded, initializing...');
+                initializePlayer();
+            } else {
+                // Retry after a short delay
+                setTimeout(checkYouTubeAPI, 100);
+            }
+        }
+
+        // Start checking for YouTube API after a brief delay
+        setTimeout(checkYouTubeAPI, 500);
+
+        function onPlayerReady(event) {
+            console.log('Player is ready!');
+            playerReady = true;
+        }
+
+        function onPlayerError(event) {
+            console.error('Player error:', event.data);
+        }
+
+        function playVideo(videoId, index) {
+            console.log('playVideo called:', videoId, index, 'playerReady:', playerReady);
+
+            // Wait for player to be ready
+            if (!player || !playerReady) {
+                console.log('Player not ready yet, waiting...');
+                setTimeout(() => playVideo(videoId, index), 500);
+                return;
+            }
+
+            try {
+                console.log('Loading video:', videoId);
+
+                // Use loadVideoById to load and autoplay the video
+                player.loadVideoById(videoId);
+
+                // Store current video index
+                currentVideoIndex = index;
+
+                // Mark video as watched
+                markVideoAsWatched(videoId);
+
+                // Update the UI to show watched status
+                updateVideoWatchedStatus(videoId);
+
+                // Highlight the currently playing video
+                updateCurrentlyPlayingStatus(videoId);
+
+                // Scroll the video into view
+                scrollToCurrentVideo(videoId);
+
+                console.log('Video loaded successfully');
+            } catch (error) {
+                console.error('Error playing video:', error);
+            }
+        }
+
+        function scrollToCurrentVideo(videoId) {
+            // Find the video element
+            const videoElement = document.querySelector(`[data-video-id="${videoId}"]`);
+            if (videoElement) {
+                // Scroll into view with smooth behavior
+                videoElement.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center',
+                    inline: 'nearest'
+                });
+            }
+        }
+
+        function playNextVideo() {
+            if (currentVideos.length === 0) {
+                return;
+            }
+
+            const nextIndex = currentVideoIndex + 1;
+            if (nextIndex < currentVideos.length) {
+                const nextVideo = currentVideos[nextIndex];
+                playVideo(nextVideo.video_id, nextIndex);
+            }
+        }
+
+        function moveToNextChannel() {
+            // Find all channel items
+            const channelItems = Array.from(document.querySelectorAll('.channel-item'));
+            if (channelItems.length === 0) {
+                return;
+            }
+
+            // Find the currently active channel
+            const activeIndex = channelItems.findIndex(item => item.classList.contains('active'));
+
+            // Calculate next index (wrap around to first if at the end)
+            const nextIndex = (activeIndex + 1) % channelItems.length;
+
+            // Click the next channel item to select it
+            channelItems[nextIndex].click();
+        }
+
+        function updateVideoWatchedStatus(videoId) {
+            // Find all video elements with this video ID and update their appearance
+            const videoElements = document.querySelectorAll(`[data-video-id="${videoId}"]`);
+            videoElements.forEach(el => {
+                el.classList.add('watched');
+            });
+        }
+
+        function updateCurrentlyPlayingStatus(videoId) {
+            // Remove currently-playing class from all videos
+            const allVideos = document.querySelectorAll('.video-item');
+            allVideos.forEach(el => {
+                el.classList.remove('currently-playing');
+            });
+
+            // Add currently-playing class to the current video
+            const currentVideo = document.querySelector(`[data-video-id="${videoId}"]`);
+            if (currentVideo) {
+                currentVideo.classList.add('currently-playing');
+            }
+        }
+
+        function showSpeedNotification(speed) {
+            // Remove existing notification if any
+            const existing = document.querySelector('.speed-notification');
+            if (existing) {
+                existing.remove();
+            }
+
+            // Create notification
+            const notification = document.createElement('div');
+            notification.className = 'speed-notification';
+            notification.textContent = `${speed}x`;
+            document.body.appendChild(notification);
+
+            // Remove after 1 second
+            setTimeout(() => {
+                notification.remove();
+            }, 1000);
+        }
+
+        function showVolumeNotification(volume) {
+            // Remove existing notification if any
+            const existing = document.querySelector('.volume-notification');
+            if (existing) {
+                existing.remove();
+            }
+
+            // Create notification
+            const notification = document.createElement('div');
+            notification.className = 'volume-notification';
+            notification.textContent = `Volume: ${Math.round(volume)}%`;
+            document.body.appendChild(notification);
+
+            // Remove after 1 second
+            setTimeout(() => {
+                notification.remove();
+            }, 1000);
+        }
+
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            // Don't trigger if user is typing in an input field
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                return;
+            }
+
+            // Track if we handle this key
+            let keyHandled = false;
+
+            // ? key - show shortcuts
+            if (e.key === '?' || (e.shiftKey && e.key === '/')) {
+                e.preventDefault();
+                showShortcuts();
+                keyHandled = true;
+                return;
+            }
+
+            // Spacebar - play/pause
+            if (e.code === 'Space' || e.keyCode === 32) {
+                keyHandled = true;
+                // Prevent default spacebar behavior (page scroll)
+                e.preventDefault();
+
+                // Toggle play/pause on the YouTube player
+                if (player && player.getPlayerState) {
+                    const state = player.getPlayerState();
+                    // 1 = playing, 2 = paused
+                    if (state === 1) {
+                        player.pauseVideo();
+                    } else if (state === 2 || state === -1 || state === 5) {
+                        // Paused, unstarted, or cued
+                        player.playVideo();
+                    }
+                }
+            }
+
+            // F key - toggle fullscreen
+            if (e.code === 'KeyF' || e.keyCode === 70) {
+                keyHandled = true;
+                e.preventDefault();
+
+                // Check if already in fullscreen
+                const isFullscreen = document.fullscreenElement ||
+                                    document.webkitFullscreenElement ||
+                                    document.mozFullScreenElement ||
+                                    document.msFullscreenElement;
+
+                if (isFullscreen) {
+                    // Exit fullscreen
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    } else if (document.webkitExitFullscreen) {
+                        document.webkitExitFullscreen();
+                    } else if (document.mozCancelFullScreen) {
+                        document.mozCancelFullScreen();
+                    } else if (document.msExitFullscreen) {
+                        document.msExitFullscreen();
+                    }
+                } else {
+                    // Enter fullscreen
+                    const iframe = document.getElementById('youtube-player');
+                    if (iframe) {
+                        if (iframe.requestFullscreen) {
+                            iframe.requestFullscreen();
+                        } else if (iframe.webkitRequestFullscreen) {
+                            iframe.webkitRequestFullscreen();
+                        } else if (iframe.mozRequestFullScreen) {
+                            iframe.mozRequestFullScreen();
+                        } else if (iframe.msRequestFullscreen) {
+                            iframe.msRequestFullscreen();
+                        }
+                    }
+                }
+            }
+
+            // N key - next video
+            if (e.code === 'KeyN' || e.keyCode === 78) {
+                keyHandled = true;
+                e.preventDefault();
+                playNextVideo();
+            }
+
+            // C key - next channel
+            if (e.code === 'KeyC' || e.keyCode === 67) {
+                keyHandled = true;
+                e.preventDefault();
+                moveToNextChannel();
+            }
+
+            // > key - increase playback speed
+            if (e.key === '>' || e.key === '.') {
+                keyHandled = true;
+                e.preventDefault();
+                if (player && player.getPlaybackRate && player.setPlaybackRate) {
+                    const currentRate = player.getPlaybackRate();
+                    const rates = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+                    const currentIndex = rates.indexOf(currentRate);
+                    if (currentIndex < rates.length - 1) {
+                        const newRate = rates[currentIndex + 1];
+                        player.setPlaybackRate(newRate);
+                        showSpeedNotification(newRate);
+                        console.log('Playback speed:', newRate);
+                    }
+                }
+            }
+
+            // < key - decrease playback speed
+            if (e.key === '<' || e.key === ',') {
+                keyHandled = true;
+                e.preventDefault();
+                if (player && player.getPlaybackRate && player.setPlaybackRate) {
+                    const currentRate = player.getPlaybackRate();
+                    const rates = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+                    const currentIndex = rates.indexOf(currentRate);
+                    if (currentIndex > 0) {
+                        const newRate = rates[currentIndex - 1];
+                        player.setPlaybackRate(newRate);
+                        showSpeedNotification(newRate);
+                        console.log('Playback speed:', newRate);
+                    }
+                }
+            }
+
+            // J key - rewind 10 seconds
+            if (e.code === 'KeyJ' || e.keyCode === 74) {
+                keyHandled = true;
+                e.preventDefault();
+                if (player && player.getCurrentTime && player.seekTo) {
+                    const currentTime = player.getCurrentTime();
+                    player.seekTo(Math.max(0, currentTime - 10), true);
+                }
+            }
+
+            // K key - play/pause (YouTube standard)
+            if (e.code === 'KeyK' || e.keyCode === 75) {
+                keyHandled = true;
+                e.preventDefault();
+                if (player && player.getPlayerState) {
+                    const state = player.getPlayerState();
+                    if (state === 1) {
+                        player.pauseVideo();
+                    } else if (state === 2 || state === -1 || state === 5) {
+                        player.playVideo();
+                    }
+                }
+            }
+
+            // L key - forward 10 seconds
+            if (e.code === 'KeyL' || e.keyCode === 76) {
+                keyHandled = true;
+                e.preventDefault();
+                if (player && player.getCurrentTime && player.seekTo && player.getDuration) {
+                    const currentTime = player.getCurrentTime();
+                    const duration = player.getDuration();
+                    player.seekTo(Math.min(duration, currentTime + 10), true);
+                }
+            }
+
+            // Arrow Up - increase volume
+            if (e.code === 'ArrowUp' || e.keyCode === 38) {
+                keyHandled = true;
+                e.preventDefault();
+                if (player && player.getVolume && player.setVolume) {
+                    const currentVolume = player.getVolume();
+                    const newVolume = Math.min(100, currentVolume + 5);
+                    player.setVolume(newVolume);
+                    showVolumeNotification(newVolume);
+                }
+            }
+
+            // Arrow Down - decrease volume
+            if (e.code === 'ArrowDown' || e.keyCode === 40) {
+                keyHandled = true;
+                e.preventDefault();
+                if (player && player.getVolume && player.setVolume) {
+                    const currentVolume = player.getVolume();
+                    const newVolume = Math.max(0, currentVolume - 5);
+                    player.setVolume(newVolume);
+                    showVolumeNotification(newVolume);
+                }
+            }
+
+            // Arrow Right - forward 5 seconds
+            if (e.code === 'ArrowRight' || e.keyCode === 39) {
+                keyHandled = true;
+                e.preventDefault();
+                if (player && player.getCurrentTime && player.seekTo && player.getDuration) {
+                    const currentTime = player.getCurrentTime();
+                    const duration = player.getDuration();
+                    player.seekTo(Math.min(duration, currentTime + 5), true);
+                }
+            }
+
+            // Arrow Left - rewind 5 seconds
+            if (e.code === 'ArrowLeft' || e.keyCode === 37) {
+                keyHandled = true;
+                e.preventDefault();
+                if (player && player.getCurrentTime && player.seekTo) {
+                    const currentTime = player.getCurrentTime();
+                    player.seekTo(Math.max(0, currentTime - 5), true);
+                }
+            }
+
+            // If key wasn't handled, show shortcuts help
+            if (!keyHandled && e.key && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                // Only show for single character keys (not modifiers, function keys, etc.)
+                showShortcuts();
+            }
+        });
+
+        function showShortcuts() {
+            const modal = document.getElementById('shortcuts-modal');
+            modal.classList.add('show');
+        }
+
+        function hideShortcuts() {
+            const modal = document.getElementById('shortcuts-modal');
+            modal.classList.remove('show');
+        }
+
+        // Close shortcuts modal with Escape or Enter
+        document.addEventListener('keydown', (e) => {
+            const modal = document.getElementById('shortcuts-modal');
+            if (modal.classList.contains('show')) {
+                if (e.key === 'Escape' || e.key === 'Enter') {
+                    e.preventDefault();
+                    hideShortcuts();
+                }
+            }
+        });
+
+
+        // Infinite scroll: detect when user scrolls to bottom of video list
+        const videoListContainer = document.querySelector('.video-list');
+        if (videoListContainer) {
+            videoListContainer.addEventListener('scroll', () => {
+                const scrollTop = videoListContainer.scrollTop;
+                const scrollHeight = videoListContainer.scrollHeight;
+                const clientHeight = videoListContainer.clientHeight;
+                const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+
+                // Trigger load more when user is within 100px of the bottom
+                if (distanceFromBottom < 100) {
+                    loadMoreVideos();
+                }
+            });
+        }
+
+        // Load all channels in the left panel
+        loadAllChannelsPanel();
+    </script>
+</body>
+</html>
