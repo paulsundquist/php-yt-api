@@ -178,6 +178,121 @@ try {
             }
             break;
 
+        case '/fit-channels':
+            // Handle CORS preflight
+            if ($method === 'OPTIONS') {
+                header('Access-Control-Allow-Headers: Content-Type');
+                http_response_code(200);
+                break;
+            }
+
+            if ($method === 'GET') {
+                $stmt = $db->getConnection()->prepare(
+                    "SELECT id, channel_id, channel_name, channel_category, schedule, uploads_playlist_id, updated_at FROM fit_channels WHERE is_active = 1"
+                );
+                $stmt->execute();
+                $channels = $stmt->fetchAll();
+
+                echo json_encode([
+                    'success' => true,
+                    'count' => count($channels),
+                    'channels' => $channels
+                ]);
+            } elseif ($method === 'POST') {
+                $input = json_decode(file_get_contents('php://input'), true);
+
+                $channelId = $input['channel_id'] ?? '';
+                $channelName = $input['channel_name'] ?? '';
+                $channelCategory = $input['channel_category'] ?? null;
+                $schedule = $input['schedule'] ?? null;
+                $playlistId = null;
+
+                if (empty($channelId)) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'channel_id is required']);
+                    break;
+                }
+
+                // If channel_id starts with @, resolve it using YouTube API
+                if (str_starts_with($channelId, '@')) {
+                    try {
+                        $youtubeService = new YouTubeService();
+                        $channelInfo = $youtubeService->getChannelByHandle($channelId);
+
+                        if (!$channelInfo) {
+                            http_response_code(404);
+                            echo json_encode(['error' => 'Channel handle not found on YouTube']);
+                            break;
+                        }
+
+                        $channelId = $channelInfo['channel_id'];
+                        // Use the name from YouTube if not provided
+                        if (empty($channelName)) {
+                            $channelName = $channelInfo['channel_name'];
+                        }
+
+                        $playlistId = $channelInfo['uploads_playlist_id'] ?? null;
+                    } catch (\Exception $e) {
+                        http_response_code(500);
+                        echo json_encode(['error' => 'Failed to resolve channel handle: ' . $e->getMessage()]);
+                        break;
+                    }
+                }
+
+                // After handle resolution, verify we have a channel name
+                if (empty($channelName)) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'channel_name is required (or use @ handle to auto-fetch)']);
+                    break;
+                }
+
+                // Add the channel to fit_channels table
+                $stmt = $db->getConnection()->prepare(
+                    "INSERT INTO fit_channels (channel_id, channel_name, channel_category, schedule, is_active)
+                     VALUES (:channel_id, :channel_name, :channel_category, :schedule, 1)
+                     ON DUPLICATE KEY UPDATE
+                     channel_name = VALUES(channel_name),
+                     channel_category = VALUES(channel_category),
+                     schedule = VALUES(schedule),
+                     is_active = 1"
+                );
+                $result = $stmt->execute([
+                    ':channel_id' => $channelId,
+                    ':channel_name' => $channelName,
+                    ':channel_category' => $channelCategory,
+                    ':schedule' => $schedule
+                ]);
+
+                if (!$result) {
+                    http_response_code(500);
+                    echo json_encode(['error' => 'Failed to add fitness channel']);
+                    break;
+                }
+
+                // Update playlist ID if we have it from handle resolution
+                if ($playlistId) {
+                    $updateStmt = $db->getConnection()->prepare(
+                        "UPDATE fit_channels SET uploads_playlist_id = :playlist_id WHERE channel_id = :channel_id"
+                    );
+                    $updateStmt->execute([
+                        ':playlist_id' => $playlistId,
+                        ':channel_id' => $channelId
+                    ]);
+                }
+
+                http_response_code(201);
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Fitness channel added successfully',
+                    'channel_id' => $channelId,
+                    'channel_name' => $channelName
+                ]);
+            } else {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+            }
+            break;
+
         case '/channels/export':
             if ($method === 'GET') {
                 $channels = $db->getActiveChannels();
@@ -828,6 +943,38 @@ try {
             }
             break;
 
+        case '/fit-videos':
+            if ($method !== 'GET') {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+                break;
+            }
+
+            $category = $_GET['category'] ?? null;
+            $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
+
+            $sql = "SELECT * FROM fit_videos";
+            if ($category && $category !== 'all') {
+                $sql .= " WHERE category = :category";
+            }
+            $sql .= " ORDER BY published_at DESC LIMIT :limit";
+
+            $stmt = $db->getConnection()->prepare($sql);
+            if ($category && $category !== 'all') {
+                $stmt->bindValue(':category', $category, PDO::PARAM_STR);
+            }
+            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $stmt->execute();
+            $videos = $stmt->fetchAll();
+
+            echo json_encode([
+                'success' => true,
+                'count' => count($videos),
+                'category' => $category ?? 'all',
+                'videos' => $videos
+            ]);
+            break;
+
         default:
             // Check for dynamic tour routes
             if (preg_match('#^/api/tours/([A-Z0-9]{8})$#', $path, $matches)) {
@@ -958,6 +1105,21 @@ try {
                 }
                 break;
             }
+
+        case '/api/config':
+            if ($method === 'GET') {
+                $config = [
+                    'tmdb_api_key' => getenv('TMDB_API_KEY') ?: null
+                ];
+                echo json_encode([
+                    'success' => true,
+                    'config' => $config
+                ]);
+            } else {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+            }
+            break;
 
             http_response_code(404);
             echo json_encode(['error' => 'Endpoint not found']);

@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Trailers - Streaming Now</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            color: white;
+            font-size: 48px;
+            margin-bottom: 10px;
+            font-weight: 700;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 18px;
+            text-shadow: 0 1px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .back-button {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            background: #f3f4f6;
+            color: #1f2937;
+            padding: 8px 12px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            border: 1px solid #d1d5db;
+            align-self: flex-start;
+        }
+
+        .back-button:hover {
+            background: #e5e7eb;
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .back-button img {
+            width: 24px;
+            height: 24px;
+        }
+
+        .filters {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-group label {
+            font-size: 12px;
+            color: #6b7280;
+            font-weight: 600;
+        }
+
+        select, input {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+        }
+
+        button {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .loading {
+            text-align: center;
+            color: white;
+            font-size: 20px;
+            padding: 40px;
+        }
+
+        .error {
+            background: #fee;
+            color: #c00;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .movies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .movie-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .movie-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .movie-poster {
+            width: 100%;
+            aspect-ratio: 2/3;
+            object-fit: cover;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .movie-info {
+            padding: 15px;
+        }
+
+        .movie-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 5px;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .movie-release {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 5px;
+        }
+
+        .movie-digital-release {
+            font-size: 12px;
+            color: #10b981;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .movie-rating {
+            display: inline-block;
+            background: #fbbf24;
+            color: #78350f;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .providers {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .provider-logo {
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            object-fit: cover;
+        }
+
+        .trailer-btn {
+            width: 100%;
+            margin-top: 10px;
+            background: #10b981;
+            font-size: 13px;
+        }
+
+        .trailer-btn:hover {
+            background: #059669;
+        }
+
+        .tmdb-link {
+            display: block;
+            text-align: center;
+            margin-top: 8px;
+            color: #667eea;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .tmdb-link:hover {
+            text-decoration: underline;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 30px 0;
+        }
+
+        .pagination button {
+            padding: 10px 20px;
+        }
+
+        .pagination button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .api-key-notice {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            color: #92400e;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .api-key-notice h3 {
+            margin-bottom: 10px;
+        }
+
+        .api-key-notice input {
+            width: 100%;
+            max-width: 500px;
+            margin-top: 10px;
+        }
+
+        /* Trailer Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            position: relative;
+            width: 100%;
+            max-width: 1000px;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            color: white;
+            font-size: 40px;
+            font-weight: 300;
+            cursor: pointer;
+            z-index: 1001;
+            transition: color 0.3s;
+        }
+
+        .modal-close:hover {
+            color: #667eea;
+        }
+
+        #trailer-container {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            height: 0;
+            overflow: hidden;
+        }
+
+        #trailer-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 32px;
+            }
+
+            .movies-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 15px;
+            }
+
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="api-key-section" class="api-key-notice" style="display: none;">
+            <h3>TMDb API Key Not Configured</h3>
+            <p>The TMDb API key needs to be configured in the .env file.</p>
+            <p>Add TMDB_API_KEY to your .env file to enable this feature.</p>
+            <p>Get your API key at: <a href="https://www.themoviedb.org/settings/api" target="_blank">https://www.themoviedb.org/settings/api</a></p>
+        </div>
+
+        <div class="filters">
+            <a href="/index.html" class="back-button">
+                <img src="/favicon.svg" alt="MyTubie">
+                Home
+            </a>
+
+            <div class="filter-group">
+                <label>Content Type</label>
+                <select id="content-type">
+                    <option value="movie">Movies</option>
+                    <option value="tv">TV Shows</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Category</label>
+                <select id="category">
+                    <option value="popular">Popular</option>
+                    <option value="now_playing">Now Playing</option>
+                    <option value="upcoming">Upcoming</option>
+                    <option value="top_rated">Top Rated</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Streaming Region</label>
+                <select id="region">
+                    <option value="US">United States</option>
+                    <option value="GB">United Kingdom</option>
+                    <option value="CA">Canada</option>
+                    <option value="AU">Australia</option>
+                    <option value="DE">Germany</option>
+                    <option value="FR">France</option>
+                    <option value="JP">Japan</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Year</label>
+                <input type="number" id="year" placeholder="e.g., 2024" min="1900" max="2030" style="width: 120px;">
+            </div>
+
+            <div class="filter-group">
+                <label>Min Score</label>
+                <select id="min-score">
+                    <option value="">Any</option>
+                    <option value="5">5+</option>
+                    <option value="6">6+</option>
+                    <option value="7">7+</option>
+                    <option value="8">8+</option>
+                    <option value="9">9+</option>
+                </select>
+            </div>
+
+            <div class="filter-group" id="digital-period-group">
+                <label id="period-label">Digital Release Period</label>
+                <select id="digital-period">
+                    <option value="">All Time</option>
+                    <option value="week">Last Week</option>
+                    <option value="month">Last Month</option>
+                    <option value="year">Last Year</option>
+                </select>
+            </div>
+
+            <button id="apply-button" onclick="loadMovies(1)" style="align-self: flex-end;" disabled>Apply</button>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            Loading movies...
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div id="movies-grid" class="movies-grid"></div>
+
+        <div id="pagination" class="pagination" style="display: none;">
+            <button onclick="prevPage()">← Previous</button>
+            <span id="page-info" style="color: white; align-self: center;"></span>
+            <button onclick="nextPage()">Next →</button>
+        </div>
+    </div>
+
+    <!-- Trailer Modal -->
+    <div id="trailer-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeTrailerModal()">&times;</span>
+            <div id="trailer-container"></div>
+        </div>
+    </div>
+
+    <script>
+        const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
+        let currentPage = 1;
+        let totalPages = 1;
+        let apiKey = null;
+
+        // Track filter state
+        let filterState = {
+            contentType: 'movie',
+            category: 'popular',
+            region: 'US',
+            year: '',
+            minScore: '',
+            digitalPeriod: ''
+        };
+
+        // Enable/disable apply button based on filter changes
+        function checkFilterChanges() {
+            const currentState = {
+                contentType: document.getElementById('content-type').value,
+                category: document.getElementById('category').value,
+                region: document.getElementById('region').value,
+                year: document.getElementById('year').value,
+                minScore: document.getElementById('min-score').value,
+                digitalPeriod: document.getElementById('digital-period').value
+            };
+
+            const hasChanged = JSON.stringify(currentState) !== JSON.stringify(filterState);
+            document.getElementById('apply-button').disabled = !hasChanged;
+        }
+
+        // Update filter state after applying
+        function updateFilterState() {
+            filterState = {
+                contentType: document.getElementById('content-type').value,
+                category: document.getElementById('category').value,
+                region: document.getElementById('region').value,
+                year: document.getElementById('year').value,
+                minScore: document.getElementById('min-score').value,
+                digitalPeriod: document.getElementById('digital-period').value
+            };
+            document.getElementById('apply-button').disabled = true;
+        }
+
+        // Update URL with current filters
+        function updateURL() {
+            const params = new URLSearchParams();
+            const contentType = document.getElementById('content-type').value;
+            const category = document.getElementById('category').value;
+            const region = document.getElementById('region').value;
+            const year = document.getElementById('year').value;
+            const minScore = document.getElementById('min-score').value;
+            const digitalPeriod = document.getElementById('digital-period').value;
+
+            if (contentType !== 'movie') params.set('type', contentType);
+            if (category !== 'popular') params.set('category', category);
+            if (region !== 'US') params.set('region', region);
+            if (year) params.set('year', year);
+            if (minScore) params.set('score', minScore);
+            if (digitalPeriod) params.set('period', digitalPeriod);
+            if (currentPage > 1) params.set('page', currentPage);
+
+            const newURL = params.toString() ? `?${params.toString()}` : window.location.pathname;
+            window.history.pushState({}, '', newURL);
+        }
+
+        // Load filters from URL
+        function loadFiltersFromURL() {
+            const params = new URLSearchParams(window.location.search);
+
+            if (params.has('type')) {
+                document.getElementById('content-type').value = params.get('type');
+                // Trigger change event to update label
+                document.getElementById('content-type').dispatchEvent(new Event('change'));
+            }
+            if (params.has('category')) {
+                document.getElementById('category').value = params.get('category');
+            }
+            if (params.has('region')) {
+                document.getElementById('region').value = params.get('region');
+            }
+            if (params.has('year')) {
+                document.getElementById('year').value = params.get('year');
+            }
+            if (params.has('score')) {
+                document.getElementById('min-score').value = params.get('score');
+            }
+            if (params.has('period')) {
+                document.getElementById('digital-period').value = params.get('period');
+            }
+            if (params.has('page')) {
+                currentPage = parseInt(params.get('page'));
+            }
+
+            // Update filter state to match URL params
+            filterState = {
+                contentType: document.getElementById('content-type').value,
+                category: document.getElementById('category').value,
+                region: document.getElementById('region').value,
+                year: document.getElementById('year').value,
+                minScore: document.getElementById('min-score').value,
+                digitalPeriod: document.getElementById('digital-period').value
+            };
+        }
+
+        // Fetch API key from backend on page load
+        async function initializeApp() {
+            try {
+                const response = await fetch('/api/config');
+                const data = await response.json();
+
+                if (data.success && data.config.tmdb_api_key) {
+                    apiKey = data.config.tmdb_api_key;
+                    document.getElementById('api-key-section').style.display = 'none';
+
+                    // Load filters from URL before loading movies
+                    loadFiltersFromURL();
+                    loadMovies(currentPage);
+                } else {
+                    document.getElementById('api-key-section').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error fetching config:', error);
+                document.getElementById('api-key-section').style.display = 'block';
+            }
+        }
+
+        // Initialize on page load
+        initializeApp();
+
+        // Handle browser back/forward buttons
+        window.addEventListener('popstate', function() {
+            loadFiltersFromURL();
+            loadMovies(currentPage);
+        });
+
+        async function loadMovies(page) {
+            if (!apiKey) {
+                return;
+            }
+
+            const contentType = document.getElementById('content-type').value;
+            const category = document.getElementById('category').value;
+            const region = document.getElementById('region').value;
+            const year = document.getElementById('year').value;
+            const minScore = document.getElementById('min-score').value;
+            const digitalPeriod = document.getElementById('digital-period').value;
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('movies-grid').innerHTML = '';
+
+            try {
+                let url;
+
+                // Use discover endpoint for better filtering support
+                const endpoint = `https://api.themoviedb.org/3/discover/${contentType}`;
+
+                // Map category to sort_by parameter
+                let sortBy = 'popularity.desc';
+                let extraParams = '';
+
+                if (category === 'popular') {
+                    sortBy = 'popularity.desc';
+                } else if (category === 'top_rated') {
+                    sortBy = 'vote_average.desc';
+                    extraParams = '&vote_count.gte=100'; // Only include movies with enough votes
+                } else if (category === 'now_playing') {
+                    sortBy = 'popularity.desc';
+                    const today = new Date().toISOString().split('T')[0];
+                    const twoMonthsAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                    if (contentType === 'movie') {
+                        extraParams = `&primary_release_date.gte=${twoMonthsAgo}&primary_release_date.lte=${today}`;
+                    } else {
+                        extraParams = `&air_date.gte=${twoMonthsAgo}&air_date.lte=${today}`;
+                    }
+                } else if (category === 'upcoming') {
+                    sortBy = 'popularity.desc';
+                    const today = new Date().toISOString().split('T')[0];
+                    const twoMonthsLater = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                    if (contentType === 'movie') {
+                        extraParams = `&primary_release_date.gte=${today}&primary_release_date.lte=${twoMonthsLater}`;
+                    } else {
+                        extraParams = `&air_date.gte=${today}&air_date.lte=${twoMonthsLater}`;
+                    }
+                }
+
+                // Build URL
+                url = `${endpoint}?api_key=${apiKey}&language=en-US&page=${page}&region=${region}&sort_by=${sortBy}${extraParams}`;
+
+                // Add year filter if specified
+                if (year) {
+                    if (contentType === 'movie') {
+                        url += `&primary_release_year=${year}`;
+                    } else {
+                        url += `&first_air_date_year=${year}`;
+                    }
+                }
+
+                // Add period filter if specified (digital release for movies, season premiere for TV)
+                if (digitalPeriod) {
+                    const today = new Date();
+                    let startDate;
+
+                    if (digitalPeriod === 'week') {
+                        startDate = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+                    } else if (digitalPeriod === 'month') {
+                        startDate = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+                    } else if (digitalPeriod === 'year') {
+                        startDate = new Date(today.getTime() - 365 * 24 * 60 * 60 * 1000);
+                    }
+
+                    if (startDate) {
+                        const startDateStr = startDate.toISOString().split('T')[0];
+                        const todayStr = today.toISOString().split('T')[0];
+
+                        if (contentType === 'movie') {
+                            // Filter for digital (4) and physical (5) releases for movies
+                            url += `&with_release_type=4|5`;
+                            url += `&release_date.gte=${startDateStr}&release_date.lte=${todayStr}`;
+                        } else {
+                            // Filter by air date for TV shows (new episodes/seasons)
+                            url += `&air_date.gte=${startDateStr}&air_date.lte=${todayStr}`;
+                        }
+                    }
+                }
+
+                // Add minimum score filter if specified
+                if (minScore) {
+                    url += `&vote_average.gte=${minScore}`;
+                }
+
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch data. Please check your API key.');
+                }
+
+                const data = await response.json();
+                currentPage = data.page;
+                totalPages = data.total_pages;
+
+                // Fetch streaming providers for each item
+                for (const item of data.results) {
+                    await displayMovie(item, contentType, region);
+                }
+
+                updatePagination();
+                document.getElementById('loading').style.display = 'none';
+                updateFilterState();
+                updateURL();
+
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error').textContent = `Error: ${error.message}`;
+            }
+        }
+
+        async function displayMovie(item, contentType, region) {
+            const movieCard = document.createElement('div');
+            movieCard.className = 'movie-card';
+
+            const title = item.title || item.name;
+            const releaseDate = item.release_date || item.first_air_date;
+            const posterPath = item.poster_path ? `${TMDB_IMAGE_BASE}${item.poster_path}` : '';
+            const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
+
+            // Fetch digital release date for movies or season info for TV shows
+            let digitalReleaseHTML = '';
+            if (contentType === 'movie') {
+                try {
+                    const releaseDatesResponse = await fetch(
+                        `https://api.themoviedb.org/3/movie/${item.id}/release_dates?api_key=${apiKey}`
+                    );
+                    const releaseDatesData = await releaseDatesResponse.json();
+
+                    // Look for digital release in the specified region
+                    const regionReleases = releaseDatesData.results.find(r => r.iso_3166_1 === region);
+                    if (regionReleases) {
+                        // Type 4 = Digital, Type 5 = Physical
+                        const digitalRelease = regionReleases.release_dates.find(rd => rd.type === 4 || rd.type === 5);
+                        if (digitalRelease && digitalRelease.release_date) {
+                            const digitalDate = new Date(digitalRelease.release_date);
+                            const formattedDate = digitalDate.toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric'
+                            });
+                            digitalReleaseHTML = `<div class="movie-digital-release">Digital: ${formattedDate}</div>`;
+                        }
+                    }
+                } catch (e) {
+                    console.log('Could not fetch digital release date for', title);
+                }
+            } else {
+                // Fetch latest season info for TV shows
+                try {
+                    const tvDetailsResponse = await fetch(
+                        `https://api.themoviedb.org/3/tv/${item.id}?api_key=${apiKey}&language=en-US`
+                    );
+                    const tvDetails = await tvDetailsResponse.json();
+
+                    if (tvDetails.last_air_date) {
+                        const lastAirDate = new Date(tvDetails.last_air_date);
+                        const formattedDate = lastAirDate.toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric'
+                        });
+                        const seasonText = tvDetails.number_of_seasons > 1 ? `Season ${tvDetails.number_of_seasons}` : 'Latest';
+                        digitalReleaseHTML = `<div class="movie-digital-release">${seasonText}: ${formattedDate}</div>`;
+                    }
+                } catch (e) {
+                    console.log('Could not fetch TV show details for', title);
+                }
+            }
+
+            // Fetch watch providers
+            let providersHTML = '';
+            try {
+                const providersResponse = await fetch(
+                    `https://api.themoviedb.org/3/${contentType}/${item.id}/watch/providers?api_key=${apiKey}`
+                );
+                const providersData = await providersResponse.json();
+
+                if (providersData.results && providersData.results[region]) {
+                    const regionData = providersData.results[region];
+                    const providers = regionData.flatrate || regionData.buy || regionData.rent || [];
+
+                    if (providers.length > 0) {
+                        providersHTML = '<div class="providers">';
+                        providers.slice(0, 4).forEach(provider => {
+                            providersHTML += `<img src="${TMDB_IMAGE_BASE}${provider.logo_path}" alt="${provider.provider_name}" class="provider-logo" title="${provider.provider_name}">`;
+                        });
+                        providersHTML += '</div>';
+                    }
+                }
+            } catch (e) {
+                console.log('Could not fetch providers for', title);
+            }
+
+            // Pre-fetch trailer key for instant playback
+            let trailerKey = '';
+            try {
+                const videosResponse = await fetch(
+                    `https://api.themoviedb.org/3/${contentType}/${item.id}/videos?api_key=${apiKey}&language=en-US`
+                );
+                const videosData = await videosResponse.json();
+                const trailer = videosData.results.find(video =>
+                    video.type === 'Trailer' && video.site === 'YouTube'
+                ) || videosData.results[0];
+                if (trailer) {
+                    trailerKey = trailer.key;
+                }
+            } catch (e) {
+                console.log('Could not pre-fetch trailer for', title);
+            }
+
+            const tmdbURL = `https://www.themoviedb.org/${contentType}/${item.id}`;
+
+            movieCard.innerHTML = `
+                ${posterPath ? `<img src="${posterPath}" alt="${title}" class="movie-poster">` : '<div class="movie-poster"></div>'}
+                <div class="movie-info">
+                    <div class="movie-title">${title}</div>
+                    <div class="movie-release">Released: ${releaseDate ? new Date(releaseDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'TBA'}</div>
+                    ${digitalReleaseHTML}
+                    <span class="movie-rating">★ ${rating}</span>
+                    ${providersHTML}
+                    <button class="trailer-btn" onclick="watchTrailer('${trailerKey}')">Watch Trailer</button>
+                    <a href="${tmdbURL}" target="_blank" class="tmdb-link">View on TMDb</a>
+                </div>
+            `;
+
+            document.getElementById('movies-grid').appendChild(movieCard);
+        }
+
+        function watchTrailer(trailerKey) {
+            if (trailerKey) {
+                // Show trailer in modal instantly (key was pre-fetched)
+                const modal = document.getElementById('trailer-modal');
+                const container = document.getElementById('trailer-container');
+
+                container.innerHTML = `<iframe src="https://www.youtube.com/embed/${trailerKey}?autoplay=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+                modal.style.display = 'flex';
+
+                // Close modal on click outside
+                modal.onclick = function(e) {
+                    if (e.target === modal) {
+                        closeTrailerModal();
+                    }
+                };
+            } else {
+                alert('No trailer available for this title');
+            }
+        }
+
+        function closeTrailerModal() {
+            const modal = document.getElementById('trailer-modal');
+            const container = document.getElementById('trailer-container');
+
+            modal.style.display = 'none';
+            container.innerHTML = ''; // Stop the video
+        }
+
+        function updatePagination() {
+            const pagination = document.getElementById('pagination');
+            const pageInfo = document.getElementById('page-info');
+
+            if (totalPages > 1) {
+                pagination.style.display = 'flex';
+                pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+
+                pagination.querySelector('button:first-child').disabled = currentPage === 1;
+                pagination.querySelector('button:last-child').disabled = currentPage === totalPages;
+            } else {
+                pagination.style.display = 'none';
+            }
+        }
+
+        function prevPage() {
+            if (currentPage > 1) {
+                loadMovies(currentPage - 1);
+            }
+        }
+
+        function nextPage() {
+            if (currentPage < totalPages) {
+                loadMovies(currentPage + 1);
+            }
+        }
+
+        // Update category options and filter labels when content type changes
+        document.getElementById('content-type').addEventListener('change', function() {
+            const category = document.getElementById('category');
+            const periodLabel = document.getElementById('period-label');
+
+            if (this.value === 'tv') {
+                // Replace "Now Playing" with "On The Air" for TV shows
+                const nowPlaying = category.querySelector('option[value="now_playing"]');
+                if (nowPlaying) {
+                    nowPlaying.textContent = 'On The Air';
+                }
+                // Change label for TV shows
+                periodLabel.textContent = 'Season Premiere Period';
+            } else {
+                const nowPlaying = category.querySelector('option[value="now_playing"]');
+                if (nowPlaying) {
+                    nowPlaying.textContent = 'Now Playing';
+                }
+                // Change label for movies
+                periodLabel.textContent = 'Digital Release Period';
+            }
+            checkFilterChanges();
+        });
+
+        // Add change listeners to all filter inputs
+        document.getElementById('category').addEventListener('change', checkFilterChanges);
+        document.getElementById('region').addEventListener('change', checkFilterChanges);
+        document.getElementById('year').addEventListener('input', checkFilterChanges);
+        document.getElementById('min-score').addEventListener('change', checkFilterChanges);
+        document.getElementById('digital-period').addEventListener('change', checkFilterChanges);
+    </script>
+</body>
+</html>
