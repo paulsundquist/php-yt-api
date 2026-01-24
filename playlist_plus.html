@@ -157,6 +157,39 @@
             border-radius: 8px;
         }
 
+        .time-overlay {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 18px;
+            font-weight: 600;
+            font-family: monospace;
+            z-index: 10;
+            display: none;
+        }
+
+        .time-overlay.active {
+            display: block;
+        }
+
+        .video-wrapper:fullscreen {
+            padding-bottom: 0;
+            height: 100%;
+            width: 100%;
+            background: black;
+        }
+
+        .video-wrapper:-webkit-full-screen {
+            padding-bottom: 0;
+            height: 100%;
+            width: 100%;
+            background: black;
+        }
+
         .back-link {
             display: inline-block;
             color: white;
@@ -223,6 +256,10 @@
                     <input type="checkbox" id="muteCheckbox">
                     <label for="muteCheckbox">Mute</label>
                 </div>
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" id="showTimeCheckbox">
+                    <label for="showTimeCheckbox">Show Time</label>
+                </div>
             </form>
         </div>
 
@@ -234,6 +271,7 @@
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                     allowfullscreen
                 ></iframe>
+                <div class="time-overlay" id="timeOverlay"></div>
             </div>
         </div>
     </div>
@@ -246,6 +284,38 @@
         const autostartCheckbox = document.getElementById('autostartCheckbox');
         const fullscreenCheckbox = document.getElementById('fullscreenCheckbox');
         const muteCheckbox = document.getElementById('muteCheckbox');
+        const showTimeCheckbox = document.getElementById('showTimeCheckbox');
+        const timeOverlay = document.getElementById('timeOverlay');
+
+        let timeInterval = null;
+
+        function updateTime() {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const seconds = now.getSeconds().toString().padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            const displayHours = hours % 12 || 12;
+            timeOverlay.textContent = `${displayHours}:${minutes}:${seconds} ${ampm}`;
+        }
+
+        function toggleTimeDisplay(show) {
+            if (show) {
+                timeOverlay.classList.add('active');
+                updateTime();
+                timeInterval = setInterval(updateTime, 1000);
+            } else {
+                timeOverlay.classList.remove('active');
+                if (timeInterval) {
+                    clearInterval(timeInterval);
+                    timeInterval = null;
+                }
+            }
+        }
+
+        showTimeCheckbox.addEventListener('change', function() {
+            toggleTimeDisplay(this.checked);
+        });
 
         function extractPlaylistId(input) {
             // If it's already just a playlist ID
@@ -272,19 +342,32 @@
         }
 
         function loadPlaylist(playlistId, options = {}) {
-            const { autostart = true, fullscreen = true, muted = false } = options;
+            const { autostart = true, fullscreen = true, muted = false, showTime = false } = options;
             let embedUrl = `https://www.youtube.com/embed/videoseries?list=${playlistId}`;
             if (autostart) {
                 embedUrl += '&autoplay=1';
-            }
-            if (!fullscreen) {
-                embedUrl += '&fs=0';
             }
             if (muted) {
                 embedUrl += '&mute=1';
             }
             youtubePlayer.src = embedUrl;
             playerContainer.classList.add('active');
+
+            toggleTimeDisplay(showTime);
+
+            if (fullscreen) {
+                // Request fullscreen on the video wrapper so the time overlay is included
+                setTimeout(() => {
+                    const elem = document.querySelector('.video-wrapper');
+                    if (elem.requestFullscreen) {
+                        elem.requestFullscreen();
+                    } else if (elem.webkitRequestFullscreen) {
+                        elem.webkitRequestFullscreen();
+                    } else if (elem.msRequestFullscreen) {
+                        elem.msRequestFullscreen();
+                    }
+                }, 100);
+            }
         }
 
         form.addEventListener('submit', function(e) {
@@ -296,7 +379,8 @@
                 loadPlaylist(playlistId, {
                     autostart: autostartCheckbox.checked,
                     fullscreen: fullscreenCheckbox.checked,
-                    muted: muteCheckbox.checked
+                    muted: muteCheckbox.checked,
+                    showTime: showTimeCheckbox.checked
                 });
             } else {
                 alert('Please enter a valid YouTube playlist URL or ID');
@@ -309,12 +393,14 @@
         const autostartParam = urlParams.get('autostart') !== '0';
         const fullscreenParam = urlParams.get('fullscreen') !== '0';
         const muteParam = urlParams.get('mute') === '1';
+        const showTimeParam = urlParams.get('showtime') === '1';
         if (listParam) {
             input.value = listParam;
             autostartCheckbox.checked = autostartParam;
             fullscreenCheckbox.checked = fullscreenParam;
             muteCheckbox.checked = muteParam;
-            loadPlaylist(listParam, { autostart: autostartParam, fullscreen: fullscreenParam, muted: muteParam });
+            showTimeCheckbox.checked = showTimeParam;
+            loadPlaylist(listParam, { autostart: autostartParam, fullscreen: fullscreenParam, muted: muteParam, showTime: showTimeParam });
         }
     </script>
 </body>
