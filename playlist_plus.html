@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playlist Plus - MyTubie</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: white;
+            font-size: 36px;
+            margin-bottom: 10px;
+            font-weight: 700;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 18px;
+            text-shadow: 0 1px 5px rgba(0,0,0,0.1);
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+        }
+
+        .input-wrapper {
+            flex: 1;
+        }
+
+        label {
+            display: block;
+            color: #374151;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        input[type="text"]::placeholder {
+            color: #9ca3af;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #5a6fd6;
+        }
+
+        .help-text {
+            color: #6b7280;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-bottom: 8px;
+        }
+
+        .checkbox-wrapper input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .checkbox-wrapper label {
+            margin-bottom: 0;
+            cursor: pointer;
+        }
+
+        .player-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 25px;
+            display: none;
+        }
+
+        .player-container.active {
+            display: block;
+        }
+
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 8px;
+        }
+
+        .back-link {
+            display: inline-block;
+            color: white;
+            text-decoration: none;
+            margin-bottom: 20px;
+            font-size: 14px;
+            opacity: 0.9;
+            transition: opacity 0.2s;
+        }
+
+        .back-link:hover {
+            opacity: 1;
+        }
+
+        @media (max-width: 600px) {
+            .form-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/index.html" class="back-link">&larr; Back to Home</a>
+
+        <header>
+            <h1>Playlist Plus</h1>
+            <p class="subtitle">Enter a YouTube playlist to start watching</p>
+        </header>
+
+        <div class="form-container">
+            <form id="playlistForm">
+                <div class="form-group">
+                    <div class="input-wrapper">
+                        <label for="playlistInput">YouTube Playlist URL or ID</label>
+                        <input
+                            type="text"
+                            id="playlistInput"
+                            placeholder="https://www.youtube.com/playlist?list=PLxxxxxxxx or PLxxxxxxxx"
+                            required
+                        >
+                        <p class="help-text">Paste a full YouTube playlist URL or just the playlist ID (starts with PL)</p>
+                    </div>
+                    <button type="submit">Load Playlist</button>
+                </div>
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" id="autostartCheckbox" checked>
+                    <label for="autostartCheckbox">Autostart</label>
+                </div>
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" id="fullscreenCheckbox" checked>
+                    <label for="fullscreenCheckbox">Fullscreen</label>
+                </div>
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" id="muteCheckbox">
+                    <label for="muteCheckbox">Mute</label>
+                </div>
+            </form>
+        </div>
+
+        <div class="player-container" id="playerContainer">
+            <div class="video-wrapper">
+                <iframe
+                    id="youtubePlayer"
+                    src=""
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowfullscreen
+                ></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('playlistForm');
+        const input = document.getElementById('playlistInput');
+        const playerContainer = document.getElementById('playerContainer');
+        const youtubePlayer = document.getElementById('youtubePlayer');
+        const autostartCheckbox = document.getElementById('autostartCheckbox');
+        const fullscreenCheckbox = document.getElementById('fullscreenCheckbox');
+        const muteCheckbox = document.getElementById('muteCheckbox');
+
+        function extractPlaylistId(input) {
+            // If it's already just a playlist ID
+            if (input.startsWith('PL') && !input.includes('/')) {
+                return input;
+            }
+
+            // Try to extract from URL
+            try {
+                const url = new URL(input);
+                const listParam = url.searchParams.get('list');
+                if (listParam) {
+                    return listParam;
+                }
+            } catch (e) {
+                // Not a valid URL, check if it looks like a playlist ID
+                const match = input.match(/(?:list=)?([A-Za-z0-9_-]+)/);
+                if (match) {
+                    return match[1];
+                }
+            }
+
+            return null;
+        }
+
+        function loadPlaylist(playlistId, options = {}) {
+            const { autostart = true, fullscreen = true, muted = false } = options;
+            let embedUrl = `https://www.youtube.com/embed/videoseries?list=${playlistId}`;
+            if (autostart) {
+                embedUrl += '&autoplay=1';
+            }
+            if (!fullscreen) {
+                embedUrl += '&fs=0';
+            }
+            if (muted) {
+                embedUrl += '&mute=1';
+            }
+            youtubePlayer.src = embedUrl;
+            playerContainer.classList.add('active');
+        }
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const playlistId = extractPlaylistId(input.value.trim());
+
+            if (playlistId) {
+                loadPlaylist(playlistId, {
+                    autostart: autostartCheckbox.checked,
+                    fullscreen: fullscreenCheckbox.checked,
+                    muted: muteCheckbox.checked
+                });
+            } else {
+                alert('Please enter a valid YouTube playlist URL or ID');
+            }
+        });
+
+        // Check for playlist in URL params on page load
+        const urlParams = new URLSearchParams(window.location.search);
+        const listParam = urlParams.get('list');
+        const autostartParam = urlParams.get('autostart') !== '0';
+        const fullscreenParam = urlParams.get('fullscreen') !== '0';
+        const muteParam = urlParams.get('mute') === '1';
+        if (listParam) {
+            input.value = listParam;
+            autostartCheckbox.checked = autostartParam;
+            fullscreenCheckbox.checked = fullscreenParam;
+            muteCheckbox.checked = muteParam;
+            loadPlaylist(listParam, { autostart: autostartParam, fullscreen: fullscreenParam, muted: muteParam });
+        }
+    </script>
+</body>
+</html>
