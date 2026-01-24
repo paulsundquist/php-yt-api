@@ -161,15 +161,16 @@
             position: absolute;
             top: 10px;
             right: 10px;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.8);
             color: white;
             padding: 8px 12px;
             border-radius: 6px;
             font-size: 18px;
             font-weight: 600;
             font-family: monospace;
-            z-index: 10;
+            z-index: 2147483647;
             display: none;
+            pointer-events: none;
         }
 
         .time-overlay.active {
@@ -180,14 +181,15 @@
             position: absolute;
             top: 50px;
             right: 10px;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.8);
             color: white;
             padding: 8px 12px;
             border-radius: 6px;
             font-size: 16px;
             font-weight: 600;
-            z-index: 10;
+            z-index: 2147483647;
             display: none;
+            pointer-events: none;
         }
 
         .date-overlay.active {
@@ -202,14 +204,15 @@
             position: absolute;
             top: 90px;
             right: 10px;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.8);
             color: white;
             padding: 8px 12px;
             border-radius: 6px;
             font-size: 18px;
             font-weight: 600;
-            z-index: 10;
+            z-index: 2147483647;
             display: none;
+            pointer-events: none;
         }
 
         .temp-overlay.active {
@@ -228,6 +231,26 @@
             height: 100%;
             width: 100%;
             background: black;
+        }
+
+        .video-wrapper:-ms-fullscreen {
+            padding-bottom: 0;
+            height: 100%;
+            width: 100%;
+            background: black;
+        }
+
+        .video-wrapper:fullscreen .time-overlay,
+        .video-wrapper:fullscreen .date-overlay,
+        .video-wrapper:fullscreen .temp-overlay,
+        .video-wrapper:-webkit-full-screen .time-overlay,
+        .video-wrapper:-webkit-full-screen .date-overlay,
+        .video-wrapper:-webkit-full-screen .temp-overlay,
+        .video-wrapper:-ms-fullscreen .time-overlay,
+        .video-wrapper:-ms-fullscreen .date-overlay,
+        .video-wrapper:-ms-fullscreen .temp-overlay {
+            position: fixed;
+            z-index: 2147483647;
         }
 
         .back-link {
