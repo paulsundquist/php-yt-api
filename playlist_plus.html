@@ -275,6 +275,65 @@
             opacity: 1;
         }
 
+        .samples-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 25px;
+            margin-top: 25px;
+        }
+
+        .samples-container h2 {
+            color: #1f2937;
+            font-size: 22px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .samples-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .samples-table th,
+        .samples-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .samples-table th {
+            background: #f9fafb;
+            color: #374151;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .samples-table td {
+            color: #4b5563;
+            font-size: 14px;
+        }
+
+        .samples-table tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .sample-link {
+            display: inline-block;
+            padding: 6px 14px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .sample-link:hover {
+            background: #5a6fd6;
+        }
+
         @media (max-width: 600px) {
             .form-group {
                 flex-direction: column;
@@ -287,6 +346,12 @@
 
             h1 {
                 font-size: 28px;
+            }
+
+            .samples-table th,
+            .samples-table td {
+                padding: 8px 10px;
+                font-size: 13px;
             }
         }
     </style>
@@ -363,6 +428,67 @@
                 <div class="date-overlay" id="dateOverlay"></div>
                 <div class="temp-overlay" id="tempOverlay"></div>
             </div>
+        </div>
+
+        <div class="samples-container">
+            <h2>Sample Playlists</h2>
+            <table class="samples-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Relaxing Fireplace</td>
+                        <td>Classical Music Fireplace Playlist</td>
+                        <td><a href="?list=PLowSApwZvqQxoVnCWSMnXAL-lQjUjLeGQ&fullscreen=0&showtime=1" class="sample-link">Load</a></td>
+                    </tr>
+
+                    <tr>
+                        <td>Travel</td>
+                        <td>The World in 4K - Timelapse</td>
+                        <td><a href="?list=PLrAo_sXKs7ccHFBvmgLKTokXFwlecGncp&fullscreen=0&showtime=1" class="sample-link">Load</a></td>
+                    </tr>
+                    <tr>
+                        <td>Travel</td>
+                        <td>4k Travel Videos</td>
+                        <td><a href="?list=PLKUSwTLF07GEkRUmQtKNFBIYKMtnHdsVz&fullscreen=0&showtime=1" class="sample-link">Load</a></td>
+                    </tr>
+                     <tr>
+                        <td>Travel</td>
+                        <td>America's 59 National Parks</td>
+                        <td><a href="?list=PLpz7cLJ1_TwSnUf7XGZAQci-c3omf5Ept&fullscreen=0&showtime=1" class="sample-link">Load</a></td>
+                    </tr>                  
+                     <tr>
+                        <td>Travel</td>
+                        <td>8K VIDEO RELAXING MUSIC</td>
+                        <td><a href="?list=PLWmOw-0qsknKtIUefS9QO36kvkjBu0epQ&fullscreen=0&showtime=1" class="sample-link">Load</a></td>
+                    </tr>                  
+                    <tr>
+                        <td>Trivia</td>
+                        <td>Famous Faces</td>
+                        <td><a href="?list=PL8ZEqw_lRBn46Z9nw15GhAPrF19JSRd3N&fullscreen=0&showtime=1" class="sample-link">Load</a></td>
+                    </tr>                  
+                    <tr>
+                        <td>Animals</td>
+                        <td>Relaxing Animal Videos</td>
+                        <td><a href="?list=PLd3XvPudTO1D2VdQaYdkr4fDZ23LRx5_H&fullscreen=0&showtime=1" class="sample-link">Load</a></td>
+                    </tr>
+                    <tr>
+                        <td>Just Watch</td>
+                        <td>Original Satisfying Videos</td>
+                        <td><a href="?list=PL8LwzmTmvN4x8w6oFo5u9R8fUsBBl8Af6&fullscreen=0&showtime=1" class="sample-link">Load</a></td>
+                    </tr>                    
+                    <tr>
+                        <td>Just Watch</td>
+                        <td>Satisfying Videos</td>
+                        <td><a href="?list=PL8LwzmTmvN4yJds-cJo5-ty9Sjp5MltnM&fullscreen=0&showtime=1" class="sample-link">Load</a></td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 
