@@ -6,6 +6,7 @@ use App\Database;
 use App\YouTubeService;
 use App\TourService;
 use App\TVDBService;
+use App\MovieListService;
 
 // Load environment variables from .env file
 if (file_exists(__DIR__ . '/.env')) {
@@ -975,6 +976,52 @@ try {
             ]);
             break;
 
+        case '/api/movie-lists':
+            // Handle CORS preflight
+            if ($method === 'OPTIONS') {
+                header('Access-Control-Allow-Headers: Content-Type');
+                header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
+                http_response_code(200);
+                break;
+            }
+
+            $movieListService = new MovieListService();
+
+            if ($method === 'GET') {
+                $curated = $movieListService->getCuratedLists();
+                $recent = $movieListService->getRecentLists(10);
+
+                echo json_encode([
+                    'success' => true,
+                    'curated' => $curated,
+                    'recent' => $recent
+                ]);
+            } elseif ($method === 'POST') {
+                $input = json_decode(file_get_contents('php://input'), true);
+
+                if (empty($input['name'])) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'name is required']);
+                    break;
+                }
+
+                $listId = $movieListService->createList(
+                    $input['name'],
+                    $input['description'] ?? null
+                );
+
+                http_response_code(201);
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'List created successfully',
+                    'list_id' => $listId
+                ]);
+            } else {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+            }
+            break;
+
         default:
             // Check for dynamic tour routes
             if (preg_match('#^/api/tours/([A-Z0-9]{8})$#', $path, $matches)) {
@@ -1098,6 +1145,179 @@ try {
                     echo json_encode([
                         'success' => true,
                         'message' => 'Step deleted successfully'
+                    ]);
+                } else {
+                    http_response_code(405);
+                    echo json_encode(['error' => 'Method not allowed']);
+                }
+                break;
+            }
+
+            // Movie list routes
+            if (preg_match('#^/api/movie-lists/([A-Z0-9]{8})$#', $path, $matches)) {
+                $listId = $matches[1];
+                $movieListService = new MovieListService();
+
+                if ($method === 'GET') {
+                    $list = $movieListService->getList($listId);
+                    if (!$list) {
+                        http_response_code(404);
+                        echo json_encode(['error' => 'List not found']);
+                        break;
+                    }
+                    $movieListService->incrementViewCount($listId);
+                    echo json_encode([
+                        'success' => true,
+                        'list' => $list
+                    ]);
+                } elseif ($method === 'PUT') {
+                    $input = json_decode(file_get_contents('php://input'), true);
+
+                    if (empty($input['name'])) {
+                        http_response_code(400);
+                        echo json_encode(['error' => 'name is required']);
+                        break;
+                    }
+
+                    $result = $movieListService->updateList(
+                        $listId,
+                        $input['name'],
+                        $input['description'] ?? null
+                    );
+
+                    if (!$result) {
+                        http_response_code(404);
+                        echo json_encode(['error' => 'List not found']);
+                        break;
+                    }
+
+                    echo json_encode([
+                        'success' => true,
+                        'message' => 'List updated successfully'
+                    ]);
+                } elseif ($method === 'DELETE') {
+                    $result = $movieListService->deleteList($listId);
+
+                    if (!$result) {
+                        http_response_code(404);
+                        echo json_encode(['error' => 'List not found']);
+                        break;
+                    }
+
+                    echo json_encode([
+                        'success' => true,
+                        'message' => 'List deleted successfully'
+                    ]);
+                } else {
+                    http_response_code(405);
+                    echo json_encode(['error' => 'Method not allowed']);
+                }
+                break;
+            }
+
+            // Add movie to list
+            if (preg_match('#^/api/movie-lists/([A-Z0-9]{8})/items$#', $path, $matches)) {
+                $listId = $matches[1];
+                $movieListService = new MovieListService();
+
+                if ($method === 'POST') {
+                    $input = json_decode(file_get_contents('php://input'), true);
+
+                    if (empty($input['tmdb_id']) || empty($input['title'])) {
+                        http_response_code(400);
+                        echo json_encode(['error' => 'tmdb_id and title are required']);
+                        break;
+                    }
+
+                    $itemId = $movieListService->addMovie($listId, $input);
+
+                    http_response_code(201);
+                    echo json_encode([
+                        'success' => true,
+                        'message' => 'Movie added successfully',
+                        'item_id' => $itemId
+                    ]);
+                } else {
+                    http_response_code(405);
+                    echo json_encode(['error' => 'Method not allowed']);
+                }
+                break;
+            }
+
+            // Remove movie from list or update note
+            if (preg_match('#^/api/movie-lists/([A-Z0-9]{8})/items/(\d+)$#', $path, $matches)) {
+                $listId = $matches[1];
+                $itemId = (int)$matches[2];
+                $movieListService = new MovieListService();
+
+                if ($method === 'DELETE') {
+                    $result = $movieListService->removeMovie($listId, $itemId);
+
+                    if (!$result) {
+                        http_response_code(404);
+                        echo json_encode(['error' => 'Item not found']);
+                        break;
+                    }
+
+                    echo json_encode([
+                        'success' => true,
+                        'message' => 'Movie removed successfully'
+                    ]);
+                } elseif ($method === 'PUT') {
+                    $input = json_decode(file_get_contents('php://input'), true);
+                    $result = $movieListService->updateMovieNote($listId, $itemId, $input['notes'] ?? '');
+
+                    echo json_encode([
+                        'success' => $result,
+                        'message' => $result ? 'Note updated successfully' : 'Failed to update note'
+                    ]);
+                } else {
+                    http_response_code(405);
+                    echo json_encode(['error' => 'Method not allowed']);
+                }
+                break;
+            }
+
+            // Update movie note (alternate endpoint)
+            if (preg_match('#^/api/movie-lists/([A-Z0-9]{8})/items/(\d+)/note$#', $path, $matches)) {
+                $listId = $matches[1];
+                $itemId = (int)$matches[2];
+                $movieListService = new MovieListService();
+
+                if ($method === 'PUT') {
+                    $input = json_decode(file_get_contents('php://input'), true);
+                    $result = $movieListService->updateMovieNote($listId, $itemId, $input['notes'] ?? '');
+
+                    echo json_encode([
+                        'success' => $result,
+                        'message' => $result ? 'Note updated successfully' : 'Failed to update note'
+                    ]);
+                } else {
+                    http_response_code(405);
+                    echo json_encode(['error' => 'Method not allowed']);
+                }
+                break;
+            }
+
+            // Reorder movies in list
+            if (preg_match('#^/api/movie-lists/([A-Z0-9]{8})/reorder$#', $path, $matches)) {
+                $listId = $matches[1];
+                $movieListService = new MovieListService();
+
+                if ($method === 'POST') {
+                    $input = json_decode(file_get_contents('php://input'), true);
+
+                    if (empty($input['positions']) || !is_array($input['positions'])) {
+                        http_response_code(400);
+                        echo json_encode(['error' => 'positions array is required']);
+                        break;
+                    }
+
+                    $result = $movieListService->reorderMovies($listId, $input['positions']);
+
+                    echo json_encode([
+                        'success' => $result,
+                        'message' => $result ? 'Movies reordered successfully' : 'Failed to reorder movies'
                     ]);
                 } else {
                     http_response_code(405);
