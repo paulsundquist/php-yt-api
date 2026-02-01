@@ -48,6 +48,7 @@
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 20px;
             margin-top: 40px;
+            min-width: 0;
         }
 
         .card {
@@ -218,17 +219,136 @@
         }
 
         @media (max-width: 768px) {
+            body {
+                padding: 20px 12px;
+            }
+
+            header {
+                margin-bottom: 25px;
+            }
+
             h1 {
-                font-size: 36px;
+                font-size: 32px;
             }
 
             .subtitle {
-                font-size: 16px;
+                font-size: 15px;
             }
 
             .cards-grid {
-                grid-template-columns: 1fr;
-                gap: 20px;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 12px;
+                margin-top: 20px;
+            }
+
+            .card {
+                padding: 10px;
+            }
+
+            .flip-back h3 {
+                font-size: 16px;
+                margin-bottom: 6px;
+            }
+
+            .flip-back p {
+                font-size: 11px;
+                line-height: 1.3;
+            }
+
+            .flip-back {
+                padding: 10px;
+            }
+
+            .card-badge {
+                font-size: 10px;
+                margin-top: 8px;
+                padding: 3px 8px;
+            }
+
+            .vote-section {
+                margin-top: 8px;
+                padding-top: 8px;
+            }
+
+            .vote-button {
+                padding: 4px 8px;
+                font-size: 11px;
+            }
+
+            .vote-count {
+                font-size: 11px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 12px 8px;
+            }
+
+            h1 {
+                font-size: 26px;
+            }
+
+            .subtitle {
+                font-size: 13px;
+            }
+
+            .cards-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+                margin-top: 15px;
+            }
+
+            .card {
+                padding: 8px;
+            }
+
+            .flip-container {
+                margin-bottom: 8px;
+            }
+
+            .flip-back h3 {
+                font-size: 13px;
+                margin-bottom: 4px;
+            }
+
+            .flip-back p {
+                font-size: 9px;
+                line-height: 1.3;
+            }
+
+            .flip-back {
+                padding: 8px;
+            }
+
+            .card-badge {
+                font-size: 9px;
+                padding: 2px 6px;
+                margin-top: 6px;
+            }
+
+            .vote-section {
+                margin-top: 6px;
+                padding-top: 6px;
+                flex-direction: column;
+                gap: 4px;
+            }
+
+            .vote-button {
+                padding: 3px 6px;
+                font-size: 10px;
+            }
+
+            .vote-count {
+                font-size: 10px;
+            }
+
+            .card span[style],
+            .card a[style],
+            .card button[style] {
+                font-size: 11px !important;
+                padding: 5px 10px !important;
+                margin-top: 6px !important;
             }
         }
 
@@ -247,7 +367,7 @@
     <div class="container">
         <header>
             <h1>MyTubie</h1>
-            <p class="subtitle">My YouTube, My Way</p>
+            <p class="subtitle">YouTube Helper Apps </p>
         </header>
 
         <div class="cards-grid">
@@ -297,7 +417,7 @@
                         </div>
                         <div class="flip-back">
                             <h3>Movie Lists</h3>
-                            <p>Discover curated movie collections and create your own watchlists to keep track of films you want to see.</p>
+                            <p>Create watchlists to track and share films with friends.</p>
                         </div>
                     </div>
                 </div>
