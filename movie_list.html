@@ -397,6 +397,66 @@
         }
 
         @media (max-width: 600px) {
+            body {
+                padding: 12px;
+            }
+
+            h1 {
+                font-size: 26px;
+            }
+
+            .subtitle {
+                font-size: 15px;
+            }
+
+            .section-title {
+                font-size: 20px;
+            }
+
+            .lists-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .list-header {
+                padding: 15px;
+            }
+
+            .list-header-top {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .list-header-top > div:last-child {
+                flex-direction: column;
+                gap: 8px;
+                width: 100%;
+            }
+
+            .list-title {
+                font-size: 22px;
+            }
+
+            .list-stats {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .comments-toggle {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            .header-actions {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .btn {
+                padding: 10px 16px;
+                font-size: 13px;
+            }
+
             .movie-row {
                 flex-direction: column;
             }
@@ -411,9 +471,41 @@
                 height: 200px;
             }
 
+            .movie-info-section {
+                min-width: unset;
+            }
+
             .movie-comment-section {
                 border-left: none;
                 border-top: 1px solid #e5e7eb;
+            }
+
+            .share-section {
+                flex-direction: column;
+            }
+
+            .share-input {
+                width: 100%;
+            }
+
+            .share-btn {
+                width: 100%;
+                text-align: center;
+            }
+
+            .modal {
+                width: 95%;
+                max-height: 85vh;
+            }
+
+            .modal-header,
+            .modal-body,
+            .modal-footer {
+                padding: 15px;
+            }
+
+            .search-results {
+                max-height: 300px;
             }
         }
 
@@ -644,7 +736,7 @@
 
             header {
                 flex-direction: column;
-                gap: 20px;
+                gap: 15px;
             }
 
             .header-actions {
@@ -652,13 +744,17 @@
                 justify-content: center;
             }
 
-            .movies-grid {
-                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            .lists-grid {
+                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
             }
 
-            .movie-card img,
-            .movie-card .no-poster {
-                height: 210px;
+            .list-header-top {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .list-header-top > div:last-child {
+                flex-wrap: wrap;
             }
         }
     </style>
@@ -671,7 +767,6 @@
                     <img src="/favicon.svg" alt="MyTubie">
                 </a>
                 <h1>Movie Lists</h1>
-                <p class="subtitle">Curated collections and personal watchlists</p>
             </div>
             <div class="header-actions">
                 <button class="btn btn-primary" onclick="openCreateModal()">Create New List</button>
@@ -681,7 +776,7 @@
         <!-- Browse View -->
         <div class="browse-view" id="browseView">
             <div class="section" id="curatedSection">
-                <h2 class="section-title">Curated Lists</h2>
+                <h2 class="section-title">MyTubie Lists</h2>
                 <div class="lists-grid" id="curatedLists"></div>
             </div>
 
