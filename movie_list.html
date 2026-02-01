@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Movie Lists - MyTubie</title>
+    <title>MyTubie - Movie Lists</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <style>
         * {
@@ -823,12 +823,15 @@
                         </label>
                     </div>
                 </div>
-                <div class="share-section">
-                    <input type="text" class="share-input" id="shareLink" readonly>
-                    <button class="share-btn" onclick="copyShareLink()">Copy Link</button>
+                <div class="share-section" style="flex-direction: column; align-items: stretch;">
+                    <div style="margin-bottom: 8px; font-size: 13px; color: #6b7280;">Copy and SAVE the URL, you will not be able to get back to this page without it.</div>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" class="share-input" id="shareLink" readonly>
+                        <button class="share-btn" onclick="copyShareLink()">Copy Link</button>
+                    </div>
                 </div>
                 <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px solid #e5e7eb;">
-                    <button class="btn btn-secondary" onclick="openCopyModal()" id="copyListBtn">Copy to New List</button>
+                    <button class="btn btn-secondary" style="background: #9ca3af; color: white;" onclick="openCopyModal()" id="copyListBtn">Duplicate this List</button>
                     <div class="header-actions" id="listActions">
                         <button class="btn btn-primary" onclick="openSearchModal()">Add Movie</button>
                         <button class="btn btn-secondary" onclick="openEditModal()">Edit</button>
@@ -1046,6 +1049,7 @@
         }
 
         function renderListDetail(list) {
+            document.title = 'MyTubie - Movie List ' + list.list_name;
             document.getElementById('listTitle').textContent = list.list_name;
             document.getElementById('listDescription').textContent = list.description || '';
             document.getElementById('movieCount').textContent = `${(list.items || []).length} movies`;
@@ -1159,6 +1163,7 @@
         }
 
         function showBrowseView() {
+            document.title = 'MyTubie - Movie Lists';
             document.getElementById('detailView').classList.remove('active');
             document.getElementById('browseView').classList.remove('hidden');
             currentListId = null;
