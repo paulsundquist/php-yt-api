@@ -797,7 +797,7 @@
                 <div class="lists-grid" id="curatedLists"></div>
             </div>
 
-            <div class="section" id="recentSection">
+            <div class="section" id="recentSection" style="display: none;">
                 <h2 class="section-title">Recent Lists</h2>
                 <div class="lists-grid" id="recentLists"></div>
             </div>
@@ -984,8 +984,7 @@
 
                     document.getElementById('curatedSection').style.display =
                         data.curated.length > 0 ? 'block' : 'none';
-                    document.getElementById('recentSection').style.display =
-                        data.recent.length > 0 ? 'block' : 'none';
+                    document.getElementById('recentSection').style.display = 'none';
                 }
             } catch (error) {
                 console.error('Failed to load lists:', error);
