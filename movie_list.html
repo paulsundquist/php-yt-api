@@ -813,6 +813,7 @@
                 </div>
                 <h1 class="list-title" id="listTitle"></h1>
                 <p class="list-description" id="listDescription"></p>
+                <a id="playlistLink" href="#" target="_blank" rel="noopener" style="display: none; margin-top: 8px; color: #dc2626; font-size: 14px; font-weight: 500; text-decoration: none;">YouTube Playlist</a>
                 <div class="list-stats">
                     <span id="movieCount">0 movies</span>
                     <span id="viewCount">0 views</span>
@@ -859,6 +860,10 @@
                 <div class="form-group">
                     <label for="listDesc">Description (optional)</label>
                     <textarea id="listDesc" placeholder="Describe your list..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="listPlaylist">YouTube Playlist (optional)</label>
+                    <input type="text" id="listPlaylist" placeholder="Playlist ID or URL, e.g. PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf">
                 </div>
             </div>
             <div class="modal-footer">
@@ -1052,6 +1057,16 @@
             document.title = 'MyTubie - Movie List ' + list.list_name;
             document.getElementById('listTitle').textContent = list.list_name;
             document.getElementById('listDescription').textContent = list.description || '';
+
+            // Show YouTube playlist link if set
+            const playlistLink = document.getElementById('playlistLink');
+            if (list.youtube_playlist_id) {
+                playlistLink.href = 'https://www.youtube.com/playlist?list=' + encodeURIComponent(list.youtube_playlist_id);
+                playlistLink.textContent = 'YouTube Playlist';
+                playlistLink.style.display = 'inline';
+            } else {
+                playlistLink.style.display = 'none';
+            }
             document.getElementById('movieCount').textContent = `${(list.items || []).length} movies`;
             document.getElementById('viewCount').textContent = `${list.view_count || 0} views`;
             document.getElementById('shareLink').value = window.location.origin + '/movie_list.html?id=' + list.list_id;
@@ -1188,6 +1203,7 @@
             document.getElementById('createModalTitle').textContent = 'Create New List';
             document.getElementById('listName').value = '';
             document.getElementById('listDesc').value = '';
+            document.getElementById('listPlaylist').value = '';
             document.getElementById('createModal').classList.add('active');
         }
 
@@ -1197,6 +1213,7 @@
             document.getElementById('createModalTitle').textContent = 'Edit List';
             document.getElementById('listName').value = currentList.list_name;
             document.getElementById('listDesc').value = currentList.description || '';
+            document.getElementById('listPlaylist').value = currentList.youtube_playlist_id || '';
             document.getElementById('createModal').classList.add('active');
         }
 
@@ -1204,9 +1221,24 @@
             document.getElementById('createModal').classList.remove('active');
         }
 
+        function extractPlaylistId(input) {
+            if (!input) return null;
+            // If it's a URL, extract the list parameter
+            try {
+                const url = new URL(input);
+                const listParam = url.searchParams.get('list');
+                if (listParam) return listParam;
+            } catch (e) {
+                // Not a URL, treat as raw ID
+            }
+            return input;
+        }
+
         async function saveList() {
             const name = document.getElementById('listName').value.trim();
             const description = document.getElementById('listDesc').value.trim();
+            const playlistRaw = document.getElementById('listPlaylist').value.trim();
+            const youtube_playlist_id = extractPlaylistId(playlistRaw) || null;
 
             if (!name) {
                 alert('Please enter a list name');
@@ -1218,7 +1250,7 @@
                     const response = await fetch(`/api/movie-lists/${currentListId}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ name, description })
+                        body: JSON.stringify({ name, description, youtube_playlist_id })
                     });
                     const data = await response.json();
                     if (data.success) {
@@ -1229,7 +1261,7 @@
                     const response = await fetch('/api/movie-lists', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ name, description })
+                        body: JSON.stringify({ name, description, youtube_playlist_id })
                     });
                     const data = await response.json();
                     if (data.success) {

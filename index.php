@@ -976,6 +976,14 @@ try {
             ]);
             break;
 
+        case '/api/movie-lists/all':
+            $movieListService = new MovieListService();
+            echo json_encode([
+                'success' => true,
+                'lists' => $movieListService->getAllLists()
+            ]);
+            break;
+
         case '/api/movie-lists':
             // Handle CORS preflight
             if ($method === 'OPTIONS') {
@@ -1007,7 +1015,8 @@ try {
 
                 $listId = $movieListService->createList(
                     $input['name'],
-                    $input['description'] ?? null
+                    $input['description'] ?? null,
+                    $input['youtube_playlist_id'] ?? null
                 );
 
                 http_response_code(201);
@@ -1182,7 +1191,8 @@ try {
                     $result = $movieListService->updateList(
                         $listId,
                         $input['name'],
-                        $input['description'] ?? null
+                        $input['description'] ?? null,
+                        $input['youtube_playlist_id'] ?? null
                     );
 
                     if (!$result) {
@@ -1291,6 +1301,46 @@ try {
                     echo json_encode([
                         'success' => $result,
                         'message' => $result ? 'Note updated successfully' : 'Failed to update note'
+                    ]);
+                } else {
+                    http_response_code(405);
+                    echo json_encode(['error' => 'Method not allowed']);
+                }
+                break;
+            }
+
+            // Copy list as curated
+            if (preg_match('#^/api/movie-lists/([A-Z0-9]{8})/copy-curated$#', $path, $matches)) {
+                $listId = $matches[1];
+                $movieListService = new MovieListService();
+
+                if ($method === 'POST') {
+                    $input = json_decode(file_get_contents('php://input'), true);
+
+                    if (empty($input['name'])) {
+                        http_response_code(400);
+                        echo json_encode(['error' => 'name is required']);
+                        break;
+                    }
+
+                    $newListId = $movieListService->copyAsCurated(
+                        $listId,
+                        $input['name'],
+                        $input['description'] ?? null,
+                        $input['youtube_playlist_id'] ?? null
+                    );
+
+                    if (!$newListId) {
+                        http_response_code(404);
+                        echo json_encode(['error' => 'Source list not found']);
+                        break;
+                    }
+
+                    http_response_code(201);
+                    echo json_encode([
+                        'success' => true,
+                        'message' => 'Curated list created successfully',
+                        'list_id' => $newListId
                     ]);
                 } else {
                     http_response_code(405);

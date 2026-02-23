@@ -916,6 +916,16 @@
         document.getElementById('year').addEventListener('input', checkFilterChanges);
         document.getElementById('min-score').addEventListener('change', checkFilterChanges);
         document.getElementById('digital-period').addEventListener('change', checkFilterChanges);
+
+        // Close trailer modal on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' || e.keyCode === 27) {
+                const modal = document.getElementById('trailer-modal');
+                if (modal.style.display === 'flex') {
+                    closeTrailerModal();
+                }
+            }
+        });
     </script>
 </body>
 </html>

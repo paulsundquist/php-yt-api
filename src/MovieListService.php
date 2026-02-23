@@ -20,19 +20,20 @@ class MovieListService
      * @param string|null $description List description
      * @return string The new list ID
      */
-    public function createList($name, $description = null)
+    public function createList($name, $description = null, $youtubePlaylistId = null)
     {
         $listId = Utils::generateReadableId();
 
         $stmt = $this->db->prepare(
-            "INSERT INTO movie_lists (list_id, list_name, description)
-             VALUES (:list_id, :list_name, :description)"
+            "INSERT INTO movie_lists (list_id, list_name, description, youtube_playlist_id)
+             VALUES (:list_id, :list_name, :description, :youtube_playlist_id)"
         );
 
         $stmt->execute([
             ':list_id' => $listId,
             ':list_name' => $name,
-            ':description' => $description
+            ':description' => $description,
+            ':youtube_playlist_id' => $youtubePlaylistId
         ]);
 
         return $listId;
@@ -162,12 +163,13 @@ class MovieListService
      * @param string|null $description
      * @return bool Success
      */
-    public function updateList($listId, $name, $description = null)
+    public function updateList($listId, $name, $description = null, $youtubePlaylistId = null)
     {
         $stmt = $this->db->prepare(
             "UPDATE movie_lists
              SET list_name = :list_name,
                  description = :description,
+                 youtube_playlist_id = :youtube_playlist_id,
                  updated_at = CURRENT_TIMESTAMP
              WHERE list_id = :list_id"
         );
@@ -175,7 +177,8 @@ class MovieListService
         return $stmt->execute([
             ':list_id' => $listId,
             ':list_name' => $name,
-            ':description' => $description
+            ':description' => $description,
+            ':youtube_playlist_id' => $youtubePlaylistId
         ]);
     }
 
@@ -301,6 +304,53 @@ class MovieListService
             $this->db->rollBack();
             return false;
         }
+    }
+
+    public function getAllLists()
+    {
+        $stmt = $this->db->prepare(
+            "SELECT ml.*, COUNT(mli.id) as item_count
+             FROM movie_lists ml
+             LEFT JOIN movie_list_items mli ON ml.list_id = mli.list_id
+             GROUP BY ml.id
+             ORDER BY ml.is_curated DESC, ml.created_at DESC"
+        );
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    public function copyAsCurated($sourceListId, $newName, $description = null, $youtubePlaylistId = null)
+    {
+        $source = $this->getList($sourceListId);
+        if (!$source) {
+            return null;
+        }
+
+        $listId = Utils::generateReadableId();
+
+        $stmt = $this->db->prepare(
+            "INSERT INTO movie_lists (list_id, list_name, description, youtube_playlist_id, is_curated)
+             VALUES (:list_id, :list_name, :description, :youtube_playlist_id, 1)"
+        );
+        $stmt->execute([
+            ':list_id' => $listId,
+            ':list_name' => $newName,
+            ':description' => $description,
+            ':youtube_playlist_id' => $youtubePlaylistId
+        ]);
+
+        foreach ($source['items'] as $item) {
+            $this->addMovie($listId, [
+                'tmdb_id' => $item['tmdb_id'],
+                'title' => $item['title'],
+                'poster_path' => $item['poster_path'],
+                'release_year' => $item['release_year'],
+                'rating' => $item['rating'],
+                'notes' => $item['notes']
+            ]);
+        }
+
+        return $listId;
     }
 
     /**
