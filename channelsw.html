@@ -670,12 +670,6 @@
 
                 console.log(`Added ${data.videos.length} videos to panel. Total videos in panel: ${currentVideos.length}`);
 
-                // Automatically play the first video
-                if (data.videos.length > 0) {
-                    const firstVideo = data.videos[0];
-                    playVideo(firstVideo.video_id, 0);
-                }
-
             } catch (error) {
                 console.error('Error loading videos:', error);
                 contentArea.innerHTML = `
@@ -1487,11 +1481,6 @@
 
                     console.log(`Added ${data.videos.length} videos to panel. Total videos in panel: ${currentVideos.length}`);
 
-                    // Automatically play the first video
-                    if (data.videos.length > 0) {
-                        const firstVideo = data.videos[0];
-                        playVideo(firstVideo.video_id, 0);
-                    }
                 })
                 .catch(error => {
                     console.error('Error loading videos:', error);
