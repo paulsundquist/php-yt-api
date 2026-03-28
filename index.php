@@ -444,10 +444,14 @@ try {
                 $stats = $youtubeService->fetchAndStoreVideos($db, $maxResults);
             }
 
+            $apiKey = getenv('YOUTUBE_API_KEY');
+            $maskedKey = $apiKey ? substr($apiKey, 0, 4) . '...' . substr($apiKey, -3) : 'not set';
+
             echo json_encode([
                 'success' => true,
                 'message' => 'Videos fetched and stored successfully',
-                'stats' => $stats
+                'stats' => $stats,
+                'api_key' => $maskedKey
             ]);
             break;
 
