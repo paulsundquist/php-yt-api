@@ -1395,6 +1395,61 @@ try {
             }
             break;
 
+        case '/api/channels/search':
+            if ($method === 'GET') {
+                $q = trim($_GET['q'] ?? '');
+                if ($q === '') {
+                    http_response_code(400);
+                    echo json_encode(['success' => false, 'error' => 'Query required']);
+                    break;
+                }
+                $youtubeService = new YouTubeService();
+                $channels = $youtubeService->searchChannels($q);
+                echo json_encode(['success' => true, 'channels' => $channels]);
+            } else {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+            }
+            break;
+
+        case '/api/feeds/rss':
+            if ($method === 'GET') {
+                $channelId = trim($_GET['channel_id'] ?? '');
+                if ($channelId === '') {
+                    http_response_code(400);
+                    echo json_encode(['success' => false, 'error' => 'channel_id required']);
+                    break;
+                }
+                $url = 'https://www.youtube.com/feeds/videos.xml?channel_id=' . urlencode($channelId);
+                $xml = @file_get_contents($url);
+                if ($xml === false) {
+                    http_response_code(502);
+                    echo json_encode(['success' => false, 'error' => 'Failed to fetch RSS feed']);
+                    break;
+                }
+                $videos = [];
+                preg_match_all('/<entry>(.*?)<\/entry>/s', $xml, $entries);
+                foreach ($entries[1] as $entry) {
+                    preg_match('/<yt:videoId>(.*?)<\/yt:videoId>/', $entry, $vidMatch);
+                    preg_match('/<title>(.*?)<\/title>/',            $entry, $titleMatch);
+                    preg_match('/<published>(.*?)<\/published>/',    $entry, $pubMatch);
+                    preg_match('/<media:thumbnail[^>]+url="([^"]+)"/', $entry, $thumbMatch);
+                    $videoId = $vidMatch[1] ?? '';
+                    if (!$videoId) continue;
+                    $videos[] = [
+                        'videoId'   => $videoId,
+                        'title'     => html_entity_decode($titleMatch[1] ?? '', ENT_XML1),
+                        'published' => $pubMatch[1] ?? '',
+                        'thumbnail' => $thumbMatch[1] ?? "https://i.ytimg.com/vi/{$videoId}/hqdefault.jpg",
+                    ];
+                }
+                echo json_encode(['success' => true, 'videos' => $videos]);
+            } else {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+            }
+            break;
+
             http_response_code(404);
             echo json_encode(['error' => 'Endpoint not found']);
             break;

@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feeds</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f9fafb;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ── Top bar ── */
+        .top-bar {
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+            z-index: 100;
+        }
+
+        .home-button {
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            transition: opacity 0.2s;
+        }
+        .home-button:hover { opacity: 0.7; }
+
+        .app-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 4px;
+            margin-left: auto;
+        }
+
+        .filter-btn {
+            padding: 5px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: white;
+            color: #374151;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .filter-btn:hover { background: #f3f4f6; }
+        .filter-btn.active { background: #2563eb; border-color: #2563eb; color: white; }
+
+        .icon-btn {
+            padding: 5px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: white;
+            color: #6b7280;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .icon-btn:hover { background: #f3f4f6; color: #374151; }
+
+        /* ── Panels ── */
+        .panels {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* ── Panel 1: Groups & Feeds ── */
+        .panel-feeds {
+            width: 220px;
+            background: white;
+            border-right: 1px solid #e5e7eb;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .panel-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .circle-btn {
+            width: 22px;
+            height: 22px;
+            border: none;
+            border-radius: 4px;
+            background: #f3f4f6;
+            color: #374151;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            line-height: 1;
+        }
+        .circle-btn:hover { background: #e5e7eb; }
+
+        .groups-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 6px 0;
+        }
+
+        .group-header {
+            display: flex;
+            align-items: center;
+            padding: 6px 10px;
+            cursor: pointer;
+            gap: 5px;
+            transition: background 0.15s;
+            user-select: none;
+        }
+        .group-header:hover { background: #f9fafb; }
+        .group-header.active { background: #eff6ff; }
+
+        .group-chevron {
+            font-size: 9px;
+            color: #9ca3af;
+            width: 12px;
+            flex-shrink: 0;
+            transition: transform 0.2s;
+        }
+        .group-chevron.open { transform: rotate(90deg); }
+
+        .group-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: #1f2937;
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .menu-trigger {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #d1d5db;
+            font-size: 15px;
+            padding: 0 2px;
+            display: block;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        .group-header:hover .menu-trigger,
+        .feed-item:hover .menu-trigger { color: #9ca3af; }
+        .menu-trigger:hover { color: #374151; }
+
+        .feeds-list { display: none; }
+        .feeds-list.open { display: block; }
+
+        .feed-item {
+            display: flex;
+            align-items: center;
+            padding: 5px 10px 5px 26px;
+            cursor: pointer;
+            gap: 5px;
+            transition: background 0.15s;
+        }
+        .feed-item:hover { background: #f9fafb; }
+        .feed-item.active { background: #eff6ff; }
+
+        .feed-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #d1d5db;
+            flex-shrink: 0;
+        }
+        .feed-item.active .feed-dot { background: #2563eb; }
+
+        .feed-name {
+            font-size: 12px;
+            color: #374151;
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .feed-item.active .feed-name { color: #2563eb; font-weight: 500; }
+
+        .add-feed-row {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px 4px 26px;
+            font-size: 12px;
+            color: #9ca3af;
+            cursor: pointer;
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
+            transition: all 0.15s;
+        }
+        .add-feed-row:hover { color: #2563eb; background: #f9fafb; }
+
+        /* ── Panel 2: Video list ── */
+        .panel-videos {
+            width: 300px;
+            border-right: 1px solid #e5e7eb;
+            flex-shrink: 0;
+            background: #f9fafb;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .videos-toolbar {
+            background: white;
+            padding: 8px 10px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .video-count {
+            font-size: 11px;
+            color: #9ca3af;
+            margin-left: auto;
+        }
+
+        .refresh-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #6b7280;
+            font-size: 16px;
+            padding: 2px 4px;
+            transition: color 0.2s;
+            line-height: 1;
+        }
+        .refresh-btn:hover { color: #2563eb; }
+        .refresh-btn.spinning { animation: spin 0.8s linear infinite; display: inline-block; }
+
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        .loading-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 2px;
+            background: #2563eb;
+            display: none;
+            animation: loading 1.4s ease-in-out infinite;
+        }
+        .loading-bar.show { display: block; }
+        @keyframes loading {
+            0%   { width: 0%; left: 0; }
+            50%  { width: 60%; left: 20%; }
+            100% { width: 0%; left: 100%; }
+        }
+
+        .videos-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+
+        .video-card {
+            display: flex;
+            gap: 8px;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s;
+            background: white;
+            margin-bottom: 6px;
+            border: 1px solid #e5e7eb;
+        }
+        .video-card:hover { background: #f0f9ff; border-color: #bfdbfe; }
+        .video-card.playing { background: #eff6ff; border-color: #2563eb; }
+        .video-card.watched { opacity: 0.55; }
+
+        .video-thumb {
+            width: 80px;
+            height: 45px;
+            object-fit: cover;
+            border-radius: 4px;
+            flex-shrink: 0;
+            background: #e5e7eb;
+        }
+
+        .video-info { flex: 1; overflow: hidden; }
+
+        .video-title {
+            font-size: 12px;
+            color: #1f2937;
+            font-weight: 500;
+            line-height: 1.35;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin-bottom: 3px;
+        }
+
+        .video-meta { font-size: 11px; color: #9ca3af; }
+
+        .watched-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #10b981;
+            flex-shrink: 0;
+            margin-top: 5px;
+            display: none;
+        }
+        .video-card.watched .watched-dot { display: block; }
+
+        .empty-state {
+            text-align: center;
+            color: #9ca3af;
+            font-size: 13px;
+            padding: 32px 16px;
+        }
+        .empty-icon { font-size: 28px; margin-bottom: 8px; }
+
+        /* ── Panel 3: Player ── */
+        .panel-player {
+            flex: 1;
+            background: black;
+            position: relative;
+            overflow: hidden;
+        }
+        #youtube-player { width: 100%; height: 100%; }
+
+        /* ── Context menu ── */
+        .ctx-menu {
+            position: fixed;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+            min-width: 150px;
+            z-index: 500;
+            display: none;
+        }
+        .ctx-menu.show { display: block; }
+
+        .ctx-item {
+            padding: 9px 14px;
+            font-size: 13px;
+            cursor: pointer;
+            color: #374151;
+            transition: background 0.15s;
+        }
+        .ctx-item:first-child { border-radius: 8px 8px 0 0; }
+        .ctx-item:last-child  { border-radius: 0 0 8px 8px; }
+        .ctx-item:hover { background: #f9fafb; }
+        .ctx-item.danger { color: #ef4444; }
+        .ctx-item.danger:hover { background: #fef2f2; }
+
+        /* ── Modals ── */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .overlay.show { display: flex; }
+
+        .modal {
+            background: white;
+            border-radius: 12px;
+            padding: 22px;
+            width: 420px;
+            max-width: 92vw;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.18);
+        }
+
+        .modal-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 14px;
+        }
+
+        .modal-sub {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 10px;
+        }
+
+        .text-input {
+            width: 100%;
+            padding: 9px 11px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #1f2937;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .text-input:focus { border-color: #2563eb; }
+
+        .search-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .search-row .text-input { margin-bottom: 0; flex: 1; }
+
+        .search-results {
+            max-height: 220px;
+            overflow-y: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: none;
+        }
+        .search-results.show { display: block; }
+
+        .search-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 12px;
+            cursor: pointer;
+            transition: background 0.15s;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .search-item:last-child { border-bottom: none; }
+        .search-item:hover { background: #f9fafb; }
+        .search-item.selected { background: #eff6ff; }
+
+        .search-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #e5e7eb;
+            flex-shrink: 0;
+        }
+
+        .search-name { font-size: 13px; color: #1f2937; font-weight: 500; }
+        .search-id   { font-size: 11px; color: #9ca3af; }
+
+        .selected-banner {
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            border-radius: 8px;
+            padding: 9px 12px;
+            margin-bottom: 10px;
+            font-size: 13px;
+            color: #166534;
+            display: none;
+        }
+
+        .spinner-text {
+            text-align: center;
+            padding: 14px;
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        .btn-primary { background: #2563eb; color: white; }
+        .btn-primary:hover { background: #1d4ed8; }
+        .btn-primary:disabled { background: #93c5fd; cursor: default; }
+        .btn-secondary { background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; }
+        .btn-secondary:hover { background: #e5e7eb; }
+
+        /* ── Feeds panel sidebar mode ── */
+        .sidebar-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.3);
+            z-index: 190;
+            display: none;
+        }
+        .sidebar-backdrop.show { display: block; }
+
+        .panel-feeds.sidebar-mode {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 200;
+            transform: translateX(-100%);
+            transition: transform 0.25s ease;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.18);
+            width: 240px;
+        }
+        .panel-feeds.sidebar-mode.sidebar-open {
+            transform: translateX(0);
+        }
+
+        #btn-open-sidebar { display: none; }
+
+        .dock-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #9ca3af;
+            font-size: 13px;
+            padding: 2px 4px;
+            line-height: 1;
+            transition: color 0.2s;
+            title: "Dock/undock panel";
+        }
+        .dock-btn:hover { color: #374151; }
+
+        /* ── Shortcuts modal ── */
+        .shortcuts-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .shortcuts-overlay.show { display: flex; }
+
+        .shortcuts-box {
+            background: white;
+            border-radius: 12px;
+            padding: 22px;
+            width: 380px;
+            max-width: 92vw;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .shortcuts-title { font-size: 17px; font-weight: 600; color: #1f2937; margin-bottom: 14px; }
+        .sc-section { font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin: 12px 0 5px; }
+        .sc-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; font-size: 13px; color: #374151; }
+        .sc-key { background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 4px; padding: 2px 7px; font-family: monospace; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+<!-- ── Shortcuts modal ── -->
+<div class="shortcuts-overlay" id="shortcuts-overlay" onclick="hideShortcuts()">
+    <div class="shortcuts-box" onclick="event.stopPropagation()">
+        <div class="shortcuts-title">Keyboard Shortcuts</div>
+        <div class="sc-section">Playback</div>
+        <div class="sc-row"><span>Play / Pause</span><span class="sc-key">Space / K</span></div>
+        <div class="sc-row"><span>Next video</span><span class="sc-key">N</span></div>
+        <div class="sc-section">Seeking</div>
+        <div class="sc-row"><span>Rewind 10s</span><span class="sc-key">J</span></div>
+        <div class="sc-row"><span>Forward 10s</span><span class="sc-key">L</span></div>
+        <div class="sc-row"><span>Rewind 5s</span><span class="sc-key">← Arrow</span></div>
+        <div class="sc-row"><span>Forward 5s</span><span class="sc-key">→ Arrow</span></div>
+        <div class="sc-section">Volume</div>
+        <div class="sc-row"><span>Volume up 5%</span><span class="sc-key">↑ Arrow</span></div>
+        <div class="sc-row"><span>Volume down 5%</span><span class="sc-key">↓ Arrow</span></div>
+        <div class="sc-section">Speed</div>
+        <div class="sc-row"><span>Faster</span><span class="sc-key">&gt; / .</span></div>
+        <div class="sc-row"><span>Slower</span><span class="sc-key">&lt; / ,</span></div>
+        <div class="sc-section">Other</div>
+        <div class="sc-row"><span>Fullscreen</span><span class="sc-key">F</span></div>
+        <div class="sc-row"><span>Show shortcuts</span><span class="sc-key">?</span></div>
+        <div class="modal-actions" style="margin-top:14px">
+            <button class="btn btn-primary" onclick="hideShortcuts()">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── Add Group modal ── -->
+<div class="overlay" id="modal-add-group" onclick="closeModal('modal-add-group')">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-title">Add Group</div>
+        <input type="text" class="text-input" id="input-group-name" placeholder="Group name…" style="margin-bottom:12px">
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="closeModal('modal-add-group')">Cancel</button>
+            <button class="btn btn-primary" onclick="submitAddGroup()">Add</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── Add Feed modal ── -->
+<div class="overlay" id="modal-add-feed" onclick="closeModal('modal-add-feed')">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-title">Add Feed</div>
+        <div class="modal-sub">Group: <strong id="add-feed-group-label"></strong></div>
+        <div class="search-row">
+            <input type="text" class="text-input" id="input-channel-search" placeholder="Search channel name…">
+            <button class="btn btn-secondary" id="btn-channel-search" onclick="doChannelSearch()">Search</button>
+        </div>
+        <div class="search-results" id="search-results"></div>
+        <div class="selected-banner" id="selected-banner">
+            Selected: <strong id="selected-channel-label"></strong>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="closeModal('modal-add-feed')">Cancel</button>
+            <button class="btn btn-primary" id="btn-add-feed-submit" onclick="submitAddFeed()" disabled>Add Feed</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── Rename modal ── -->
+<div class="overlay" id="modal-rename" onclick="closeModal('modal-rename')">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-title" id="rename-modal-title">Rename</div>
+        <input type="text" class="text-input" id="input-rename" placeholder="New name…" style="margin-bottom:12px">
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="closeModal('modal-rename')">Cancel</button>
+            <button class="btn btn-primary" onclick="submitRename()">Rename</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── Context menu ── -->
+<div class="ctx-menu" id="ctx-menu">
+    <div class="ctx-item" onclick="ctxRename()">Rename</div>
+    <div class="ctx-item danger" onclick="ctxDelete()">Delete</div>
+</div>
+
+<!-- ── Sidebar backdrop ── -->
+<div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeSidebar()"></div>
+
+<!-- ── Top bar ── -->
+<div class="top-bar">
+    <a href="index.html" class="home-button" title="Home">
+        <img src="/favicon.svg" alt="Home" style="width:24px;height:24px">
+    </a>
+    <button class="icon-btn" id="btn-open-sidebar" onclick="openSidebar()" title="Open feeds panel">☰</button>
+    <span class="app-title">Feeds</span>
+    <div class="filter-group">
+        <button class="filter-btn active" id="filter-all"       onclick="setFilter('all')">All</button>
+        <button class="filter-btn"        id="filter-unwatched" onclick="setFilter('unwatched')">Unwatched</button>
+        <button class="filter-btn"        id="filter-watched"   onclick="setFilter('watched')">Watched</button>
+    </div>
+    <button class="icon-btn" id="btn-dock-toggle" onclick="toggleFeedsMode()" title="Float as sidebar">&#x2261; Feeds</button>
+    <button class="icon-btn" onclick="showShortcuts()" title="Keyboard shortcuts">?</button>
+</div>
+
+<!-- ── Panels ── -->
+<div class="panels">
+
+    <!-- Panel 1 -->
+    <div class="panel-feeds">
+        <div class="panel-header">
+            <span class="panel-label">Feeds</span>
+            <button class="circle-btn" onclick="showAddGroup()" title="Add group">+</button>
+        </div>
+        <div class="groups-list" id="groups-list">
+            <div class="empty-state">
+                <div class="empty-icon">📡</div>
+                <div>No feeds yet.<br>Add a group to get started.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel 2 -->
+    <div class="panel-videos">
+        <div class="videos-toolbar">
+            <span class="panel-label">Videos</span>
+            <span class="video-count" id="video-count"></span>
+            <button class="refresh-btn" id="refresh-btn" onclick="refreshVideos()" title="Refresh">↻</button>
+            <div class="loading-bar" id="loading-bar"></div>
+        </div>
+        <div class="videos-scroll" id="videos-scroll">
+            <div class="empty-state" style="padding-top:48px">
+                <div class="empty-icon">👈</div>
+                <div>Select a group or feed</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel 3 -->
+    <div class="panel-player">
+        <div id="youtube-player"></div>
+    </div>
+
+</div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+// ── Feeds panel dock/sidebar mode ────────────────────────────────────────────
+let feedsPanelMode = localStorage.getItem('feedsPanelMode') || 'docked'; // 'docked' | 'sidebar'
+let sidebarOpen    = false;
+
+function applyFeedsMode() {
+    const panel    = document.querySelector('.panel-feeds');
+    const backdrop = document.getElementById('sidebar-backdrop');
+    const btnOpen  = document.getElementById('btn-open-sidebar');
+    const btnDock  = document.getElementById('btn-dock-toggle');
+
+    if (feedsPanelMode === 'sidebar') {
+        panel.classList.add('sidebar-mode');
+        panel.classList.remove('sidebar-open');
+        backdrop.classList.remove('show');
+        btnOpen.style.display = '';
+        btnDock.innerHTML = '&#x2261; Feeds';
+        btnDock.title = 'Dock feeds panel';
+        sidebarOpen = false;
+    } else {
+        panel.classList.remove('sidebar-mode', 'sidebar-open');
+        backdrop.classList.remove('show');
+        btnOpen.style.display = 'none';
+        btnDock.innerHTML = '&#x2261; Feeds';
+        btnDock.title = 'Float feeds as sidebar';
+        sidebarOpen = false;
+    }
+}
+
+function toggleFeedsMode() {
+    feedsPanelMode = feedsPanelMode === 'docked' ? 'sidebar' : 'docked';
+    localStorage.setItem('feedsPanelMode', feedsPanelMode);
+    applyFeedsMode();
+}
+
+function openSidebar() {
+    if (feedsPanelMode !== 'sidebar') return;
+    const panel    = document.querySelector('.panel-feeds');
+    const backdrop = document.getElementById('sidebar-backdrop');
+    panel.classList.add('sidebar-open');
+    backdrop.classList.add('show');
+    sidebarOpen = true;
+}
+
+function closeSidebar() {
+    if (feedsPanelMode !== 'sidebar') return;
+    const panel    = document.querySelector('.panel-feeds');
+    const backdrop = document.getElementById('sidebar-backdrop');
+    panel.classList.remove('sidebar-open');
+    backdrop.classList.remove('show');
+    sidebarOpen = false;
+}
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let db            = null;
+let player        = null;
+let playerReady   = false;
+let currentVideos = [];          // all loaded videos (sorted)
+let currentIndex  = -1;          // index in currentVideos of playing video
+let currentFilter = 'all';
+let watchedSet    = new Set();
+
+// context menu
+let ctxType = null;   // 'group' | 'feed'
+let ctxId   = null;
+
+// add-feed
+let addFeedGroupId    = null;
+let selectedChannel   = null;  // { channelId, name, thumbnail }
+
+// rename
+let renameType = null;
+let renameId   = null;
+
+// selection
+let selGroupId = null;
+let selFeedId  = null;
+
+// playback speed
+const SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+let speedIdx  = 3;
+
+// ── IndexedDB ─────────────────────────────────────────────────────────────────
+const DB_NAME    = 'feedsDB';
+const DB_VERSION = 1;
+const CACHE_TTL  = 60 * 60 * 1000; // 1 hour
+
+function openDB() {
+    return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
+        req.onerror = () => reject(req.error);
+        req.onsuccess = () => resolve(req.result);
+        req.onupgradeneeded = (e) => {
+            const d = e.target.result;
+            if (!d.objectStoreNames.contains('groups')) {
+                d.createObjectStore('groups', { keyPath: 'id', autoIncrement: true });
+            }
+            if (!d.objectStoreNames.contains('feeds')) {
+                const fs = d.createObjectStore('feeds', { keyPath: 'id', autoIncrement: true });
+                fs.createIndex('groupId', 'groupId');
+            }
+            if (!d.objectStoreNames.contains('watched')) {
+                d.createObjectStore('watched', { keyPath: 'videoId' });
+            }
+            if (!d.objectStoreNames.contains('videoCache')) {
+                const vs = d.createObjectStore('videoCache', { keyPath: 'videoId' });
+                vs.createIndex('channelId', 'channelId');
+            }
+        };
+    });
+}
+
+const tx = (store, mode = 'readonly') => db.transaction(store, mode).objectStore(store);
+
+function dbGetAll(store) {
+    return new Promise((resolve, reject) => {
+        const r = tx(store).getAll();
+        r.onsuccess = () => resolve(r.result);
+        r.onerror   = () => reject(r.error);
+    });
+}
+
+function dbGet(store, key) {
+    return new Promise((resolve, reject) => {
+        const r = tx(store).get(key);
+        r.onsuccess = () => resolve(r.result);
+        r.onerror   = () => reject(r.error);
+    });
+}
+
+function dbAdd(store, val) {
+    return new Promise((resolve, reject) => {
+        const r = tx(store, 'readwrite').add(val);
+        r.onsuccess = () => resolve(r.result);
+        r.onerror   = () => reject(r.error);
+    });
+}
+
+function dbPut(store, val) {
+    return new Promise((resolve, reject) => {
+        const r = tx(store, 'readwrite').put(val);
+        r.onsuccess = () => resolve(r.result);
+        r.onerror   = () => reject(r.error);
+    });
+}
+
+function dbDelete(store, key) {
+    return new Promise((resolve, reject) => {
+        const r = tx(store, 'readwrite').delete(key);
+        r.onsuccess = () => resolve(r.result);
+        r.onerror   = () => reject(r.error);
+    });
+}
+
+function dbByIndex(store, index, val) {
+    return new Promise((resolve, reject) => {
+        const t = db.transaction(store, 'readonly');
+        const r = t.objectStore(store).index(index).getAll(val);
+        r.onsuccess = () => resolve(r.result);
+        r.onerror   = () => reject(r.error);
+    });
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+async function init() {
+    applyFeedsMode();
+    db = await openDB();
+    const watched = await dbGetAll('watched');
+    watchedSet = new Set(watched.map(w => w.videoId));
+    await renderGroups();
+}
+
+// ── Panel 1: Groups & Feeds ───────────────────────────────────────────────────
+// Safely embed a JS value inside an HTML attribute (double-quoted)
+function aj(val) { return JSON.stringify(val).replace(/"/g, '&quot;'); }
+
+async function renderGroups() {
+    const groups = await dbGetAll('groups');
+    const el = document.getElementById('groups-list');
+
+    if (!groups.length) {
+        el.innerHTML = `<div class="empty-state"><div class="empty-icon">📡</div><div>No feeds yet.<br>Add a group to get started.</div></div>`;
+        return;
+    }
+
+    let html = '';
+    for (const g of groups) {
+        const feeds  = await dbByIndex('feeds', 'groupId', g.id);
+        const active = selGroupId === g.id && selFeedId === null;
+        html += `
+        <div class="group-item">
+            <div class="group-header${active ? ' active' : ''}" onclick="selectGroup(${g.id})">
+                <span class="group-chevron open" id="chev-${g.id}">▶</span>
+                <span class="group-name">${esc(g.name)}</span>
+                <button class="menu-trigger" onclick="openGroupMenu(event,${g.id},${aj(g.name)})">⋯</button>
+            </div>
+            <div class="feeds-list open" id="fl-${g.id}">
+                ${feeds.map(f => `
+                <div class="feed-item${selFeedId === f.id ? ' active' : ''}" onclick="selectFeed(${f.id})">
+                    <span class="feed-dot"></span>
+                    <span class="feed-name">${esc(f.label)}</span>
+                    <button class="menu-trigger" onclick="openFeedMenu(event,${f.id},${aj(f.label)})">⋯</button>
+                </div>`).join('')}
+                <button class="add-feed-row" onclick="showAddFeed(${g.id},${aj(g.name)})">+ Add feed</button>
+            </div>
+        </div>`;
+    }
+    el.innerHTML = html;
+}
+
+async function selectGroup(groupId) {
+    selGroupId = groupId;
+    selFeedId  = null;
+    await renderGroups();
+    await loadGroupVideos(groupId);
+    closeSidebar();
+}
+
+async function selectFeed(feedId) {
+    const feed = await dbGet('feeds', feedId);
+    selFeedId  = feedId;
+    selGroupId = feed.groupId;
+    await renderGroups();
+    await loadFeedVideos([feed]);
+    closeSidebar();
+}
+
+// ── Add Group ─────────────────────────────────────────────────────────────────
+function showAddGroup() {
+    document.getElementById('input-group-name').value = '';
+    openModal('modal-add-group');
+    setTimeout(() => document.getElementById('input-group-name').focus(), 80);
+}
+
+async function submitAddGroup() {
+    const name = document.getElementById('input-group-name').value.trim();
+    if (!name) return;
+    await dbAdd('groups', { name });
+    closeModal('modal-add-group');
+    await renderGroups();
+}
+
+// ── Add Feed ──────────────────────────────────────────────────────────────────
+function showAddFeed(groupId, groupName) {
+    addFeedGroupId  = groupId;
+    selectedChannel = null;
+    document.getElementById('add-feed-group-label').textContent      = groupName;
+    document.getElementById('input-channel-search').value            = '';
+    document.getElementById('search-results').innerHTML              = '';
+    document.getElementById('search-results').classList.remove('show');
+    document.getElementById('selected-banner').style.display         = 'none';
+    document.getElementById('btn-add-feed-submit').disabled          = true;
+    openModal('modal-add-feed');
+    setTimeout(() => document.getElementById('input-channel-search').focus(), 80);
+}
+
+async function doChannelSearch() {
+    const q = document.getElementById('input-channel-search').value.trim();
+    if (!q) return;
+
+    const btn        = document.getElementById('btn-channel-search');
+    const resultsEl  = document.getElementById('search-results');
+    btn.disabled     = true;
+    btn.textContent  = '…';
+    resultsEl.innerHTML = '<div class="spinner-text">Searching…</div>';
+    resultsEl.classList.add('show');
+
+    try {
+        const res  = await fetch(`/api/channels/search?q=${encodeURIComponent(q)}`);
+        const data = await res.json();
+
+        if (!data.success || !data.channels.length) {
+            resultsEl.innerHTML = '<div class="spinner-text">No channels found.</div>';
+            return;
+        }
+
+        resultsEl.innerHTML = data.channels.map(ch => `
+            <div class="search-item" onclick="pickChannel(this, ${aj(ch.channelId)}, ${aj(ch.name)}, ${aj(ch.thumbnail)})">
+                <img class="search-avatar" src="${esc(ch.thumbnail)}" onerror="this.src=''" alt="">
+                <div>
+                    <div class="search-name">${esc(ch.name)}</div>
+                    <div class="search-id">${esc(ch.channelId)}</div>
+                </div>
+            </div>`).join('');
+    } catch {
+        resultsEl.innerHTML = '<div class="spinner-text">Error — could not reach server.</div>';
+    } finally {
+        btn.disabled    = false;
+        btn.textContent = 'Search';
+    }
+}
+
+function pickChannel(el, channelId, name, thumbnail) {
+    selectedChannel = { channelId, name, thumbnail };
+    document.querySelectorAll('.search-item').forEach(i => i.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('selected-banner').style.display    = 'block';
+    document.getElementById('selected-channel-label').textContent = name;
+    document.getElementById('btn-add-feed-submit').disabled      = false;
+}
+
+async function submitAddFeed() {
+    if (!selectedChannel || !addFeedGroupId) return;
+    await dbAdd('feeds', {
+        groupId:   addFeedGroupId,
+        channelId: selectedChannel.channelId,
+        label:     selectedChannel.name
+    });
+    closeModal('modal-add-feed');
+    await renderGroups();
+}
+
+// ── Context menu ──────────────────────────────────────────────────────────────
+function openGroupMenu(e, id, name) {
+    e.stopPropagation();
+    ctxType = 'group';
+    ctxId   = id;
+    document.getElementById('input-rename').dataset.prev = name;
+    positionCtx(e);
+}
+
+function openFeedMenu(e, id, name) {
+    e.stopPropagation();
+    ctxType = 'feed';
+    ctxId   = id;
+    document.getElementById('input-rename').dataset.prev = name;
+    positionCtx(e);
+}
+
+function positionCtx(e) {
+    const m = document.getElementById('ctx-menu');
+    m.style.left = e.clientX + 'px';
+    m.style.top  = e.clientY + 'px';
+    m.classList.add('show');
+}
+
+function hideCtx() {
+    document.getElementById('ctx-menu').classList.remove('show');
+}
+
+function ctxRename() {
+    hideCtx();
+    const prev = document.getElementById('input-rename').dataset.prev || '';
+    document.getElementById('rename-modal-title').textContent = ctxType === 'group' ? 'Rename Group' : 'Rename Feed';
+    document.getElementById('input-rename').value = prev;
+    renameType = ctxType;
+    renameId   = ctxId;
+    openModal('modal-rename');
+    setTimeout(() => document.getElementById('input-rename').focus(), 80);
+}
+
+async function submitRename() {
+    const name = document.getElementById('input-rename').value.trim();
+    if (!name) return;
+    if (renameType === 'group') {
+        const g = await dbGet('groups', renameId);
+        await dbPut('groups', { ...g, name });
+    } else {
+        const f = await dbGet('feeds', renameId);
+        await dbPut('feeds', { ...f, label: name });
+    }
+    closeModal('modal-rename');
+    await renderGroups();
+}
+
+async function ctxDelete() {
+    hideCtx();
+    if (ctxType === 'group') {
+        const feeds = await dbByIndex('feeds', 'groupId', ctxId);
+        for (const f of feeds) {
+            await dbDelete('feeds', f.id);
+            await clearChannelCache(f.channelId);
+        }
+        await dbDelete('groups', ctxId);
+        if (selGroupId === ctxId) { selGroupId = null; selFeedId = null; clearVideoPanel(); }
+    } else {
+        const feed = await dbGet('feeds', ctxId);
+        if (feed) await clearChannelCache(feed.channelId);
+        await dbDelete('feeds', ctxId);
+        if (selFeedId === ctxId) { selFeedId = null; clearVideoPanel(); }
+    }
+    await renderGroups();
+}
+
+async function clearChannelCache(channelId) {
+    const cached = await dbByIndex('videoCache', 'channelId', channelId);
+    for (const v of cached) await dbDelete('videoCache', v.videoId);
+}
+
+function clearVideoPanel() {
+    currentVideos = [];
+    currentIndex  = -1;
+    document.getElementById('video-count').textContent = '';
+    document.getElementById('videos-scroll').innerHTML = `
+        <div class="empty-state" style="padding-top:48px">
+            <div class="empty-icon">👈</div><div>Select a group or feed</div>
+        </div>`;
+}
+
+// ── Video loading ─────────────────────────────────────────────────────────────
+async function loadGroupVideos(groupId, forceRefresh = false) {
+    const feeds = await dbByIndex('feeds', 'groupId', groupId);
+    if (!feeds.length) {
+        document.getElementById('videos-scroll').innerHTML = `
+            <div class="empty-state"><div class="empty-icon">📭</div><div>No feeds in this group yet.</div></div>`;
+        document.getElementById('video-count').textContent = '';
+        return;
+    }
+    await loadFeedVideos(feeds, forceRefresh);
+}
+
+async function loadFeedVideos(feeds, forceRefresh = false) {
+    setLoading(true);
+    currentVideos = [];
+    currentIndex  = -1;
+    try {
+        const all = [];
+        for (const f of feeds) {
+            try {
+                const vids = await fetchChannelVideos(f.channelId, f.label, forceRefresh);
+                all.push(...vids);
+            } catch (e) {
+                console.error('Error loading feed', f.channelId, e);
+            }
+        }
+        all.sort((a, b) => new Date(b.published) - new Date(a.published));
+        currentVideos = all;
+    } finally {
+        setLoading(false);
+        renderVideoList();
+    }
+}
+
+async function fetchChannelVideos(channelId, label, forceRefresh) {
+    const now = Date.now();
+
+    try {
+        if (!forceRefresh) {
+            const cached = await dbByIndex('videoCache', 'channelId', channelId);
+            if (cached.length && cached[0].fetchedAt && (now - cached[0].fetchedAt) < CACHE_TTL) {
+                return cached.map(v => ({ ...v, channelLabel: label }));
+            }
+        }
+
+        const res  = await fetch(`/api/feeds/rss?channel_id=${encodeURIComponent(channelId)}`);
+        const data = await res.json();
+        if (!data.success) return [];
+
+        const videos = data.videos.map(v => ({
+            videoId:      v.videoId,
+            channelId,
+            channelLabel: label,
+            title:        v.title,
+            published:    v.published,
+            thumbnail:    v.thumbnail,
+            fetchedAt:    now
+        }));
+
+        const t = db.transaction('videoCache', 'readwrite');
+        const s = t.objectStore('videoCache');
+        for (const v of videos) s.put(v);
+        return videos;
+    } catch (e) {
+        console.error('RSS fetch failed for', channelId, e);
+        return [];
+    }
+}
+
+function renderVideoList() {
+    const filtered = applyFilter(currentVideos);
+    const count    = filtered.length;
+    document.getElementById('video-count').textContent = count ? `${count} video${count !== 1 ? 's' : ''}` : '';
+
+    if (!count) {
+        const label = currentFilter !== 'all' ? currentFilter + ' ' : '';
+        document.getElementById('videos-scroll').innerHTML = `
+            <div class="empty-state"><div class="empty-icon">🎬</div><div>No ${label}videos found.</div></div>`;
+        return;
+    }
+
+    document.getElementById('videos-scroll').innerHTML = filtered.map(v => {
+        const idx     = currentVideos.indexOf(v);
+        const watched = watchedSet.has(v.videoId);
+        return `
+        <div class="video-card${watched ? ' watched' : ''}${idx === currentIndex ? ' playing' : ''}"
+             onclick="playVideo(${idx})" data-idx="${idx}">
+            <img class="video-thumb" src="${esc(v.thumbnail)}" loading="lazy" onerror="this.style.display='none'" alt="">
+            <div class="video-info">
+                <div class="video-title">${esc(v.title)}</div>
+                <div class="video-meta">${esc(v.channelLabel)} · ${timeAgo(v.published)}</div>
+            </div>
+            <div class="watched-dot" title="Watched"></div>
+        </div>`;
+    }).join('');
+}
+
+function applyFilter(videos) {
+    if (currentFilter === 'watched')   return videos.filter(v =>  watchedSet.has(v.videoId));
+    if (currentFilter === 'unwatched') return videos.filter(v => !watchedSet.has(v.videoId));
+    return videos;
+}
+
+async function refreshVideos() {
+    const btn = document.getElementById('refresh-btn');
+    btn.classList.add('spinning');
+    try {
+        if (selFeedId) {
+            const f = await dbGet('feeds', selFeedId);
+            await loadFeedVideos([f], true);
+        } else if (selGroupId) {
+            await loadGroupVideos(selGroupId, true);
+        }
+    } finally {
+        btn.classList.remove('spinning');
+    }
+}
+
+// ── Panel 3: Player ───────────────────────────────────────────────────────────
+function onYouTubeIframeAPIReady() {
+    player = new YT.Player('youtube-player', {
+        height: '100%',
+        width:  '100%',
+        playerVars: { autoplay: 0, rel: 0, modestbranding: 1 },
+        events: {
+            onReady:       () => { playerReady = true; },
+            onStateChange: (e) => { if (e.data === YT.PlayerState.ENDED) nextVideo(); }
+        }
+    });
+}
+
+function playVideo(index) {
+    if (index < 0 || index >= currentVideos.length) return;
+    currentIndex = index;
+    const v = currentVideos[index];
+    if (playerReady) player.loadVideoById(v.videoId);
+    markWatched(v.videoId);
+    renderVideoList();
+    const el = document.querySelector(`[data-idx="${index}"]`);
+    if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+
+async function markWatched(videoId) {
+    if (watchedSet.has(videoId)) return;
+    watchedSet.add(videoId);
+    await dbPut('watched', { videoId, watchedAt: new Date().toISOString() });
+}
+
+function nextVideo() {
+    const filtered = applyFilter(currentVideos);
+    if (!filtered.length) return;
+    const curInFiltered = filtered.findIndex(v => currentVideos.indexOf(v) === currentIndex);
+    const next = curInFiltered + 1;
+    if (next < filtered.length) playVideo(currentVideos.indexOf(filtered[next]));
+}
+
+// ── Filter ────────────────────────────────────────────────────────────────────
+function setFilter(f) {
+    currentFilter = f;
+    ['all', 'unwatched', 'watched'].forEach(k =>
+        document.getElementById(`filter-${k}`).classList.toggle('active', k === f)
+    );
+    if (currentVideos.length) renderVideoList();
+}
+
+// ── Keyboard shortcuts ────────────────────────────────────────────────────────
+document.addEventListener('keydown', (e) => {
+    if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+    if (!playerReady) return;
+
+    switch (e.key) {
+        case ' ': case 'k': case 'K':
+            e.preventDefault();
+            player.getPlayerState() === YT.PlayerState.PLAYING ? player.pauseVideo() : player.playVideo();
+            break;
+        case 'n': case 'N': nextVideo(); break;
+        case 'j': case 'J': player.seekTo(player.getCurrentTime() - 10, true); break;
+        case 'l': case 'L': player.seekTo(player.getCurrentTime() + 10, true); break;
+        case 'ArrowLeft':  e.preventDefault(); player.seekTo(player.getCurrentTime() - 5,  true); break;
+        case 'ArrowRight': e.preventDefault(); player.seekTo(player.getCurrentTime() + 5,  true); break;
+        case 'ArrowUp':    e.preventDefault(); player.setVolume(Math.min(100, player.getVolume() + 5)); break;
+        case 'ArrowDown':  e.preventDefault(); player.setVolume(Math.max(0,   player.getVolume() - 5)); break;
+        case '>': case '.': speedIdx = Math.min(SPEEDS.length - 1, speedIdx + 1); player.setPlaybackRate(SPEEDS[speedIdx]); break;
+        case '<': case ',': speedIdx = Math.max(0, speedIdx - 1); player.setPlaybackRate(SPEEDS[speedIdx]); break;
+        case 'f': case 'F': toggleFullscreen(); break;
+        case '?': showShortcuts(); break;
+    }
+});
+
+function toggleFullscreen() {
+    const el = document.querySelector('.panel-player');
+    document.fullscreenElement ? document.exitFullscreen() : el.requestFullscreen();
+}
+
+// ── Modal helpers ─────────────────────────────────────────────────────────────
+function openModal(id)  { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+function showShortcuts() { document.getElementById('shortcuts-overlay').classList.add('show'); }
+function hideShortcuts() { document.getElementById('shortcuts-overlay').classList.remove('show'); }
+
+// Enter-key submission
+document.getElementById('input-group-name').addEventListener('keydown',    e => { if (e.key === 'Enter') submitAddGroup(); });
+document.getElementById('input-channel-search').addEventListener('keydown', e => { if (e.key === 'Enter') doChannelSearch(); });
+document.getElementById('input-rename').addEventListener('keydown',         e => { if (e.key === 'Enter') submitRename(); });
+
+// Close context menu on outside click
+document.addEventListener('click', e => {
+    if (!e.target.closest('#ctx-menu') && !e.target.classList.contains('menu-trigger')) hideCtx();
+});
+
+// ── Loading ───────────────────────────────────────────────────────────────────
+function setLoading(on) {
+    document.getElementById('loading-bar').classList.toggle('show', on);
+}
+
+// ── Utils ─────────────────────────────────────────────────────────────────────
+function esc(s) {
+    return String(s ?? '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function timeAgo(iso) {
+    if (!iso) return '';
+    const d = Math.floor((Date.now() - new Date(iso)) / 1000);
+    if (d < 3600)  return `${Math.floor(d / 60)}m ago`;
+    if (d < 86400) return `${Math.floor(d / 3600)}h ago`;
+    return `${Math.floor(d / 86400)}d ago`;
+}
+
+// ── Start ─────────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>

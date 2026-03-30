@@ -59,6 +59,42 @@ class YouTubeService
     }
 
     /**
+     * Search for YouTube channels by name
+     *
+     * @param string $query Search query
+     * @param int $maxResults Maximum results to return
+     * @return array
+     */
+    public function searchChannels($query, $maxResults = 8)
+    {
+        try {
+            $response = $this->client->request('GET', 'search', [
+                'query' => [
+                    'key'        => $this->apiKey,
+                    'part'       => 'snippet',
+                    'type'       => 'channel',
+                    'q'          => $query,
+                    'maxResults' => $maxResults,
+                ]
+            ]);
+
+            $data = json_decode($response->getBody(), true);
+
+            return array_map(function ($item) {
+                return [
+                    'channelId'   => $item['id']['channelId'],
+                    'name'        => $item['snippet']['title'],
+                    'description' => $item['snippet']['description'] ?? '',
+                    'thumbnail'   => $item['snippet']['thumbnails']['default']['url'] ?? '',
+                ];
+            }, $data['items'] ?? []);
+
+        } catch (GuzzleException $e) {
+            throw new \Exception("Failed to search channels: " . $e->getMessage());
+        }
+    }
+
+    /**
      * Get uploads playlist ID for a channel
      *
      * @param string $channelId YouTube channel ID
