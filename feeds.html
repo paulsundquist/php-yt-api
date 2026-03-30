@@ -552,6 +552,25 @@
         }
         .dock-btn:hover { color: #374151; }
 
+        /* ── Speed toast ── */
+        .speed-toast {
+            position: fixed;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.75);
+            color: white;
+            font-size: 22px;
+            font-weight: 600;
+            padding: 10px 24px;
+            border-radius: 10px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.15s ease;
+            z-index: 300;
+        }
+        .speed-toast.show { opacity: 1; }
+
         /* ── Shortcuts modal ── */
         .shortcuts-overlay {
             position: fixed;
@@ -658,6 +677,9 @@
     <div class="ctx-item" onclick="ctxRename()">Rename</div>
     <div class="ctx-item danger" onclick="ctxDelete()">Delete</div>
 </div>
+
+<!-- ── Speed toast ── -->
+<div class="speed-toast" id="speed-toast"></div>
 
 <!-- ── Sidebar backdrop ── -->
 <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeSidebar()"></div>
@@ -807,6 +829,15 @@ let selFeedId  = null;
 // playback speed
 const SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
 let speedIdx  = 3;
+let speedToastTimer = null;
+
+function showSpeedToast(speed) {
+    const toast = document.getElementById('speed-toast');
+    toast.textContent = speed + 'x';
+    toast.classList.add('show');
+    clearTimeout(speedToastTimer);
+    speedToastTimer = setTimeout(() => toast.classList.remove('show'), 1000);
+}
 
 // ── IndexedDB ─────────────────────────────────────────────────────────────────
 const DB_NAME    = 'feedsDB';
@@ -1307,8 +1338,8 @@ document.addEventListener('keydown', (e) => {
         case 'ArrowRight': e.preventDefault(); player.seekTo(player.getCurrentTime() + 5,  true); break;
         case 'ArrowUp':    e.preventDefault(); player.setVolume(Math.min(100, player.getVolume() + 5)); break;
         case 'ArrowDown':  e.preventDefault(); player.setVolume(Math.max(0,   player.getVolume() - 5)); break;
-        case '>': case '.': speedIdx = Math.min(SPEEDS.length - 1, speedIdx + 1); player.setPlaybackRate(SPEEDS[speedIdx]); break;
-        case '<': case ',': speedIdx = Math.max(0, speedIdx - 1); player.setPlaybackRate(SPEEDS[speedIdx]); break;
+        case '>': case '.': speedIdx = Math.min(SPEEDS.length - 1, speedIdx + 1); player.setPlaybackRate(SPEEDS[speedIdx]); showSpeedToast(SPEEDS[speedIdx]); break;
+        case '<': case ',': speedIdx = Math.max(0, speedIdx - 1); player.setPlaybackRate(SPEEDS[speedIdx]); showSpeedToast(SPEEDS[speedIdx]); break;
         case 'f': case 'F': toggleFullscreen(); break;
         case '?': showShortcuts(); break;
     }
