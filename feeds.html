@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Feeds</title>
+    <title>MyTubie Feeds</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -667,14 +667,13 @@
     <a href="index.html" class="home-button" title="Home">
         <img src="/favicon.svg" alt="Home" style="width:24px;height:24px">
     </a>
+    <button class="icon-btn" id="btn-dock-toggle" onclick="toggleFeedsMode()" title="Float as sidebar" style="font-size:16px;font-weight:bold;color:#d946ef;border-color:#d946ef;padding-top:2px;padding-bottom:2px">&#x2261; Feeds</button>
     <button class="icon-btn" id="btn-open-sidebar" onclick="openSidebar()" title="Open feeds panel">☰</button>
-    <span class="app-title">Feeds</span>
     <div class="filter-group">
         <button class="filter-btn active" id="filter-all"       onclick="setFilter('all')">All</button>
         <button class="filter-btn"        id="filter-unwatched" onclick="setFilter('unwatched')">Unwatched</button>
         <button class="filter-btn"        id="filter-watched"   onclick="setFilter('watched')">Watched</button>
     </div>
-    <button class="icon-btn" id="btn-dock-toggle" onclick="toggleFeedsMode()" title="Float as sidebar">&#x2261; Feeds</button>
     <button class="icon-btn" onclick="showShortcuts()" title="Keyboard shortcuts">?</button>
 </div>
 
@@ -684,7 +683,6 @@
     <!-- Panel 1 -->
     <div class="panel-feeds">
         <div class="panel-header">
-            <span class="panel-label">Feeds</span>
             <button class="circle-btn" onclick="showAddGroup()" title="Add group">+</button>
         </div>
         <div class="groups-list" id="groups-list">
@@ -735,17 +733,24 @@ function applyFeedsMode() {
         panel.classList.remove('sidebar-open');
         backdrop.classList.remove('show');
         btnOpen.style.display = '';
-        btnDock.innerHTML = '&#x2261; Feeds';
         btnDock.title = 'Dock feeds panel';
         sidebarOpen = false;
     } else {
         panel.classList.remove('sidebar-mode', 'sidebar-open');
         backdrop.classList.remove('show');
         btnOpen.style.display = 'none';
-        btnDock.innerHTML = '&#x2261; Feeds';
         btnDock.title = 'Float feeds as sidebar';
         sidebarOpen = false;
     }
+    updateDockBtnColor();
+}
+
+function updateDockBtnColor() {
+    const btnDock = document.getElementById('btn-dock-toggle');
+    const panelVisible = feedsPanelMode === 'docked' || sidebarOpen;
+    btnDock.style.background  = panelVisible ? '#d946ef' : '';
+    btnDock.style.color       = panelVisible ? 'white' : '#d946ef';
+    btnDock.style.borderColor = '#d946ef';
 }
 
 function toggleFeedsMode() {
@@ -761,6 +766,7 @@ function openSidebar() {
     panel.classList.add('sidebar-open');
     backdrop.classList.add('show');
     sidebarOpen = true;
+    updateDockBtnColor();
 }
 
 function closeSidebar() {
@@ -770,6 +776,7 @@ function closeSidebar() {
     panel.classList.remove('sidebar-open');
     backdrop.classList.remove('show');
     sidebarOpen = false;
+    updateDockBtnColor();
 }
 
 // ── State ─────────────────────────────────────────────────────────────────────
