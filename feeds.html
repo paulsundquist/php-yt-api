@@ -705,7 +705,7 @@
     <!-- Panel 1 -->
     <div class="panel-feeds">
         <div class="panel-header">
-            <button class="circle-btn" onclick="showAddGroup()" title="Add group">+</button>
+            <button class="circle-btn" onclick="showAddGroup()" title="Add group" style="width:auto;padding:0 8px;font-size:12px">+ Group</button>
         </div>
         <div class="groups-list" id="groups-list">
             <div class="empty-state">
@@ -1372,8 +1372,14 @@ function setLoading(on) {
 }
 
 // ── Utils ─────────────────────────────────────────────────────────────────────
+function decodeHtml(s) {
+    const t = document.createElement('textarea');
+    t.innerHTML = String(s ?? '');
+    return t.value;
+}
+
 function esc(s) {
-    return String(s ?? '')
+    return decodeHtml(s)
         .replace(/&/g, '&amp;').replace(/</g, '&lt;')
         .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
