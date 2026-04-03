@@ -1246,7 +1246,7 @@ function renderVideoList() {
             <img class="video-thumb" src="${esc(v.thumbnail)}" loading="lazy" onerror="this.style.display='none'" alt="">
             <div class="video-info">
                 <div class="video-title">${esc(v.title)}</div>
-                <div class="video-meta">${esc(v.channelLabel)} · ${timeAgo(v.published)}</div>
+                <div class="video-meta">${esc(v.channelLabel)} · <span style="color:#111">${timeAgo(v.published)}</span></div>
             </div>
             <div class="watched-dot" title="Watched"></div>
         </div>`;
