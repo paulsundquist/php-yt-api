@@ -270,7 +270,12 @@ try {
                     break;
                 }
 
-                // Update playlist ID if we have it from handle resolution
+                // Fetch playlist ID if not already resolved via handle
+                if (!$playlistId) {
+                    $youtubeService = $youtubeService ?? new YouTubeService();
+                    $playlistId = $youtubeService->getUploadsPlaylistId($channelId);
+                }
+
                 if ($playlistId) {
                     $updateStmt = $db->getConnection()->prepare(
                         "UPDATE fit_channels SET uploads_playlist_id = :playlist_id WHERE channel_id = :channel_id"
@@ -281,12 +286,58 @@ try {
                     ]);
                 }
 
+                // Fetch last 50 videos for the new channel
+                $videosAdded = 0;
+                $fetchError = null;
+                if ($playlistId) {
+                    try {
+                        $youtubeService = $youtubeService ?? new YouTubeService();
+                        $videos = $youtubeService->getChannelVideos($channelId, $playlistId, 50);
+
+                        foreach ($videos as $videoData) {
+                            $insertStmt = $db->getConnection()->prepare(
+                                "INSERT INTO fit_videos
+                                (video_id, title, description, category, channel_id, channel_name, thumbnail_url, view_count, like_count, duration, published_at)
+                                VALUES
+                                (:video_id, :title, :description, :category, :channel_id, :channel_name, :thumbnail_url, :view_count, :like_count, :duration, :published_at)
+                                ON DUPLICATE KEY UPDATE
+                                title = VALUES(title),
+                                description = VALUES(description),
+                                view_count = VALUES(view_count),
+                                like_count = VALUES(like_count),
+                                thumbnail_url = VALUES(thumbnail_url),
+                                duration = VALUES(duration),
+                                channel_id = VALUES(channel_id),
+                                channel_name = VALUES(channel_name)"
+                            );
+                            $insertStmt->execute([
+                                ':video_id' => $videoData['video_id'],
+                                ':title' => $videoData['title'],
+                                ':description' => $videoData['description'],
+                                ':category' => $channelCategory,
+                                ':channel_id' => $channelId,
+                                ':channel_name' => $channelName,
+                                ':thumbnail_url' => $videoData['thumbnail_url'],
+                                ':view_count' => $videoData['view_count'],
+                                ':like_count' => $videoData['like_count'],
+                                ':duration' => $videoData['duration'],
+                                ':published_at' => $videoData['published_at']
+                            ]);
+                            $videosAdded++;
+                        }
+                    } catch (\Exception $e) {
+                        $fetchError = 'Channel added but video fetch failed: ' . $e->getMessage();
+                    }
+                }
+
                 http_response_code(201);
                 echo json_encode([
                     'success' => true,
                     'message' => 'Fitness channel added successfully',
                     'channel_id' => $channelId,
-                    'channel_name' => $channelName
+                    'channel_name' => $channelName,
+                    'videos_fetched' => $videosAdded,
+                    'fetch_error' => $fetchError
                 ]);
             } else {
                 http_response_code(405);
