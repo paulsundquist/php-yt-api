@@ -130,39 +130,57 @@ class YouTubeService
     public function getChannelVideos($channelId, $playlistId, $maxResults = 10)
     {
         try {
-            // Get video IDs from uploads playlist (1 quota unit vs 100 for search)
-            $playlistResponse = $this->client->request('GET', 'playlistItems', [
-                'query' => [
+            $videoIds = [];
+            $pageToken = null;
+            $remaining = $maxResults;
+
+            // Paginate through playlist items until we have enough video IDs
+            do {
+                $query = [
                     'key' => $this->apiKey,
                     'playlistId' => $playlistId,
                     'part' => 'contentDetails',
-                    'maxResults' => min($maxResults, 50)
-                ]
-            ]);
+                    'maxResults' => min($remaining, 50)
+                ];
+                if ($pageToken) {
+                    $query['pageToken'] = $pageToken;
+                }
 
-            $playlistData = json_decode($playlistResponse->getBody(), true);
+                $playlistResponse = $this->client->request('GET', 'playlistItems', ['query' => $query]);
+                $playlistData = json_decode($playlistResponse->getBody(), true);
 
-            if (empty($playlistData['items'])) {
+                if (empty($playlistData['items'])) {
+                    break;
+                }
+
+                foreach ($playlistData['items'] as $item) {
+                    $videoIds[] = $item['contentDetails']['videoId'];
+                }
+
+                $remaining -= count($playlistData['items']);
+                $pageToken = $playlistData['nextPageToken'] ?? null;
+
+            } while ($pageToken && $remaining > 0);
+
+            if (empty($videoIds)) {
                 return [];
             }
 
-            // Extract video IDs
-            $videoIds = array_map(function ($item) {
-                return $item['contentDetails']['videoId'];
-            }, $playlistData['items']);
+            // Fetch video details in batches of 50 (API limit per request)
+            $allVideos = [];
+            foreach (array_chunk($videoIds, 50) as $chunk) {
+                $videosResponse = $this->client->request('GET', 'videos', [
+                    'query' => [
+                        'key' => $this->apiKey,
+                        'id' => implode(',', $chunk),
+                        'part' => 'snippet,contentDetails,statistics'
+                    ]
+                ]);
+                $videosData = json_decode($videosResponse->getBody(), true);
+                $allVideos = array_merge($allVideos, $videosData['items'] ?? []);
+            }
 
-            // Get detailed video statistics
-            $videosResponse = $this->client->request('GET', 'videos', [
-                'query' => [
-                    'key' => $this->apiKey,
-                    'id' => implode(',', $videoIds),
-                    'part' => 'snippet,contentDetails,statistics'
-                ]
-            ]);
-
-            $videosData = json_decode($videosResponse->getBody(), true);
-
-            return $this->formatVideos($videosData['items'] ?? [], $channelId);
+            return $this->formatVideos($allVideos, $channelId);
 
         } catch (GuzzleException $e) {
             throw new \Exception("YouTube API request failed: " . $e->getMessage());
