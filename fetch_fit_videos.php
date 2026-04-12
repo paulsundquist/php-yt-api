@@ -131,16 +131,18 @@ try {
             foreach ($videos as $videoData) {
                 $insertStmt = $db->getConnection()->prepare(
                     "INSERT INTO fit_videos
-                    (video_id, title, description, category, thumbnail_url, view_count, like_count, duration, published_at)
+                    (video_id, title, description, category, channel_id, channel_name, thumbnail_url, view_count, like_count, duration, published_at)
                     VALUES
-                    (:video_id, :title, :description, :category, :thumbnail_url, :view_count, :like_count, :duration, :published_at)
+                    (:video_id, :title, :description, :category, :channel_id, :channel_name, :thumbnail_url, :view_count, :like_count, :duration, :published_at)
                     ON DUPLICATE KEY UPDATE
                     title = VALUES(title),
                     description = VALUES(description),
                     view_count = VALUES(view_count),
                     like_count = VALUES(like_count),
                     thumbnail_url = VALUES(thumbnail_url),
-                    duration = VALUES(duration)"
+                    duration = VALUES(duration),
+                    channel_id = VALUES(channel_id),
+                    channel_name = VALUES(channel_name)"
                 );
 
                 $insertStmt->execute([
@@ -148,6 +150,8 @@ try {
                     ':title' => $videoData['title'],
                     ':description' => $videoData['description'],
                     ':category' => $category,
+                    ':channel_id' => $channelId,
+                    ':channel_name' => $channel['channel_name'],
                     ':thumbnail_url' => $videoData['thumbnail_url'],
                     ':view_count' => $videoData['view_count'],
                     ':like_count' => $videoData['like_count'],

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyTubie Fitness</title>
+    <title>MyTubie Fit</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <style>
         * {
@@ -39,45 +39,30 @@
         }
 
         .home-btn {
-            background: rgba(37, 99, 235, 0.2);
-            color: white;
             text-decoration: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            transition: opacity 0.2s;
         }
 
         .home-btn:hover {
-            background: rgba(37, 99, 235, 0.9);
+            opacity: 0.7;
         }
 
-        .category-buttons {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .category-btn {
-            background: rgba(255, 255, 255, 0.1);
+        .category-select {
+            background: rgba(255, 255, 255, 0.15);
             color: white;
-            border: 2px solid transparent;
-            padding: 10px 24px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 16px;
             border-radius: 8px;
-            cursor: pointer;
             font-size: 14px;
             font-weight: 500;
-            transition: all 0.2s;
+            cursor: pointer;
+            outline: none;
         }
-
-        .category-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
-        }
-
-        .category-btn.active {
-            background: #2563eb;
-            border-color: #3b82f6;
+        .category-select option {
+            background: #1e3a5f;
+            color: white;
         }
 
         .container {
@@ -168,13 +153,27 @@
 <body>
     <div class="header">
         <div class="header-content">
-            <a href="/" class="home-btn">← Home</a>
-            <div class="category-buttons">
-                <button class="category-btn active" data-category="all">All</button>
-                <button class="category-btn" data-category="Lift">Lift</button>
-                <button class="category-btn" data-category="Bike">Bike</button>
-                <button class="category-btn" data-category="Treadmill">Treadmill</button>
+            <div style="display:flex;align-items:center;gap:8px">
+                <a href="/" class="home-btn" title="Home"><img src="/favicon.svg" alt="Home" style="width:24px;height:24px;display:block"></a>
+                <span style="color:#d946ef;font-size:28px;font-weight:800;">Fit</span>
             </div>
+            <select class="category-select" id="category-select">
+                <option value="all">All Workouts</option>
+                <option value="Lift">Lift</option>
+                <option value="Bike">Bike</option>
+                <option value="Treadmill">Treadmill</option>
+            </select>
+            <select class="category-select" id="channel-select">
+                <option value="all">All Instructors</option>
+            </select>
+            <select class="category-select" id="duration-select">
+                <option value="all">Any Length</option>
+                <option value="0-12">Up to 12 min</option>
+                <option value="12-17">12–17 min</option>
+                <option value="17-32">17–32 min</option>
+                <option value="32-50">32–50 min</option>
+                <option value="50+">50+ min</option>
+            </select>
         </div>
     </div>
 
@@ -187,6 +186,8 @@
     <script>
         let allVideos = [];
         let currentCategory = 'all';
+        let currentDuration = 'all';
+        let currentChannel = 'all';
 
         // Fetch fitness videos from the fit_videos table
         async function loadVideos() {
@@ -204,6 +205,16 @@
 
                 allVideos = data.videos;
 
+                // Populate channel dropdown
+                const channelSelect = document.getElementById('channel-select');
+                const channels = [...new Map(allVideos.filter(v => v.channel_name).map(v => [v.channel_id, v.channel_name])).entries()];
+                channels.forEach(([id, name]) => {
+                    const opt = document.createElement('option');
+                    opt.value = id;
+                    opt.textContent = name;
+                    channelSelect.appendChild(opt);
+                });
+
                 displayVideos();
             } catch (error) {
                 console.error('Error loading videos:', error);
@@ -217,7 +228,18 @@
 
             let filteredVideos = allVideos;
             if (currentCategory !== 'all') {
-                filteredVideos = allVideos.filter(video => video.category === currentCategory);
+                filteredVideos = filteredVideos.filter(video => video.category === currentCategory);
+            }
+            if (currentChannel !== 'all') {
+                filteredVideos = filteredVideos.filter(video => video.channel_id === currentChannel);
+            }
+            if (currentDuration !== 'all') {
+                filteredVideos = filteredVideos.filter(video => {
+                    const mins = durationToMinutes(video.duration);
+                    if (currentDuration === '50+') return mins >= 50;
+                    const [lo, hi] = currentDuration.split('-').map(Number);
+                    return mins >= lo && mins < hi;
+                });
             }
 
             if (filteredVideos.length === 0) {
@@ -252,15 +274,33 @@
                      onerror="this.src='https://img.youtube.com/vi/${video.video_id}/mqdefault.jpg'">
                 <div class="video-info">
                     <div class="video-title">${escapeHtml(video.title)}</div>
-                    <div class="video-channel">${video.category}</div>
-                    <div class="video-meta">
-                        <span>${formatViews(video.view_count)} views</span>
-                        <span>${timeAgo}</span>
+                    <div class="video-channel">${video.channel_name || video.category}</div>
+                    <div class="video-meta" style="display:flex;justify-content:space-between;align-items:center">
+                        <div>
+                            <span>${formatViews(video.view_count)} views</span>
+                            <span> · ${timeAgo}</span>
+                        </div>
+                        ${video.duration ? `<span style="color:#fff;font-weight:600;margin-left:auto">${parseDuration(video.duration)}</span>` : ''}
                     </div>
                 </div>
             `;
 
             return card;
+        }
+
+        function durationToMinutes(iso) {
+            if (!iso) return 0;
+            const m = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+            if (!m) return 0;
+            return parseInt(m[1] || 0) * 60 + parseInt(m[2] || 0) + parseInt(m[3] || 0) / 60;
+        }
+
+        function parseDuration(iso) {
+            const m = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+            if (!m) return '';
+            const h = parseInt(m[1] || 0), min = parseInt(m[2] || 0), s = parseInt(m[3] || 0);
+            if (h > 0) return `${h}:${String(min).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+            return `${min}:${String(s).padStart(2,'0')}`;
         }
 
         function getTimeAgo(date) {
@@ -300,19 +340,22 @@
             return div.innerHTML;
         }
 
-        // Category button handling
-        document.querySelectorAll('.category-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                // Update active state
-                document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
+        // Category dropdown handling
+        document.getElementById('category-select').addEventListener('change', function() {
+            currentCategory = this.value;
+            displayVideos();
+        });
 
-                // Update current category
-                currentCategory = btn.dataset.category;
+        // Channel dropdown handling
+        document.getElementById('channel-select').addEventListener('change', function() {
+            currentChannel = this.value;
+            displayVideos();
+        });
 
-                // Display filtered videos
-                displayVideos();
-            });
+        // Duration dropdown handling
+        document.getElementById('duration-select').addEventListener('change', function() {
+            currentDuration = this.value;
+            displayVideos();
         });
 
         // Load videos on page load
