@@ -11,5 +11,5 @@
     # Route API endpoints to index.php
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^(api|channels|videos|fetch|groups|categories|votes|tvdb|chains)(/.*)?$ index.php [QSA,L]
+    RewriteRule ^(api|channels|videos|fetch|groups|categories|votes|tvdb|chains|fit-channels)(/.*)?$ index.php [QSA,L]
 </IfModule>
