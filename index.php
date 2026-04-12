@@ -980,6 +980,144 @@ try {
             ]);
             break;
 
+        case '/fit-videos-fetch':
+            if ($method !== 'POST' && $method !== 'GET') {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+                break;
+            }
+
+            $maxResults = $method === 'POST'
+                ? (isset($_POST['max_results']) ? (int)$_POST['max_results'] : 10)
+                : (isset($_GET['max_results']) ? (int)$_GET['max_results'] : 10);
+
+            $schedule = $method === 'POST'
+                ? ($_POST['schedule'] ?? null)
+                : ($_GET['schedule'] ?? null);
+
+            $channelId = $method === 'POST'
+                ? ($_POST['channel_id'] ?? null)
+                : ($_GET['channel_id'] ?? null);
+
+            if ($schedule !== null && !in_array($schedule, ['hourly', 'daily', 'weekly'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Invalid schedule value. Must be hourly, daily, or weekly'
+                ]);
+                break;
+            }
+
+            $youtubeService = new YouTubeService();
+
+            if ($channelId) {
+                $stmt = $db->getConnection()->prepare(
+                    "SELECT id, channel_id, channel_name, channel_category, schedule, uploads_playlist_id, updated_at
+                     FROM fit_channels WHERE is_active = 1 AND channel_id = :channel_id"
+                );
+                $stmt->execute([':channel_id' => $channelId]);
+                $fitChannels = $stmt->fetchAll();
+
+                if (empty($fitChannels)) {
+                    http_response_code(404);
+                    echo json_encode([
+                        'success' => false,
+                        'error' => "No active fitness channel found with ID: {$channelId}"
+                    ]);
+                    break;
+                }
+            } elseif ($schedule) {
+                $stmt = $db->getConnection()->prepare(
+                    "SELECT id, channel_id, channel_name, channel_category, schedule, uploads_playlist_id, updated_at
+                     FROM fit_channels WHERE is_active = 1 AND schedule = :schedule"
+                );
+                $stmt->execute([':schedule' => $schedule]);
+                $fitChannels = $stmt->fetchAll();
+            } else {
+                $stmt = $db->getConnection()->prepare(
+                    "SELECT id, channel_id, channel_name, channel_category, schedule, uploads_playlist_id, updated_at
+                     FROM fit_channels WHERE is_active = 1"
+                );
+                $stmt->execute();
+                $fitChannels = $stmt->fetchAll();
+            }
+
+            $channelsProcessed = 0;
+            $videosAdded = 0;
+            $errors = [];
+
+            foreach ($fitChannels as $channel) {
+                try {
+                    $fitChannelId = $channel['channel_id'];
+                    $category = $channel['channel_category'];
+                    $playlistId = $channel['uploads_playlist_id'];
+
+                    if (!$playlistId) {
+                        $playlistId = $youtubeService->getUploadsPlaylistId($fitChannelId);
+                        if ($playlistId) {
+                            $updateStmt = $db->getConnection()->prepare(
+                                "UPDATE fit_channels SET uploads_playlist_id = :playlist_id WHERE channel_id = :channel_id"
+                            );
+                            $updateStmt->execute([
+                                ':playlist_id' => $playlistId,
+                                ':channel_id' => $fitChannelId
+                            ]);
+                        } else {
+                            throw new \Exception("Could not get uploads playlist ID");
+                        }
+                    }
+
+                    $videos = $youtubeService->getChannelVideos($fitChannelId, $playlistId, $maxResults);
+
+                    foreach ($videos as $videoData) {
+                        $insertStmt = $db->getConnection()->prepare(
+                            "INSERT INTO fit_videos
+                            (video_id, title, description, category, channel_id, channel_name, thumbnail_url, view_count, like_count, duration, published_at)
+                            VALUES
+                            (:video_id, :title, :description, :category, :channel_id, :channel_name, :thumbnail_url, :view_count, :like_count, :duration, :published_at)
+                            ON DUPLICATE KEY UPDATE
+                            title = VALUES(title),
+                            description = VALUES(description),
+                            view_count = VALUES(view_count),
+                            like_count = VALUES(like_count),
+                            thumbnail_url = VALUES(thumbnail_url),
+                            duration = VALUES(duration),
+                            channel_id = VALUES(channel_id),
+                            channel_name = VALUES(channel_name)"
+                        );
+                        $insertStmt->execute([
+                            ':video_id' => $videoData['video_id'],
+                            ':title' => $videoData['title'],
+                            ':description' => $videoData['description'],
+                            ':category' => $category,
+                            ':channel_id' => $fitChannelId,
+                            ':channel_name' => $channel['channel_name'],
+                            ':thumbnail_url' => $videoData['thumbnail_url'],
+                            ':view_count' => $videoData['view_count'],
+                            ':like_count' => $videoData['like_count'],
+                            ':duration' => $videoData['duration'],
+                            ':published_at' => $videoData['published_at']
+                        ]);
+                        $videosAdded++;
+                    }
+
+                    $channelsProcessed++;
+                } catch (\Exception $e) {
+                    $errors[] = "Failed to fetch videos for channel {$channel['channel_name']}: " . $e->getMessage();
+                }
+            }
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Fitness videos fetched and stored successfully',
+                'stats' => [
+                    'channels_processed' => $channelsProcessed,
+                    'videos_added' => $videosAdded,
+                    'errors' => $errors
+                ]
+            ]);
+            break;
+
         case '/api/movie-lists/all':
             $movieListService = new MovieListService();
             echo json_encode([
