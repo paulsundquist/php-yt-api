@@ -18,6 +18,11 @@ if (file_exists(__DIR__ . '/.env')) {
     }
 }
 
+function iso8601ToSeconds(string $duration): int {
+    preg_match('/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/', $duration, $m);
+    return (int)($m[1] ?? 0) * 3600 + (int)($m[2] ?? 0) * 60 + (int)($m[3] ?? 0);
+}
+
 // Set headers for JSON API
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -295,6 +300,7 @@ try {
                         $videos = $youtubeService->getChannelVideos($channelId, $playlistId, 50);
 
                         foreach ($videos as $videoData) {
+                            if (iso8601ToSeconds($videoData['duration']) < 120) continue;
                             $insertStmt = $db->getConnection()->prepare(
                                 "INSERT INTO fit_videos
                                 (video_id, title, description, category, channel_id, channel_name, thumbnail_url, view_count, like_count, duration, published_at)
@@ -1121,6 +1127,7 @@ try {
                     $videos = $youtubeService->getChannelVideos($fitChannelId, $playlistId, $maxResults);
 
                     foreach ($videos as $videoData) {
+                        if (iso8601ToSeconds($videoData['duration']) < 120) continue;
                         $insertStmt = $db->getConnection()->prepare(
                             "INSERT INTO fit_videos
                             (video_id, title, description, category, channel_id, channel_name, thumbnail_url, view_count, like_count, duration, published_at)
