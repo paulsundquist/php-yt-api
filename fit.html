@@ -196,7 +196,7 @@
                 container.innerHTML = '<div class="loading">Loading videos...</div>';
 
                 // Fetch all fitness videos
-                const response = await fetch('/fit-videos?limit=1000');
+                const response = await fetch('/fit-videos?limit=100');
                 const data = await response.json();
 
                 if (!data.success) {
