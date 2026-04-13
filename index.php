@@ -1012,27 +1012,51 @@ try {
                 break;
             }
 
-            $category = $_GET['category'] ?? null;
-            $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
+            $category  = $_GET['category']   ?? null;
+            $channelId = $_GET['channel_id']  ?? null;
+            $minMins   = isset($_GET['min_mins']) ? (int)$_GET['min_mins'] : null;
+            $maxMins   = isset($_GET['max_mins']) ? (int)$_GET['max_mins'] : null;
+            $limit     = isset($_GET['limit'])    ? (int)$_GET['limit']    : 100;
+
+            $conditions = [];
+            $params = [];
+
+            if ($category && $category !== 'all') {
+                $conditions[] = 'category = :category';
+                $params[':category'] = $category;
+            }
+            if ($channelId && $channelId !== 'all') {
+                $conditions[] = 'channel_id = :channel_id';
+                $params[':channel_id'] = $channelId;
+            }
 
             $sql = "SELECT * FROM fit_videos";
-            if ($category && $category !== 'all') {
-                $sql .= " WHERE category = :category";
+            if ($conditions) {
+                $sql .= ' WHERE ' . implode(' AND ', $conditions);
             }
             $sql .= " ORDER BY published_at DESC LIMIT :limit";
 
             $stmt = $db->getConnection()->prepare($sql);
-            if ($category && $category !== 'all') {
-                $stmt->bindValue(':category', $category, PDO::PARAM_STR);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value, PDO::PARAM_STR);
             }
             $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
             $stmt->execute();
             $videos = $stmt->fetchAll();
 
+            // Filter by duration in PHP (ISO 8601 durations don't sort cleanly in SQL)
+            if ($minMins !== null || $maxMins !== null) {
+                $videos = array_values(array_filter($videos, function($v) use ($minMins, $maxMins) {
+                    $mins = iso8601ToSeconds($v['duration']) / 60;
+                    if ($minMins !== null && $mins < $minMins) return false;
+                    if ($maxMins !== null && $mins >= $maxMins) return false;
+                    return true;
+                }));
+            }
+
             echo json_encode([
                 'success' => true,
                 'count' => count($videos),
-                'category' => $category ?? 'all',
                 'videos' => $videos
             ]);
             break;
@@ -1055,6 +1079,10 @@ try {
             $channelId = $method === 'POST'
                 ? ($_POST['channel_id'] ?? null)
                 : ($_GET['channel_id'] ?? null);
+
+            $minDuration = $method === 'POST'
+                ? (isset($_POST['min_duration']) ? (int)$_POST['min_duration'] : 180)
+                : (isset($_GET['min_duration']) ? (int)$_GET['min_duration'] : 180);
 
             if ($schedule !== null && !in_array($schedule, ['hourly', 'daily', 'weekly'])) {
                 http_response_code(400);
@@ -1127,7 +1155,7 @@ try {
                     $videos = $youtubeService->getChannelVideos($fitChannelId, $playlistId, $maxResults);
 
                     foreach ($videos as $videoData) {
-                        if (iso8601ToSeconds($videoData['duration']) < 120) continue;
+                        if (iso8601ToSeconds($videoData['duration']) < $minDuration) continue;
                         $insertStmt = $db->getConnection()->prepare(
                             "INSERT INTO fit_videos
                             (video_id, title, description, category, channel_id, channel_name, thumbnail_url, view_count, like_count, duration, published_at)

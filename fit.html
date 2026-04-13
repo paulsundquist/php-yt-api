@@ -184,79 +184,64 @@
     </div>
 
     <script>
-        let allVideos = [];
         let currentCategory = 'all';
         let currentDuration = 'all';
         let currentChannel = 'all';
 
-        // Fetch fitness videos from the fit_videos table
-        async function loadVideos() {
+        async function loadChannels() {
             try {
-                const container = document.getElementById('videos-container');
-                container.innerHTML = '<div class="loading">Loading videos...</div>';
-
-                // Fetch all fitness videos
-                const response = await fetch('/fit-videos?limit=100');
+                const response = await fetch('/fit-channels');
                 const data = await response.json();
-
-                if (!data.success) {
-                    throw new Error('Failed to fetch fitness videos');
-                }
-
-                allVideos = data.videos;
-
-                // Populate channel dropdown
+                if (!data.success) return;
                 const channelSelect = document.getElementById('channel-select');
-                const channels = [...new Map(allVideos.filter(v => v.channel_name).map(v => [v.channel_id, v.channel_name])).entries()];
-                channels.forEach(([id, name]) => {
+                data.channels.forEach(ch => {
                     const opt = document.createElement('option');
-                    opt.value = id;
-                    opt.textContent = name;
+                    opt.value = ch.channel_id;
+                    opt.textContent = ch.channel_name;
                     channelSelect.appendChild(opt);
                 });
-
-                displayVideos();
-            } catch (error) {
-                console.error('Error loading videos:', error);
-                document.getElementById('videos-container').innerHTML =
-                    `<div class="error">Error loading videos: ${error.message}</div>`;
+            } catch (e) {
+                console.error('Error loading channels:', e);
             }
         }
 
-        function displayVideos() {
+        async function loadVideos() {
             const container = document.getElementById('videos-container');
+            container.innerHTML = '<div class="loading">Loading videos...</div>';
 
-            let filteredVideos = allVideos;
-            if (currentCategory !== 'all') {
-                filteredVideos = filteredVideos.filter(video => video.category === currentCategory);
-            }
-            if (currentChannel !== 'all') {
-                filteredVideos = filteredVideos.filter(video => video.channel_id === currentChannel);
-            }
+            const params = new URLSearchParams({ limit: 100 });
+            if (currentCategory !== 'all') params.set('category', currentCategory);
+            if (currentChannel !== 'all') params.set('channel_id', currentChannel);
             if (currentDuration !== 'all') {
-                filteredVideos = filteredVideos.filter(video => {
-                    const mins = durationToMinutes(video.duration);
-                    if (currentDuration === '50+') return mins >= 50;
-                    const [lo, hi] = currentDuration.split('-').map(Number);
-                    return mins >= lo && mins < hi;
-                });
+                if (currentDuration === '50+') {
+                    params.set('min_mins', 50);
+                } else {
+                    const [lo, hi] = currentDuration.split('-');
+                    params.set('min_mins', lo);
+                    params.set('max_mins', hi);
+                }
             }
 
-            if (filteredVideos.length === 0) {
-                container.innerHTML = '<div class="no-videos">No videos found for this category.</div>';
-                return;
+            try {
+                const response = await fetch(`/fit-videos?${params}`);
+                const data = await response.json();
+                if (!data.success) throw new Error('Failed to fetch fitness videos');
+
+                const videos = data.videos;
+                if (videos.length === 0) {
+                    container.innerHTML = '<div class="no-videos">No videos found for this category.</div>';
+                    return;
+                }
+
+                const grid = document.createElement('div');
+                grid.className = 'videos-grid';
+                videos.forEach(video => grid.appendChild(createVideoCard(video)));
+                container.innerHTML = '';
+                container.appendChild(grid);
+            } catch (error) {
+                console.error('Error loading videos:', error);
+                container.innerHTML = `<div class="error">Error loading videos: ${error.message}</div>`;
             }
-
-            const grid = document.createElement('div');
-            grid.className = 'videos-grid';
-
-            filteredVideos.forEach(video => {
-                const card = createVideoCard(video);
-                grid.appendChild(card);
-            });
-
-            container.innerHTML = '';
-            container.appendChild(grid);
         }
 
         function createVideoCard(video) {
@@ -343,22 +328,23 @@
         // Category dropdown handling
         document.getElementById('category-select').addEventListener('change', function() {
             currentCategory = this.value;
-            displayVideos();
+            loadVideos();
         });
 
         // Channel dropdown handling
         document.getElementById('channel-select').addEventListener('change', function() {
             currentChannel = this.value;
-            displayVideos();
+            loadVideos();
         });
 
         // Duration dropdown handling
         document.getElementById('duration-select').addEventListener('change', function() {
             currentDuration = this.value;
-            displayVideos();
+            loadVideos();
         });
 
-        // Load videos on page load
+        // Load channels and initial videos on page load
+        loadChannels();
         loadVideos();
     </script>
 </body>
