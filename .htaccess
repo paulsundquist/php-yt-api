@@ -8,8 +8,9 @@
     # Route /2v/{short_id} to 2v.php handler (must come before file/directory checks)
     RewriteRule ^2v/([A-Z0-9]{8})$ 2v.php?id=$1 [NC,QSA,L]
 
-    # Route movietrivia sub-paths explicitly (must come before file/directory checks)
-    RewriteRule ^movietrivia(/.*)?$ index.php [QSA,L]
+    # Route movietrivia sub-paths explicitly via REQUEST_URI (bypasses filesystem checks)
+    RewriteCond %{REQUEST_URI} ^/movietrivia(/|$)
+    RewriteRule ^ index.php [QSA,L]
 
     # Route API endpoints to index.php
     RewriteCond %{REQUEST_FILENAME} !-f
