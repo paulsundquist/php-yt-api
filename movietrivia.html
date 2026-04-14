@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Trivia</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: rgba(0,0,0,0.9);
+            padding: 16px 24px;
+            border-bottom: 2px solid #222;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .header-left { display: flex; align-items: center; gap: 10px; }
+        .header a { color: inherit; text-decoration: none; opacity: 0.5; font-size: 14px; }
+        .header a:hover { opacity: 1; }
+        .header h1 { font-size: 22px; font-weight: 800; color: #f59e0b; }
+
+        .score-badge {
+            background: rgba(245,158,11,0.15);
+            border: 1px solid #f59e0b;
+            color: #f59e0b;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: #1a1a1a;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #f59e0b;
+            transition: width 0.4s ease;
+        }
+
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* States */
+        .screen { width: 100%; display: none; }
+        .screen.active { display: flex; flex-direction: column; align-items: center; }
+
+        /* Start screen */
+        #start-screen { text-align: center; gap: 20px; padding-top: 60px; }
+        #start-screen h2 { font-size: 36px; font-weight: 800; color: #f59e0b; }
+        #start-screen p { color: #9ca3af; font-size: 16px; line-height: 1.6; }
+
+        /* Game screen */
+        #game-screen { gap: 24px; }
+
+        .question-label {
+            font-size: 13px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            align-self: flex-start;
+        }
+
+        .video-title-cover {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 15%;
+            z-index: 1;
+            background: #000;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #111;
+        }
+
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            border: none;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .option-btn {
+            padding: 16px;
+            background: rgba(255,255,255,0.06);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: left;
+            transition: background 0.15s, border-color 0.15s;
+            line-height: 1.4;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(255,255,255,0.12);
+            border-color: rgba(255,255,255,0.3);
+        }
+
+        .option-btn.correct {
+            background: rgba(16,185,129,0.2);
+            border-color: #10b981;
+            color: #6ee7b7;
+        }
+
+        .option-btn.wrong {
+            background: rgba(239,68,68,0.15);
+            border-color: #ef4444;
+            color: #fca5a5;
+        }
+
+        .option-btn:disabled { cursor: default; }
+
+        .result-msg {
+            font-size: 20px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .result-msg.correct { color: #10b981; }
+        .result-msg.wrong   { color: #ef4444; }
+
+        .next-btn {
+            padding: 14px 40px;
+            background: #2563eb;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .next-btn:hover { background: #1d4ed8; }
+
+        /* End screen */
+        #end-screen { text-align: center; gap: 24px; padding-top: 60px; }
+        #end-screen h2 { font-size: 32px; font-weight: 800; }
+
+        .final-score {
+            font-size: 72px;
+            font-weight: 900;
+            color: #f59e0b;
+            line-height: 1;
+        }
+
+        .final-label { font-size: 16px; color: #9ca3af; }
+
+        .play-again-btn {
+            padding: 16px 48px;
+            background: #f59e0b;
+            color: #000;
+            border: none;
+            border-radius: 10px;
+            font-size: 17px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .play-again-btn:hover { background: #d97706; }
+
+        /* Loading / error */
+        #loading-screen { text-align: center; gap: 16px; padding-top: 80px; color: #6b7280; font-size: 18px; }
+
+        .spinner {
+            width: 36px; height: 36px;
+            border: 3px solid #333;
+            border-top-color: #f59e0b;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        button.start-btn {
+            padding: 16px 48px;
+            background: #f59e0b;
+            color: #000;
+            border: none;
+            border-radius: 10px;
+            font-size: 17px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        button.start-btn:hover { background: #d97706; }
+
+        .daily-btn {
+            padding: 16px 48px;
+            background: #10b981;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 17px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .daily-btn:hover { background: #059669; }
+
+        .daily-label {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #10b981;
+        }
+
+        @media (max-width: 480px) {
+            .options-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <a href="/" title="Home"><img src="/favicon.svg" alt="Home" style="width:24px;height:24px;display:block"></a>
+            <h1>Movie Trivia</h1>
+        </div>
+        <div class="score-badge" id="score-badge" style="display:none">0 / 0</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+
+    <div class="main">
+
+        <!-- Loading -->
+        <div class="screen active" id="loading-screen">
+            <div class="spinner"></div>
+            <span>Loading questions...</span>
+        </div>
+
+        <!-- Start -->
+        <div class="screen" id="start-screen">
+            <h2>Guess the Movie!</h2>
+            <p>Watch the trailer, then pick the right movie title.<br>Good luck!</p>
+            <div id="daily-btn-area"></div>
+        </div>
+
+        <!-- Game -->
+        <div class="screen" id="game-screen">
+            <div class="question-label" id="question-label">Question 1 of 10</div>
+            <div class="video-wrapper">
+                <div class="video-title-cover"></div>
+                <iframe id="trailer-frame" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+            </div>
+            <div class="options-grid" id="options-grid"></div>
+            <div class="result-msg" id="result-msg" style="display:none"></div>
+            <button class="next-btn" id="next-btn" style="display:none" onclick="nextQuestion()">Next</button>
+        </div>
+
+        <!-- End -->
+        <div class="screen" id="end-screen">
+            <h2>Game Over!</h2>
+            <div class="final-score" id="final-score">0</div>
+            <div class="final-label" id="final-label">out of 0</div>
+            <button class="play-again-btn" onclick="restartGame()">Play Again</button>
+        </div>
+
+    </div>
+
+    <script>
+        let questions = [];
+        let current = 0;
+        let score = 0;
+        let answered = false;
+        let pendingQuizId = null;
+
+        async function init() {
+            try {
+                const params = new URLSearchParams(window.location.search);
+                const quizId = params.get('quiz_id');
+
+                if (quizId) {
+                    // Direct link to a specific quiz — load it immediately
+                    pendingQuizId = quizId;
+                    await loadGame(quizId);
+                    showScreen('start-screen');
+                    return;
+                }
+
+                // Check for today's daily quiz
+                const dailyRes = await fetch('/movietrivia/daily');
+                const dailyData = await dailyRes.json();
+
+                if (dailyData.has_daily) {
+                    const quiz = dailyData.quiz;
+                    const area = document.getElementById('daily-btn-area');
+                    area.innerHTML = `
+                        <div class="daily-label">Today's Daily Quiz</div>
+                        <button class="daily-btn" onclick="startGame('${quiz.id}')">${quiz.title}</button>
+                    `;
+                }
+
+                showScreen('start-screen');
+            } catch (e) {
+                showError('Could not load. Please try again.');
+            }
+        }
+
+        async function loadGame(quizId) {
+            const url = quizId && quizId !== 'random'
+                ? `/movietrivia/game?quiz_id=${quizId}`
+                : '/movietrivia/game?count=10';
+
+            const res = await fetch(url);
+            const data = await res.json();
+
+            if (!res.ok) {
+                showError(data.error || 'Failed to load questions.');
+                return false;
+            }
+
+            questions = data.questions;
+            return true;
+        }
+
+        async function startGame(quizId) {
+            showScreen('loading-screen');
+            const ok = await loadGame(quizId);
+            if (!ok) return;
+
+            current = 0;
+            score = 0;
+            updateScoreBadge();
+            document.getElementById('score-badge').style.display = '';
+            showScreen('game-screen');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            answered = false;
+            const q = questions[current];
+            const total = questions.length;
+
+            document.getElementById('question-label').textContent = `Question ${current + 1} of ${total}`;
+            document.getElementById('progress-fill').style.width = `${(current / total) * 100}%`;
+
+            // Load trailer
+            document.getElementById('trailer-frame').src =
+                `https://www.youtube.com/embed/${q.trailer_video_id}?autoplay=1&rel=0`;
+
+            // Reset UI
+            document.getElementById('options-grid').style.display = 'none';
+            document.getElementById('result-msg').style.display = 'none';
+            document.getElementById('next-btn').style.display = 'none';
+            showOptions();
+        }
+
+        function shuffle(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function showOptions() {
+            const q = questions[current];
+            const grid = document.getElementById('options-grid');
+            grid.innerHTML = '';
+            grid.style.display = 'grid';
+
+            shuffle([...q.options]).forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = opt;
+                btn.addEventListener('click', () => selectAnswer(opt, q.answer));
+                grid.appendChild(btn);
+            });
+        }
+
+        function selectAnswer(selected, correct) {
+            if (answered) return;
+            answered = true;
+
+            const isCorrect = selected === correct;
+            if (isCorrect) score++;
+
+            // Highlight buttons
+            document.querySelectorAll('.option-btn').forEach(btn => {
+                btn.disabled = true;
+                if (btn.textContent === correct) btn.classList.add('correct');
+                else if (btn.textContent === selected && !isCorrect) btn.classList.add('wrong');
+            });
+
+            const msg = document.getElementById('result-msg');
+            msg.textContent = isCorrect ? '✓ Correct!' : `✗ It was "${correct}"`;
+            msg.className = 'result-msg ' + (isCorrect ? 'correct' : 'wrong');
+            msg.style.display = 'block';
+
+            updateScoreBadge();
+            document.getElementById('next-btn').style.display = '';
+            document.getElementById('next-btn').textContent =
+                current + 1 < questions.length ? 'Next' : 'See Results';
+        }
+
+        function nextQuestion() {
+            current++;
+            if (current >= questions.length) {
+                endGame();
+            } else {
+                loadQuestion();
+            }
+        }
+
+        function endGame() {
+            document.getElementById('progress-fill').style.width = '100%';
+            document.getElementById('trailer-frame').src = '';
+            document.getElementById('final-score').textContent = score;
+            document.getElementById('final-label').textContent = `out of ${questions.length}`;
+            showScreen('end-screen');
+        }
+
+        function restartGame() {
+            document.getElementById('score-badge').style.display = 'none';
+            init();
+        }
+
+        function updateScoreBadge() {
+            document.getElementById('score-badge').textContent = `${score} / ${questions.length}`;
+        }
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function showError(msg) {
+            const el = document.getElementById('loading-screen');
+            el.innerHTML = `<span style="color:#fca5a5">${msg}</span>`;
+            el.classList.add('active');
+        }
+
+        init();
+    </script>
+</body>
+</html>

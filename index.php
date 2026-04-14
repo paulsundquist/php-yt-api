@@ -7,6 +7,7 @@ use App\YouTubeService;
 use App\TourService;
 use App\TVDBService;
 use App\MovieListService;
+use App\Utils;
 
 // Load environment variables from .env file
 if (file_exists(__DIR__ . '/.env')) {
@@ -1201,6 +1202,258 @@ try {
                     'videos_added' => $videosAdded,
                     'errors' => $errors
                 ]
+            ]);
+            break;
+
+        case '/movietrivia/daily':
+            if ($method !== 'GET') {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+                break;
+            }
+            $dailyStmt = $db->getConnection()->prepare(
+                "SELECT q.id, q.title, q.daily_date, COUNT(mq.id) AS question_count
+                 FROM movietrivia_quiz q
+                 LEFT JOIN movietrivia_questions mq ON mq.quiz_id = q.id
+                 WHERE q.is_daily = 1 AND q.daily_date = CURDATE() AND q.is_active = 1
+                 GROUP BY q.id LIMIT 1"
+            );
+            $dailyStmt->execute();
+            $daily = $dailyStmt->fetch();
+            echo json_encode([
+                'success' => true,
+                'has_daily' => (bool)$daily,
+                'quiz' => $daily ?: null,
+            ]);
+            break;
+
+        case '/movietrivia/search-trailer':
+            if ($method !== 'GET') {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+                break;
+            }
+            $q = trim($_GET['q'] ?? '');
+            if (empty($q)) {
+                http_response_code(400);
+                echo json_encode(['error' => 'q parameter is required']);
+                break;
+            }
+            $youtubeService = new YouTubeService();
+            $results = $youtubeService->searchVideos($q . ' official trailer', 5);
+            echo json_encode(['success' => true, 'results' => $results]);
+            break;
+
+        case '/movietrivia/quiz':
+            if ($method === 'GET') {
+                $stmt = $db->getConnection()->query(
+                    "SELECT q.id, q.title, q.is_daily, q.daily_date, q.is_active, q.created_at,
+                            COUNT(mq.id) AS question_count
+                     FROM movietrivia_quiz q
+                     LEFT JOIN movietrivia_questions mq ON mq.quiz_id = q.id
+                     GROUP BY q.id ORDER BY q.created_at DESC"
+                );
+                $quizzes = $stmt->fetchAll();
+                echo json_encode(['success' => true, 'quizzes' => $quizzes]);
+            } elseif ($method === 'POST') {
+                $input = json_decode(file_get_contents('php://input'), true);
+                $title     = trim($input['title'] ?? '');
+                $isDaily   = !empty($input['is_daily']) ? 1 : 0;
+                $dailyDate = $input['daily_date'] ?? null;
+
+                if (empty($title)) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'title is required']);
+                    break;
+                }
+
+                $quizId = Utils::generateReadableId();
+                $stmt = $db->getConnection()->prepare(
+                    "INSERT INTO movietrivia_quiz (id, title, is_daily, daily_date)
+                     VALUES (:id, :title, :is_daily, :daily_date)"
+                );
+                $stmt->execute([
+                    ':id'         => $quizId,
+                    ':title'      => $title,
+                    ':is_daily'   => $isDaily,
+                    ':daily_date' => $dailyDate ?: null,
+                ]);
+                http_response_code(201);
+                echo json_encode(['success' => true, 'id' => $quizId, 'title' => $title]);
+            } else {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+            }
+            break;
+
+        case '/movietrivia/questions':
+            if ($method === 'GET') {
+                $quizId = $_GET['quiz_id'] ?? null;
+                if (empty($quizId)) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'quiz_id is required']);
+                    break;
+                }
+                $stmt = $db->getConnection()->prepare(
+                    "SELECT id, quiz_id, movie_title, trailer_video_id, tmdb_id, position, created_at
+                     FROM movietrivia_questions WHERE quiz_id = :quiz_id ORDER BY position ASC, created_at ASC"
+                );
+                $stmt->execute([':quiz_id' => $quizId]);
+                $questions = $stmt->fetchAll();
+                echo json_encode(['success' => true, 'count' => count($questions), 'questions' => $questions]);
+            } elseif ($method === 'POST') {
+                $input = json_decode(file_get_contents('php://input'), true);
+                $quizId         = trim($input['quiz_id'] ?? '');
+                $movieTitle     = trim($input['movie_title'] ?? '');
+                $trailerVideoId = trim($input['trailer_video_id'] ?? '');
+                $tmdbId         = $input['tmdb_id'] ?? null;
+
+                if (empty($quizId) || empty($movieTitle) || empty($trailerVideoId)) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'quiz_id, movie_title, and trailer_video_id are required']);
+                    break;
+                }
+
+                // Verify quiz exists
+                $checkStmt = $db->getConnection()->prepare("SELECT id FROM movietrivia_quiz WHERE id = :id");
+                $checkStmt->execute([':id' => $quizId]);
+                if (!$checkStmt->fetch()) {
+                    http_response_code(404);
+                    echo json_encode(['error' => 'Quiz not found']);
+                    break;
+                }
+
+                // Get next position
+                $posStmt = $db->getConnection()->prepare(
+                    "SELECT COALESCE(MAX(position), 0) + 1 FROM movietrivia_questions WHERE quiz_id = :quiz_id"
+                );
+                $posStmt->execute([':quiz_id' => $quizId]);
+                $position = (int)$posStmt->fetchColumn();
+
+                $wrongAnswer1 = trim($input['wrong_answer_1'] ?? '') ?: null;
+                $wrongAnswer2 = trim($input['wrong_answer_2'] ?? '') ?: null;
+                $wrongAnswer3 = trim($input['wrong_answer_3'] ?? '') ?: null;
+
+                $stmt = $db->getConnection()->prepare(
+                    "INSERT INTO movietrivia_questions (quiz_id, movie_title, trailer_video_id, tmdb_id, wrong_answer_1, wrong_answer_2, wrong_answer_3, position)
+                     VALUES (:quiz_id, :movie_title, :trailer_video_id, :tmdb_id, :wrong_answer_1, :wrong_answer_2, :wrong_answer_3, :position)"
+                );
+                $stmt->execute([
+                    ':quiz_id'          => $quizId,
+                    ':movie_title'      => $movieTitle,
+                    ':trailer_video_id' => $trailerVideoId,
+                    ':tmdb_id'          => $tmdbId,
+                    ':wrong_answer_1'   => $wrongAnswer1,
+                    ':wrong_answer_2'   => $wrongAnswer2,
+                    ':wrong_answer_3'   => $wrongAnswer3,
+                    ':position'         => $position,
+                ]);
+                $id = $db->getConnection()->lastInsertId();
+                http_response_code(201);
+                echo json_encode(['success' => true, 'id' => $id, 'movie_title' => $movieTitle, 'position' => $position]);
+            } else {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+            }
+            break;
+
+        case '/movietrivia/game':
+            if ($method !== 'GET') {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+                break;
+            }
+
+            $quizId = $_GET['quiz_id'] ?? null;
+
+            if ($quizId) {
+                // Load specific quiz
+                $quizStmt = $db->getConnection()->prepare(
+                    "SELECT id, title, is_daily, daily_date FROM movietrivia_quiz WHERE id = :id AND is_active = 1"
+                );
+                $quizStmt->execute([':id' => $quizId]);
+                $quiz = $quizStmt->fetch();
+                if (!$quiz) {
+                    http_response_code(404);
+                    echo json_encode(['error' => 'Quiz not found']);
+                    break;
+                }
+                $qStmt = $db->getConnection()->prepare(
+                    "SELECT id, movie_title, trailer_video_id, wrong_answer_1, wrong_answer_2, wrong_answer_3 FROM movietrivia_questions
+                     WHERE quiz_id = :quiz_id ORDER BY position ASC"
+                );
+                $qStmt->execute([':quiz_id' => $quizId]);
+                $quizQuestions = $qStmt->fetchAll();
+            } else {
+                // Default: today's daily quiz or random questions across all quizzes
+                $quizStmt = $db->getConnection()->prepare(
+                    "SELECT id, title, is_daily, daily_date FROM movietrivia_quiz
+                     WHERE is_daily = 1 AND daily_date = CURDATE() AND is_active = 1 LIMIT 1"
+                );
+                $quizStmt->execute();
+                $quiz = $quizStmt->fetch();
+
+                if ($quiz) {
+                    $qStmt = $db->getConnection()->prepare(
+                        "SELECT id, movie_title, trailer_video_id, wrong_answer_1, wrong_answer_2, wrong_answer_3 FROM movietrivia_questions
+                         WHERE quiz_id = :quiz_id ORDER BY position ASC"
+                    );
+                    $qStmt->execute([':quiz_id' => $quiz['id']]);
+                    $quizQuestions = $qStmt->fetchAll();
+                } else {
+                    // Fall back to random questions across all quizzes
+                    $quiz = ['title' => 'Random Quiz'];
+                    $count = isset($_GET['count']) ? min((int)$_GET['count'], 20) : 10;
+                    $allStmt = $db->getConnection()->query(
+                        "SELECT id, movie_title, trailer_video_id, wrong_answer_1, wrong_answer_2, wrong_answer_3 FROM movietrivia_questions"
+                    );
+                    $all = $allStmt->fetchAll();
+                    shuffle($all);
+                    $quizQuestions = array_slice($all, 0, min($count, count($all)));
+                }
+            }
+
+            if (count($quizQuestions) === 0) {
+                http_response_code(422);
+                echo json_encode(['error' => 'No questions found']);
+                break;
+            }
+
+            // Build wrong answer pool from all questions
+            $allTitlesStmt = $db->getConnection()->query("SELECT DISTINCT movie_title FROM movietrivia_questions");
+            $allTitles = array_column($allTitlesStmt->fetchAll(), 'movie_title');
+
+            $gameQuestions = array_map(function($q) use ($allTitles) {
+                // Use stored wrong answers if all 3 are present, otherwise fall back to random
+                $stored = array_filter([
+                    $q['wrong_answer_1'] ?? null,
+                    $q['wrong_answer_2'] ?? null,
+                    $q['wrong_answer_3'] ?? null,
+                ]);
+
+                if (count($stored) === 3) {
+                    $options = array_values($stored);
+                } else {
+                    $wrongPool = array_values(array_filter($allTitles, fn($t) => $t !== $q['movie_title']));
+                    shuffle($wrongPool);
+                    $options = array_slice($wrongPool, 0, 3);
+                }
+
+                $options[] = $q['movie_title'];
+                shuffle($options);
+                return [
+                    'id'               => $q['id'],
+                    'trailer_video_id' => $q['trailer_video_id'],
+                    'answer'           => $q['movie_title'],
+                    'options'          => $options,
+                ];
+            }, $quizQuestions);
+
+            echo json_encode([
+                'success'   => true,
+                'quiz'      => $quiz,
+                'count'     => count($gameQuestions),
+                'questions' => $gameQuestions,
             ]);
             break;
 

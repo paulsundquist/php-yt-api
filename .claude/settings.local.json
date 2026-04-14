@@ -8,7 +8,12 @@
       "Bash(curl:*)",
       "Bash(git mv:*)",
       "WebSearch",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(cp:*)",
+      "Bash(__NEW_LINE__ curl -s -X POST http://localhost:8000/channels )",
+      "Bash(python3:*)",
+      "Bash(php fetch_videos.php:*)",
+      "Bash(git:*)"
     ],
     "deny": [],
     "ask": []

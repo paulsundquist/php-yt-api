@@ -95,6 +95,42 @@ class YouTubeService
     }
 
     /**
+     * Search for YouTube videos by query (e.g. "Jaws official trailer")
+     *
+     * @param string $query Search query
+     * @param int $maxResults Maximum results to return
+     * @return array List of video results with video_id and title
+     */
+    public function searchVideos($query, $maxResults = 5)
+    {
+        try {
+            $response = $this->client->request('GET', 'search', [
+                'query' => [
+                    'key'        => $this->apiKey,
+                    'part'       => 'snippet',
+                    'type'       => 'video',
+                    'q'          => $query,
+                    'maxResults' => $maxResults,
+                ]
+            ]);
+
+            $data = json_decode($response->getBody(), true);
+
+            return array_map(function ($item) {
+                return [
+                    'video_id' => $item['id']['videoId'],
+                    'title'    => $item['snippet']['title'],
+                    'channel'  => $item['snippet']['channelTitle'],
+                    'thumbnail' => $item['snippet']['thumbnails']['medium']['url'] ?? '',
+                ];
+            }, $data['items'] ?? []);
+
+        } catch (GuzzleException $e) {
+            throw new \Exception("Failed to search videos: " . $e->getMessage());
+        }
+    }
+
+    /**
      * Get uploads playlist ID for a channel
      *
      * @param string $channelId YouTube channel ID

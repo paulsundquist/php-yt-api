@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Trivia Author</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container { max-width: 800px; margin: 0 auto; }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 36px;
+        }
+
+        .header a { color: inherit; text-decoration: none; opacity: 0.5; font-size: 14px; }
+        .header a:hover { opacity: 1; }
+        h1 { font-size: 28px; font-weight: 800; color: #f59e0b; }
+
+        .section {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 28px;
+            margin-bottom: 24px;
+        }
+
+        .section h2 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #f59e0b;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #9ca3af;
+            margin-bottom: 6px;
+        }
+
+        .form-group { margin-bottom: 16px; }
+
+        input[type="text"],
+        input[type="date"],
+        select {
+            width: 100%;
+            padding: 11px 14px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus,
+        input[type="date"]:focus,
+        select:focus { border-color: #f59e0b; }
+
+        input::placeholder { color: #4b5563; }
+
+        select option { background: #1f2937; }
+
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        input[type="checkbox"] { width: 16px; height: 16px; accent-color: #f59e0b; cursor: pointer; }
+        .checkbox-row label { margin: 0; cursor: pointer; color: #d1d5db; font-size: 14px; }
+
+        button {
+            padding: 11px 22px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-primary  { background: #f59e0b; color: #000; }
+        .btn-primary:hover  { background: #d97706; }
+        .btn-primary:disabled  { background: #6b7280; cursor: not-allowed; }
+
+        .btn-success  { background: #10b981; color: #fff; }
+        .btn-success:hover  { background: #059669; }
+        .btn-success:disabled  { background: #374151; cursor: not-allowed; }
+
+        .btn-blue { background: #2563eb; color: #fff; }
+        .btn-blue:hover { background: #1d4ed8; }
+
+        .row { display: flex; gap: 10px; }
+        .row input { flex: 1; }
+
+        .quiz-list { display: flex; flex-direction: column; gap: 8px; }
+
+        .quiz-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: rgba(255,255,255,0.04);
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .quiz-item:hover { background: rgba(255,255,255,0.08); }
+        .quiz-item.selected { border-color: #f59e0b; background: rgba(245,158,11,0.08); }
+
+        .quiz-item-title { font-size: 14px; font-weight: 600; }
+        .quiz-item-meta  { font-size: 12px; color: #6b7280; margin-top: 2px; }
+
+        .quiz-item-badges { display: flex; gap: 6px; align-items: center; }
+
+        .badge {
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-daily { background: rgba(245,158,11,0.2); color: #f59e0b; }
+        .badge-count { background: rgba(255,255,255,0.1); color: #9ca3af; }
+
+        .results-list { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+
+        .result-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            background: rgba(255,255,255,0.04);
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .result-item:hover { background: rgba(255,255,255,0.08); }
+        .result-item.selected { border-color: #f59e0b; background: rgba(245,158,11,0.08); }
+
+        .result-item img {
+            width: 80px;
+            height: 45px;
+            object-fit: cover;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        .result-title { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .result-channel { font-size: 11px; color: #6b7280; margin-top: 2px; }
+
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #000;
+            margin-bottom: 16px;
+        }
+
+        .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+
+        .alert-success { background: rgba(16,185,129,0.15); border: 1px solid #10b981; color: #6ee7b7; }
+        .alert-error   { background: rgba(239,68,68,0.15);  border: 1px solid #ef4444; color: #fca5a5; }
+        .alert-info    { background: rgba(37,99,235,0.15);  border: 1px solid #2563eb; color: #93c5fd; }
+
+        .spinner {
+            display: inline-block;
+            width: 13px; height: 13px;
+            border: 2px solid currentColor;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .disabled-section { opacity: 0.4; pointer-events: none; }
+
+        .selected-quiz-bar {
+            background: rgba(245,158,11,0.1);
+            border: 1px solid rgba(245,158,11,0.3);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 13px;
+            color: #f59e0b;
+            margin-bottom: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <a href="/">← Home</a>
+        <h1>Movie Trivia Author</h1>
+    </div>
+
+    <div id="alert-area"></div>
+
+    <!-- Step 1: Quiz -->
+    <div class="section" id="quiz-section">
+        <h2>Step 1 — Select or Create a Quiz</h2>
+
+        <div class="quiz-list" id="quiz-list">
+            <div style="color:#6b7280;font-size:13px">Loading quizzes...</div>
+        </div>
+
+        <div style="margin-top:20px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.08)">
+            <div class="form-group">
+                <label>New Quiz Title</label>
+                <input type="text" id="new-quiz-title" placeholder="e.g. 80s Classics">
+            </div>
+            <div class="checkbox-row">
+                <input type="checkbox" id="is-daily">
+                <label for="is-daily">Daily Quiz</label>
+            </div>
+            <div class="form-group">
+                <label>Daily Date</label>
+                <input type="date" id="daily-date">
+            </div>
+            <button class="btn-blue" onclick="createQuiz()">Create Quiz</button>
+        </div>
+    </div>
+
+    <!-- Step 2: Add Questions -->
+    <div class="section" id="questions-section">
+        <h2>Step 2 — Add Questions</h2>
+
+        <div class="selected-quiz-bar" id="selected-quiz-bar"></div>
+
+        <div id="add-question-form" class="disabled-section">
+            <div class="form-group">
+                <label>Search for a Movie</label>
+                <div class="row">
+                    <input type="text" id="movie-input" placeholder="e.g. Jaws" autocomplete="off"
+                           onkeydown="if(event.key==='Enter') searchTrailer()">
+                    <button class="btn-primary" id="search-btn" onclick="searchTrailer()">Find Trailer</button>
+                </div>
+            </div>
+
+            <div class="results-list" id="results-list"></div>
+
+            <div id="preview-area" style="display:none">
+                <div class="video-wrapper">
+                    <iframe id="trailer-frame" allowfullscreen allow="autoplay"></iframe>
+                </div>
+                <div class="form-group">
+                    <label>Movie Title (the answer)</label>
+                    <input type="text" id="movie-title-input" placeholder="Enter exact movie title">
+                </div>
+                <div class="form-group">
+                    <label>Wrong Answer 1</label>
+                    <input type="text" id="wrong-answer-1" placeholder="e.g. The Godfather">
+                </div>
+                <div class="form-group">
+                    <label>Wrong Answer 2</label>
+                    <input type="text" id="wrong-answer-2" placeholder="e.g. Pulp Fiction">
+                </div>
+                <div class="form-group">
+                    <label>Wrong Answer 3</label>
+                    <input type="text" id="wrong-answer-3" placeholder="e.g. Forrest Gump">
+                </div>
+                <button class="btn-success" id="save-btn" onclick="saveQuestion()" style="width:100%;padding:14px">
+                    Save Question
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let selectedQuizId = null;
+    let selectedVideoId = null;
+
+    // ── Quiz ─────────────────────────────────────────────────────────────
+
+    async function loadQuizzes() {
+        try {
+            const res = await fetch('/movietrivia/quiz');
+            const data = await res.json();
+            renderQuizList(data.quizzes || []);
+        } catch (e) {
+            document.getElementById('quiz-list').innerHTML =
+                '<div style="color:#fca5a5;font-size:13px">Failed to load quizzes.</div>';
+        }
+    }
+
+    function renderQuizList(quizzes) {
+        const list = document.getElementById('quiz-list');
+        if (!quizzes.length) {
+            list.innerHTML = '<div style="color:#6b7280;font-size:13px">No quizzes yet. Create one below.</div>';
+            return;
+        }
+        list.innerHTML = '';
+        quizzes.forEach(q => {
+            const div = document.createElement('div');
+            div.className = 'quiz-item' + (q.id === selectedQuizId ? ' selected' : '');
+            div.dataset.id = q.id;
+            div.innerHTML = `
+                <div>
+                    <div class="quiz-item-title">${escapeHtml(q.title)}</div>
+                    <div class="quiz-item-meta">ID: ${q.id}${q.daily_date ? ' · ' + q.daily_date : ''}</div>
+                </div>
+                <div class="quiz-item-badges">
+                    ${q.is_daily ? '<span class="badge badge-daily">Daily</span>' : ''}
+                    <span class="badge badge-count">${q.question_count} Q</span>
+                </div>
+            `;
+            div.addEventListener('click', () => selectQuiz(q.id, q.title));
+            list.appendChild(div);
+        });
+    }
+
+    function selectQuiz(id, title) {
+        selectedQuizId = id;
+        document.querySelectorAll('.quiz-item').forEach(el => {
+            el.classList.toggle('selected', el.dataset.id === id);
+        });
+        const bar = document.getElementById('selected-quiz-bar');
+        bar.textContent = `Adding questions to: ${title} (${id})`;
+        bar.style.display = 'block';
+        document.getElementById('add-question-form').classList.remove('disabled-section');
+    }
+
+    async function createQuiz() {
+        const title = document.getElementById('new-quiz-title').value.trim();
+        if (!title) { showAlert('Quiz title is required.', 'error'); return; }
+
+        const isDaily = document.getElementById('is-daily').checked;
+        const dailyDate = document.getElementById('daily-date').value || null;
+
+        try {
+            const res = await fetch('/movietrivia/quiz', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, is_daily: isDaily, daily_date: dailyDate })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showAlert(`Quiz "${escapeHtml(title)}" created (ID: ${data.id})`, 'success');
+                document.getElementById('new-quiz-title').value = '';
+                document.getElementById('is-daily').checked = false;
+                document.getElementById('daily-date').value = '';
+                await loadQuizzes();
+                selectQuiz(data.id, title);
+            } else {
+                showAlert(data.error || 'Failed to create quiz.', 'error');
+            }
+        } catch (e) {
+            showAlert('Failed to create quiz.', 'error');
+        }
+    }
+
+    // ── Questions ─────────────────────────────────────────────────────────
+
+    async function searchTrailer() {
+        const q = document.getElementById('movie-input').value.trim();
+        if (!q) return;
+
+        const btn = document.getElementById('search-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span>Searching...';
+        document.getElementById('results-list').innerHTML = '';
+        document.getElementById('preview-area').style.display = 'none';
+        selectedVideoId = null;
+
+        try {
+            const res = await fetch(`/movietrivia/search-trailer?q=${encodeURIComponent(q)}`);
+            const data = await res.json();
+            if (!data.success || !data.results.length) {
+                showAlert('No trailers found.', 'error');
+                return;
+            }
+            renderResults(data.results, q);
+        } catch (e) {
+            showAlert('Search failed.', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = 'Find Trailer';
+        }
+    }
+
+    function renderResults(results, movieName) {
+        const list = document.getElementById('results-list');
+        list.innerHTML = '';
+        results.forEach((r, i) => {
+            const div = document.createElement('div');
+            div.className = 'result-item';
+            div.innerHTML = `
+                <img src="${r.thumbnail}" onerror="this.src='https://img.youtube.com/vi/${r.video_id}/mqdefault.jpg'">
+                <div>
+                    <div class="result-title">${escapeHtml(r.title)}</div>
+                    <div class="result-channel">${escapeHtml(r.channel)}</div>
+                </div>
+            `;
+            div.addEventListener('click', () => selectResult(div, r.video_id, movieName));
+            list.appendChild(div);
+            if (i === 0) div.click();
+        });
+    }
+
+    function selectResult(el, videoId, movieName) {
+        document.querySelectorAll('.result-item').forEach(r => r.classList.remove('selected'));
+        el.classList.add('selected');
+        selectedVideoId = videoId;
+        document.getElementById('trailer-frame').src =
+            `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+        document.getElementById('movie-title-input').value = movieName;
+        document.getElementById('preview-area').style.display = 'block';
+    }
+
+    async function saveQuestion() {
+        if (!selectedQuizId) { showAlert('Select a quiz first.', 'error'); return; }
+        const movieTitle = document.getElementById('movie-title-input').value.trim();
+        if (!movieTitle || !selectedVideoId) return;
+
+        const btn = document.getElementById('save-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span>Saving...';
+
+        try {
+            const res = await fetch('/movietrivia/questions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    quiz_id: selectedQuizId,
+                    movie_title: movieTitle,
+                    trailer_video_id: selectedVideoId,
+                    wrong_answer_1: document.getElementById('wrong-answer-1').value.trim() || null,
+                    wrong_answer_2: document.getElementById('wrong-answer-2').value.trim() || null,
+                    wrong_answer_3: document.getElementById('wrong-answer-3').value.trim() || null,
+                })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showAlert(`"${escapeHtml(movieTitle)}" saved as question #${data.position}`, 'success');
+                document.getElementById('movie-input').value = '';
+                document.getElementById('results-list').innerHTML = '';
+                document.getElementById('preview-area').style.display = 'none';
+                document.getElementById('trailer-frame').src = '';
+                document.getElementById('wrong-answer-1').value = '';
+                document.getElementById('wrong-answer-2').value = '';
+                document.getElementById('wrong-answer-3').value = '';
+                selectedVideoId = null;
+                await loadQuizzes(); // refresh question counts
+            } else {
+                showAlert(data.error || 'Failed to save question.', 'error');
+            }
+        } catch (e) {
+            showAlert('Save failed.', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = 'Save Question';
+        }
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────────
+
+    function showAlert(msg, type) {
+        const area = document.getElementById('alert-area');
+        area.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+        setTimeout(() => area.innerHTML = '', 5000);
+    }
+
+    function escapeHtml(text) {
+        const d = document.createElement('div');
+        d.textContent = text;
+        return d.innerHTML;
+    }
+
+    loadQuizzes();
+</script>
+</body>
+</html>
