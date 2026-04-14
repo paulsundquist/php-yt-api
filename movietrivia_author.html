@@ -309,7 +309,7 @@
 
     async function loadQuizzes() {
         try {
-            const res = await fetch('/movietrivia/quiz');
+            const res = await fetch('/movietrivia_api/quiz');
             const data = await res.json();
             renderQuizList(data.quizzes || []);
         } catch (e) {
@@ -363,7 +363,7 @@
         const dailyDate = document.getElementById('daily-date').value || null;
 
         try {
-            const res = await fetch('/movietrivia/quiz', {
+            const res = await fetch('/movietrivia_api/quiz', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ title, is_daily: isDaily, daily_date: dailyDate })
@@ -398,7 +398,7 @@
         selectedVideoId = null;
 
         try {
-            const res = await fetch(`/movietrivia/search-trailer?q=${encodeURIComponent(q)}`);
+            const res = await fetch(`/movietrivia_api/search-trailer?q=${encodeURIComponent(q)}`);
             const data = await res.json();
             if (!data.success || !data.results.length) {
                 showAlert('No trailers found.', 'error');
@@ -452,7 +452,7 @@
         btn.innerHTML = '<span class="spinner"></span>Saving...';
 
         try {
-            const res = await fetch('/movietrivia/questions', {
+            const res = await fetch('/movietrivia_api/questions', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

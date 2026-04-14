@@ -325,7 +325,7 @@
                 }
 
                 // Check for today's daily quiz
-                const dailyRes = await fetch('/movietrivia/daily');
+                const dailyRes = await fetch('/movietrivia_api/daily');
                 const dailyData = await dailyRes.json();
 
                 if (dailyData.has_daily) {
@@ -345,8 +345,8 @@
 
         async function loadGame(quizId) {
             const url = quizId && quizId !== 'random'
-                ? `/movietrivia/game?quiz_id=${quizId}`
-                : '/movietrivia/game?count=10';
+                ? `/movietrivia_api/game?quiz_id=${quizId}`
+                : '/movietrivia_api/game?count=10';
 
             const res = await fetch(url);
             const data = await res.json();

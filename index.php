@@ -1205,7 +1205,7 @@ try {
             ]);
             break;
 
-        case '/movietrivia/daily':
+        case '/movietrivia_api/daily':
             if ($method !== 'GET') {
                 http_response_code(405);
                 echo json_encode(['error' => 'Method not allowed']);
@@ -1227,7 +1227,7 @@ try {
             ]);
             break;
 
-        case '/movietrivia/search-trailer':
+        case '/movietrivia_api/search-trailer':
             if ($method !== 'GET') {
                 http_response_code(405);
                 echo json_encode(['error' => 'Method not allowed']);
@@ -1244,7 +1244,7 @@ try {
             echo json_encode(['success' => true, 'results' => $results]);
             break;
 
-        case '/movietrivia/quiz':
+        case '/movietrivia_api/quiz':
             if ($method === 'GET') {
                 $stmt = $db->getConnection()->query(
                     "SELECT q.id, q.title, q.is_daily, q.daily_date, q.is_active, q.created_at,
@@ -1286,7 +1286,7 @@ try {
             }
             break;
 
-        case '/movietrivia/questions':
+        case '/movietrivia_api/questions':
             if ($method === 'GET') {
                 $quizId = $_GET['quiz_id'] ?? null;
                 if (empty($quizId)) {
@@ -1357,7 +1357,7 @@ try {
             }
             break;
 
-        case '/movietrivia/game':
+        case '/movietrivia_api/game':
             if ($method !== 'GET') {
                 http_response_code(405);
                 echo json_encode(['error' => 'Method not allowed']);
