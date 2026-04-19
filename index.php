@@ -446,6 +446,29 @@ try {
             }
             break;
 
+        case '/weather':
+            if ($method !== 'GET') {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+                break;
+            }
+            $zip = trim($_GET['zip'] ?? '');
+            if (empty($zip)) {
+                http_response_code(400);
+                echo json_encode(['error' => 'zip parameter is required']);
+                break;
+            }
+            $wttrUrl = 'https://wttr.in/' . urlencode($zip) . '?format=' . urlencode('%t+%C');
+            $ctx = stream_context_create(['http' => ['timeout' => 5, 'header' => "User-Agent: curl/7.0\r\n"]]);
+            $result = @file_get_contents($wttrUrl, false, $ctx);
+            if ($result === false) {
+                http_response_code(502);
+                echo json_encode(['error' => 'Failed to fetch weather']);
+                break;
+            }
+            echo json_encode(['temp' => trim($result)]);
+            break;
+
         case '/fetch':
             if ($method !== 'POST' && $method !== 'GET') {
                 http_response_code(405);

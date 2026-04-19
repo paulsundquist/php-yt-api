@@ -358,7 +358,7 @@
 </head>
 <body>
     <div class="container">
-        <a href="/index.html" class="back-link">&larr; Back to Home</a>
+        <a href="/index.html" class="back-link"><img src="/favicon.svg" alt="Home" style="width:24px;height:24px;display:block"></a>
 
         <header>
             <h1>Playlist Plus</h1>
@@ -546,6 +546,34 @@
         let timeInterval = null;
         let tempInterval = null;
 
+        const PREFS_KEY = 'playlist_player_prefs';
+
+        function savePrefs() {
+            localStorage.setItem(PREFS_KEY, JSON.stringify({
+                autostart: autostartCheckbox.checked,
+                fullscreen: fullscreenCheckbox.checked,
+                mute: muteCheckbox.checked,
+                showtime: showTimeCheckbox.checked,
+                showdate: showDateCheckbox.checked,
+                showtemp: showTempCheckbox.checked,
+                zip: zipCodeInput.value.trim()
+            }));
+        }
+
+        function loadPrefs() {
+            try {
+                const prefs = JSON.parse(localStorage.getItem(PREFS_KEY));
+                if (!prefs) return;
+                autostartCheckbox.checked = prefs.autostart ?? true;
+                fullscreenCheckbox.checked = prefs.fullscreen ?? true;
+                muteCheckbox.checked = prefs.mute ?? false;
+                showTimeCheckbox.checked = prefs.showtime ?? false;
+                showDateCheckbox.checked = prefs.showdate ?? false;
+                showTempCheckbox.checked = prefs.showtemp ?? false;
+                zipCodeInput.value = prefs.zip ?? '';
+            } catch (e) {}
+        }
+
         function updateURL() {
             const params = new URLSearchParams();
 
@@ -607,6 +635,7 @@
         showTimeCheckbox.addEventListener('change', function() {
             toggleTimeDisplay(this.checked);
             updateURL();
+            savePrefs();
         });
 
         function updateDate() {
@@ -627,15 +656,15 @@
         showDateCheckbox.addEventListener('change', function() {
             toggleDateDisplay(this.checked);
             updateURL();
+            savePrefs();
         });
 
         async function fetchTemperature(zipCode) {
             try {
-                // Use wttr.in API which supports zip codes
-                const response = await fetch(`https://wttr.in/${zipCode}?format=%t`);
+                const response = await fetch(`/weather?zip=${encodeURIComponent(zipCode)}`);
                 if (response.ok) {
-                    const temp = await response.text();
-                    return temp.trim();
+                    const data = await response.json();
+                    return data.temp || 'N/A';
                 }
                 return 'N/A';
             } catch (error) {
@@ -673,6 +702,7 @@
         showTempCheckbox.addEventListener('change', function() {
             toggleTempDisplay(this.checked);
             updateURL();
+            savePrefs();
         });
 
         zipCodeInput.addEventListener('change', function() {
@@ -680,12 +710,13 @@
                 updateTemperature();
             }
             updateURL();
+            savePrefs();
         });
 
         // Add URL update listeners to remaining fields
-        autostartCheckbox.addEventListener('change', updateURL);
-        fullscreenCheckbox.addEventListener('change', updateURL);
-        muteCheckbox.addEventListener('change', updateURL);
+        autostartCheckbox.addEventListener('change', function() { updateURL(); savePrefs(); });
+        fullscreenCheckbox.addEventListener('change', function() { updateURL(); savePrefs(); });
+        muteCheckbox.addEventListener('change', function() { updateURL(); savePrefs(); });
         input.addEventListener('change', updateURL);
 
         function extractPlaylistId(input) {
@@ -769,14 +800,15 @@
         // Check for playlist in URL params on page load
         const urlParams = new URLSearchParams(window.location.search);
         const listParam = urlParams.get('list');
-        const autostartParam = urlParams.get('autostart') !== '0';
-        const fullscreenParam = urlParams.get('fullscreen') !== '0';
-        const muteParam = urlParams.get('mute') === '1';
-        const showTimeParam = urlParams.get('showtime') === '1';
-        const showDateParam = urlParams.get('showdate') === '1';
-        const showTempParam = urlParams.get('showtemp') === '1';
-        const zipCodeParam = urlParams.get('zip') || '';
         if (listParam) {
+            const autostartParam = urlParams.get('autostart') !== '0';
+            const fullscreenParam = urlParams.get('fullscreen') !== '0';
+            const muteParam = urlParams.get('mute') === '1';
+            const showTimeParam = urlParams.get('showtime') === '1';
+            const showDateParam = urlParams.get('showdate') === '1';
+            const showTempParam = urlParams.get('showtemp') === '1';
+            const savedZip = (() => { try { return JSON.parse(localStorage.getItem(PREFS_KEY))?.zip || ''; } catch(e) { return ''; } })();
+            const zipCodeParam = urlParams.get('zip') || savedZip;
             input.value = listParam;
             autostartCheckbox.checked = autostartParam;
             fullscreenCheckbox.checked = fullscreenParam;
@@ -786,6 +818,8 @@
             showTempCheckbox.checked = showTempParam;
             zipCodeInput.value = zipCodeParam;
             loadPlaylist(listParam, { autostart: autostartParam, fullscreen: fullscreenParam, muted: muteParam, showTime: showTimeParam, showDate: showDateParam, showTemp: showTempParam, zipCode: zipCodeParam });
+        } else {
+            loadPrefs();
         }
     </script>
 </body>
