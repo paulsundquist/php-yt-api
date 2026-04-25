@@ -188,22 +188,33 @@
         let currentCategory = 'all';
         let currentDuration = 'all';
         let currentChannel = 'all';
+        let allChannels = [];
 
         async function loadChannels() {
             try {
                 const response = await fetch('/fit-channels');
                 const data = await response.json();
                 if (!data.success) return;
-                const channelSelect = document.getElementById('channel-select');
-                data.channels.forEach(ch => {
-                    const opt = document.createElement('option');
-                    opt.value = ch.channel_id;
-                    opt.textContent = ch.channel_name;
-                    channelSelect.appendChild(opt);
-                });
+                allChannels = data.channels;
+                populateChannelDropdown();
             } catch (e) {
                 console.error('Error loading channels:', e);
             }
+        }
+
+        function populateChannelDropdown() {
+            const channelSelect = document.getElementById('channel-select');
+            const filtered = currentCategory === 'all'
+                ? allChannels
+                : allChannels.filter(ch => ch.channel_category === currentCategory);
+
+            channelSelect.innerHTML = '<option value="all">All Instructors</option>';
+            filtered.forEach(ch => {
+                const opt = document.createElement('option');
+                opt.value = ch.channel_id;
+                opt.textContent = ch.channel_name;
+                channelSelect.appendChild(opt);
+            });
         }
 
         async function loadVideos() {
@@ -329,6 +340,8 @@
         // Category dropdown handling
         document.getElementById('category-select').addEventListener('change', function() {
             currentCategory = this.value;
+            currentChannel = 'all';
+            populateChannelDropdown();
             loadVideos();
         });
 
