@@ -45,7 +45,7 @@ if (preg_match('#^/2v/([A-Z0-9]{8})$#', $uri, $matches)) {
 }
 
 // API endpoints
-if (preg_match('#^/(channels|videos|fetch|categories|groups|tours|tour-steps|votes|tvdb|chains|api|fit-videos|fit-channels)#', $uri)) {
+if (preg_match('#^/(channels|videos|fetch|categories|groups|tours|tour-steps|votes|tvdb|chains|api|fit-videos|fit-channels|movietrivia_api|weather)#', $uri)) {
     require __DIR__ . '/index.php';
     return true;
 }
