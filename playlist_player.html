@@ -275,6 +275,20 @@
             opacity: 1;
         }
 
+        .reddit-link {
+            display: inline-block;
+            float: right;
+            color: #FF4500;
+            margin-bottom: 20px;
+            vertical-align: top;
+            opacity: 0.9;
+            transition: opacity 0.2s;
+        }
+
+        .reddit-link:hover {
+            opacity: 1;
+        }
+
         .samples-container {
             background: white;
             border-radius: 12px;
@@ -359,6 +373,9 @@
 <body>
     <div class="container">
         <a href="/index.html" class="back-link"><img src="/favicon.svg" alt="Home" style="width:24px;height:24px;display:block"></a>
+        <a href="https://www.reddit.com/r/MyTubie/comments/1qmlomo/mytubie_playlist_plus/" class="reddit-link" target="_blank" rel="noopener" title="Discuss on Reddit" aria-label="Discuss on Reddit">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.01 13.21c.014.13.022.262.022.396 0 2.69-3.13 4.87-6.99 4.87-3.86 0-6.99-2.18-6.99-4.87 0-.135.008-.268.023-.4-.5-.226-.846-.73-.846-1.316 0-.798.647-1.444 1.445-1.444.39 0 .744.155 1.003.408 1.005-.726 2.394-1.19 3.933-1.244l.67-3.16c.014-.067.054-.126.11-.163.057-.038.126-.05.193-.036l2.196.468c.152-.31.47-.524.84-.524.518 0 .938.42.938.937 0 .517-.42.937-.937.937-.504 0-.913-.398-.936-.896l-1.967-.418-.6 2.827c1.516.062 2.884.524 3.88 1.247.259-.25.61-.404.997-.404.798 0 1.445.646 1.445 1.444 0 .586-.346 1.09-.846 1.316zM8.81 12.84c-.518 0-.937.42-.937.937 0 .518.42.938.937.938.518 0 .937-.42.937-.938 0-.517-.42-.937-.937-.937zm6.38 0c-.518 0-.937.42-.937.937 0 .518.42.938.937.938.518 0 .937-.42.937-.938 0-.517-.42-.937-.937-.937zm-1.04 3.04c-.49.49-1.43.53-1.71.53-.28 0-1.22-.04-1.71-.53-.073-.073-.073-.19 0-.263.073-.073.19-.073.263 0 .31.31 1 .42 1.447.42.447 0 1.137-.11 1.447-.42.073-.073.19-.073.263 0 .073.073.073.19 0 .263z"/></svg>
+        </a>
 
         <header>
             <h1>Playlist Plus</h1>
