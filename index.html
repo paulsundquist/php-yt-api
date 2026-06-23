@@ -29,6 +29,20 @@
             margin-bottom: 50px;
         }
 
+        .reddit-link {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: inline-block;
+            z-index: 1000;
+            opacity: 0.9;
+            transition: opacity 0.2s;
+        }
+
+        .reddit-link:hover {
+            opacity: 1;
+        }
+
         h1 {
             color: white;
             font-size: 48px;
@@ -364,6 +378,9 @@
     </style>
 </head>
 <body>
+    <a href="https://www.reddit.com/r/MyTubie/" class="reddit-link" target="_blank" rel="noopener" title="MyTubie on Reddit" aria-label="MyTubie on Reddit">
+        <img src="/images/reddit_icon.png" alt="MyTubie on Reddit" style="width:48px;height:48px;display:block">
+    </a>
     <div class="container">
         <header>
             <h1>MyTubie</h1>
