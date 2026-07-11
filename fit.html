@@ -36,6 +36,7 @@
             align-items: center;
             flex-wrap: wrap;
             gap: 15px;
+            padding-right: 60px;
         }
 
         .home-btn {
@@ -43,6 +44,20 @@
             display: flex;
             align-items: center;
             transition: opacity 0.2s;
+        }
+
+        .reddit-link {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: inline-block;
+            z-index: 1000;
+            opacity: 0.9;
+            transition: opacity 0.2s;
+        }
+
+        .reddit-link:hover {
+            opacity: 1;
         }
 
         .home-btn:hover {
@@ -151,6 +166,9 @@
     </style>
 </head>
 <body>
+    <a href="https://www.reddit.com/r/MyTubie/comments/1svl48n/mytubie_fit_discover_and_find_youtube_fitness/" class="reddit-link" target="_blank" rel="noopener" title="Suggestions" aria-label="Suggestions">
+        <img src="/images/reddit_icon.png" alt="Suggestions" style="width:48px;height:48px;display:block">
+    </a>
     <div class="header">
         <div class="header-content">
             <div style="display:flex;align-items:center;gap:8px">
@@ -204,9 +222,10 @@
 
         function populateChannelDropdown() {
             const channelSelect = document.getElementById('channel-select');
-            const filtered = currentCategory === 'all'
-                ? allChannels
-                : allChannels.filter(ch => ch.channel_category === currentCategory);
+            const filtered = (currentCategory === 'all'
+                ? [...allChannels]
+                : allChannels.filter(ch => ch.channel_category === currentCategory))
+                .sort((a, b) => a.channel_name.localeCompare(b.channel_name, undefined, { sensitivity: 'base' }));
 
             channelSelect.innerHTML = '<option value="all">All Instructors</option>';
             filtered.forEach(ch => {
