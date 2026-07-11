@@ -121,8 +121,8 @@
         }
 
         .preset-grid {
-            display: flex;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
             gap: 8px;
         }
 
@@ -282,6 +282,7 @@
                     <button type="button" class="preset-btn" onclick="applyPreset('0:30', '4:00')">Walk :30 · Run 4:00</button>
                     <button type="button" class="preset-btn" onclick="applyPreset('0:30', '6:00')">Walk :30 · Run 6:00</button>
                     <button type="button" class="preset-btn" onclick="applyPreset('0:30', '8:00')">Walk :30 · Run 8:00</button>
+                    <button type="button" class="preset-btn" onclick="applyPreset('0:30', '10:00')">Walk :30 · Run 10:00</button>
                 </div>
             </div>
 
