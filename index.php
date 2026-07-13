@@ -24,6 +24,24 @@ function iso8601ToSeconds(string $duration): int {
     return (int)($m[1] ?? 0) * 3600 + (int)($m[2] ?? 0) * 60 + (int)($m[3] ?? 0);
 }
 
+// Normalize FameFrame tags (accepts a comma-separated string or an array)
+// into a clean, de-duplicated comma-separated string, or null if empty.
+function normalizeFameFrameTags($tags): ?string {
+    if (is_array($tags)) {
+        $parts = $tags;
+    } else {
+        $parts = explode(',', (string)$tags);
+    }
+    $clean = [];
+    foreach ($parts as $tag) {
+        $tag = trim($tag);
+        if ($tag !== '' && !in_array($tag, $clean, true)) {
+            $clean[] = $tag;
+        }
+    }
+    return empty($clean) ? null : implode(', ', $clean);
+}
+
 // Set headers for JSON API
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -56,6 +74,61 @@ try {
                     'GET /categories' => 'Get YouTube video categories'
                 ]
             ]);
+            break;
+
+        case '/fameframe':
+            if ($method === 'GET') {
+                $cards = $db->getFameFrames();
+                echo json_encode([
+                    'success' => true,
+                    'count' => count($cards),
+                    'cards' => $cards
+                ]);
+            } elseif ($method === 'POST') {
+                $input = json_decode(file_get_contents('php://input'), true) ?: [];
+
+                $action = $input['action'] ?? '';
+
+                if ($action === 'delete') {
+                    $id = (int)($input['id'] ?? 0);
+                    if ($id <= 0) {
+                        http_response_code(400);
+                        echo json_encode(['error' => 'A valid id is required']);
+                        break;
+                    }
+                    $db->deleteFameFrame($id);
+                    echo json_encode(['success' => true, 'deleted' => $id]);
+                    break;
+                }
+
+                if ($action === 'update_tags') {
+                    $id = (int)($input['id'] ?? 0);
+                    if ($id <= 0) {
+                        http_response_code(400);
+                        echo json_encode(['error' => 'A valid id is required']);
+                        break;
+                    }
+                    $tags = normalizeFameFrameTags($input['tags'] ?? '');
+                    $db->updateFameFrameTags($id, $tags);
+                    echo json_encode(['success' => true, 'id' => $id, 'tags' => $tags]);
+                    break;
+                }
+
+                $name = trim($input['name'] ?? '');
+                $imageUrl = trim($input['image_url'] ?? '');
+                if ($name === '' || $imageUrl === '') {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'name and image_url are required']);
+                    break;
+                }
+
+                $tags = normalizeFameFrameTags($input['tags'] ?? '');
+                $id = $db->addFameFrame($name, $imageUrl, $tags);
+                echo json_encode(['success' => true, 'id' => $id, 'name' => $name, 'image_url' => $imageUrl, 'tags' => $tags]);
+            } else {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+            }
             break;
 
         case '/videos':

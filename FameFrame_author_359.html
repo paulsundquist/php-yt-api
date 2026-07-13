@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FameFrame — Author</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 700px;
+            width: 100%;
+        }
+
+        .home-btn { display: inline-block; margin-bottom: 15px; }
+        .home-btn img { display: block; width: 40px; height: 40px; }
+
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        h1 {
+            color: white;
+            font-size: 38px;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        h2 { color: #1f2937; font-size: 20px; margin-bottom: 18px; }
+
+        .form-group { margin-bottom: 16px; }
+
+        .form-group label {
+            display: block;
+            color: #374151;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+
+        .preview {
+            margin-top: 10px;
+            height: 180px;
+            background: #111827;
+            border-radius: 8px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .preview img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button:hover { background: #1d4ed8; }
+        button:disabled { background: #d1d5db; cursor: not-allowed; }
+
+        .msg {
+            margin-top: 12px;
+            font-size: 14px;
+            min-height: 18px;
+        }
+        .msg.ok { color: #059669; }
+        .msg.err { color: #dc2626; }
+
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+        .list-header h2 { margin-bottom: 0; }
+        .count-badge { color: #6b7280; font-size: 14px; }
+
+        .entry {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .entry:last-child { border-bottom: none; }
+
+        .entry-thumb {
+            width: 56px;
+            height: 56px;
+            border-radius: 8px;
+            object-fit: cover;
+            background: #111827;
+            flex-shrink: 0;
+        }
+
+        .entry-info { flex: 1; min-width: 0; }
+        .entry-name { color: #1f2937; font-weight: 600; }
+        .entry-url {
+            color: #9ca3af;
+            font-size: 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .entry-tags {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 6px;
+        }
+        .tags-input {
+            flex: 1;
+            min-width: 0;
+            padding: 6px 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        button.save {
+            background: #6b7280;
+            padding: 6px 12px;
+            font-size: 13px;
+            flex-shrink: 0;
+        }
+        button.save:hover { background: #4b5563; }
+        .tags-msg { font-size: 12px; flex-shrink: 0; min-width: 42px; }
+        .tags-msg.ok { color: #059669; }
+        .tags-msg.err { color: #dc2626; }
+
+        button.delete {
+            background: #ef4444;
+            padding: 8px 14px;
+            font-size: 13px;
+            flex-shrink: 0;
+        }
+        button.delete:hover { background: #dc2626; }
+
+        .empty { color: #9ca3af; text-align: center; padding: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/FameFrame.html" class="home-btn" title="FameFrame" aria-label="FameFrame"><img src="/favicon.svg" alt="FameFrame"></a>
+
+        <header>
+            <h1>FameFrame Author</h1>
+            <p class="subtitle">Add faces to the flashcard deck</p>
+        </header>
+
+        <div class="card">
+            <h2>Add a new face</h2>
+            <form id="addForm" onsubmit="return addEntry(event)">
+                <div class="form-group">
+                    <label for="name">Name</label>
+                    <input type="text" id="name" placeholder="e.g. Marie Curie" required>
+                </div>
+                <div class="form-group">
+                    <label for="imageUrl">Image URL</label>
+                    <input type="url" id="imageUrl" placeholder="https://…" required oninput="updatePreview()">
+                    <div class="preview" id="preview"><img id="previewImg" src="" alt=""></div>
+                </div>
+                <div class="form-group">
+                    <label for="tags">Tags</label>
+                    <input type="text" id="tags" placeholder="comma, separated, tags">
+                </div>
+                <button type="submit" id="submitBtn">Add Face</button>
+                <div class="msg" id="formMsg"></div>
+            </form>
+        </div>
+
+        <div class="card">
+            <div class="list-header">
+                <h2>Existing faces</h2>
+                <span class="count-badge" id="countBadge"></span>
+            </div>
+            <div id="list"><div class="empty">Loading…</div></div>
+        </div>
+    </div>
+
+    <script>
+        function updatePreview() {
+            const url = document.getElementById('imageUrl').value.trim();
+            const preview = document.getElementById('preview');
+            const img = document.getElementById('previewImg');
+            if (url) {
+                img.src = url;
+                preview.style.display = 'flex';
+            } else {
+                preview.style.display = 'none';
+            }
+        }
+
+        function setMsg(text, kind) {
+            const el = document.getElementById('formMsg');
+            el.textContent = text;
+            el.className = 'msg' + (kind ? ' ' + kind : '');
+        }
+
+        async function addEntry(e) {
+            e.preventDefault();
+            const name = document.getElementById('name').value.trim();
+            const imageUrl = document.getElementById('imageUrl').value.trim();
+            const tags = document.getElementById('tags').value.trim();
+            if (!name || !imageUrl) return false;
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            setMsg('Saving…', '');
+
+            try {
+                const res = await fetch('/fameframe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, image_url: imageUrl, tags })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    setMsg(`Added "${name}".`, 'ok');
+                    document.getElementById('addForm').reset();
+                    document.getElementById('preview').style.display = 'none';
+                    loadList();
+                } else {
+                    setMsg(data.error || 'Failed to add.', 'err');
+                }
+            } catch (err) {
+                setMsg('Network error: ' + err.message, 'err');
+            } finally {
+                btn.disabled = false;
+            }
+            return false;
+        }
+
+        async function deleteEntry(id, name) {
+            if (!confirm(`Delete "${name}"?`)) return;
+            try {
+                const res = await fetch('/fameframe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'delete', id })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    loadList();
+                } else {
+                    alert(data.error || 'Failed to delete.');
+                }
+            } catch (err) {
+                alert('Network error: ' + err.message);
+            }
+        }
+
+        async function saveTags(id) {
+            const input = document.getElementById('tags-' + id);
+            const msg = document.getElementById('tags-msg-' + id);
+            msg.textContent = 'Saving…';
+            msg.className = 'tags-msg';
+            try {
+                const res = await fetch('/fameframe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'update_tags', id, tags: input.value.trim() })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    input.value = data.tags || '';
+                    msg.textContent = 'Saved';
+                    msg.className = 'tags-msg ok';
+                    setTimeout(() => { msg.textContent = ''; }, 1500);
+                } else {
+                    msg.textContent = data.error || 'Failed';
+                    msg.className = 'tags-msg err';
+                }
+            } catch (err) {
+                msg.textContent = 'Error';
+                msg.className = 'tags-msg err';
+            }
+        }
+
+        function escapeHtml(s) {
+            return String(s).replace(/[&<>"']/g, c => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[c]));
+        }
+
+        async function loadList() {
+            const list = document.getElementById('list');
+            try {
+                const res = await fetch('/fameframe');
+                const data = await res.json();
+                const cards = data.cards || [];
+                document.getElementById('countBadge').textContent =
+                    cards.length + (cards.length === 1 ? ' face' : ' faces');
+
+                if (cards.length === 0) {
+                    list.innerHTML = '<div class="empty">No faces yet. Add one above.</div>';
+                    return;
+                }
+
+                list.innerHTML = '';
+                cards.forEach(c => {
+                    const row = document.createElement('div');
+                    row.className = 'entry';
+                    const safeName = escapeHtml(c.name).replace(/'/g, "\\'");
+                    row.innerHTML =
+                        `<img class="entry-thumb" src="${escapeHtml(c.image_url)}" alt="" onerror="this.style.visibility='hidden'">` +
+                        `<div class="entry-info">` +
+                            `<div class="entry-name">${escapeHtml(c.name)}</div>` +
+                            `<div class="entry-url">${escapeHtml(c.image_url)}</div>` +
+                            `<div class="entry-tags">` +
+                                `<input type="text" class="tags-input" id="tags-${c.id}" value="${escapeHtml(c.tags || '')}" placeholder="comma, separated, tags">` +
+                                `<button class="save" onclick="saveTags(${c.id})">Save tags</button>` +
+                                `<span class="tags-msg" id="tags-msg-${c.id}"></span>` +
+                            `</div>` +
+                        `</div>` +
+                        `<button class="delete" onclick="deleteEntry(${c.id}, '${safeName}')">Delete</button>`;
+                    list.appendChild(row);
+                });
+            } catch (err) {
+                list.innerHTML = '<div class="empty">Could not load faces: ' + escapeHtml(err.message) + '</div>';
+            }
+        }
+
+        loadList();
+    </script>
+</body>
+</html>

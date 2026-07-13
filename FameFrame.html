@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FameFrame</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 640px;
+            width: 100%;
+        }
+
+        .home-btn {
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+
+        .home-btn img {
+            display: block;
+            width: 40px;
+            height: 40px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        h1 {
+            color: white;
+            font-size: 40px;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        /* Bucket overview */
+        .buckets {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 10px;
+        }
+
+        .bucket {
+            text-align: center;
+            padding: 12px 8px;
+            background: #f3f4f6;
+            border-radius: 8px;
+            transition: all 0.15s;
+        }
+
+        .bucket.clickable { cursor: pointer; }
+        .bucket.clickable:hover {
+            background: #e0e7ff;
+            transform: translateY(-2px);
+        }
+        .bucket.empty { opacity: 0.45; }
+
+        .bucket-label {
+            font-size: 26px;
+            font-weight: 700;
+            color: #1e3a8a;
+            background: #dbeafe;
+            border-radius: 6px;
+            padding: 6px 0;
+            margin-bottom: 8px;
+        }
+
+        .bucket-count {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .bucket-wide {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .bucket-wide .bucket-label {
+            margin-bottom: 0;
+            padding: 5px 12px;
+            font-size: 16px;
+        }
+        .bucket-wide .bucket-count {
+            font-size: 16px;
+        }
+
+        .study-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .study-head .studying-label { font-weight: 600; color: #1f2937; }
+        button.back {
+            background: #6b7280;
+            padding: 8px 16px;
+            font-size: 14px;
+            flex: none;
+            max-width: none;
+        }
+        button.back:hover { background: #4b5563; }
+
+        /* Study area */
+        .study-status {
+            text-align: center;
+            color: #6b7280;
+            font-size: 15px;
+            margin-bottom: 15px;
+        }
+
+        .frame {
+            width: 100%;
+            height: 340px;
+            background: #111827;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .frame img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .card-name {
+            text-align: center;
+            font-size: 30px;
+            font-weight: 700;
+            color: #1f2937;
+            min-height: 40px;
+            margin-bottom: 10px;
+        }
+
+        .card-bucket {
+            text-align: center;
+            font-size: 13px;
+            color: #9ca3af;
+            margin-bottom: 15px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 14px 26px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex: 1;
+            max-width: 220px;
+        }
+
+        button:hover { background: #1d4ed8; transform: translateY(-2px); }
+        button:active { transform: translateY(0); }
+
+        button.got { background: #10b981; }
+        button.got:hover { background: #059669; }
+        button.missed { background: #ef4444; }
+        button.missed:hover { background: #dc2626; }
+        button.secondary { background: #6b7280; }
+        button.secondary:hover { background: #4b5563; }
+
+        .hidden { display: none; }
+
+        .message {
+            text-align: center;
+            color: #6b7280;
+            font-size: 16px;
+            line-height: 1.6;
+            padding: 20px 10px;
+        }
+
+        .reset-btn {
+            display: block;
+            width: fit-content;
+            margin: 15px auto 0;
+            background: #6b7280;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            flex: none;
+            max-width: none;
+        }
+        .reset-btn:hover { background: #4b5563; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="home-btn" title="Home" aria-label="Home"><img src="/favicon.svg" alt="MyTubie Home"></a>
+
+        <header>
+            <h1>FameFrame</h1>
+            <p class="subtitle">Face flashcards — study by level</p>
+        </header>
+
+        <!-- Bucket picker -->
+        <div class="card" id="pickView">
+            <div class="study-status" id="pickStatus">Pick a bucket to study.</div>
+            <div class="buckets" id="buckets"></div>
+        </div>
+
+        <!-- Study view -->
+        <div class="card hidden" id="studyView">
+            <div class="study-head">
+                <span class="studying-label" id="studyingLabel"></span>
+                <button class="back" onclick="backToBuckets()">Done</button>
+            </div>
+            <div class="study-status" id="studyProgress"></div>
+            <div class="frame">
+                <img id="cardImage" src="" alt="Guess who">
+            </div>
+            <div class="card-name hidden" id="cardName"></div>
+            <div class="card-bucket hidden" id="cardBucket"></div>
+
+            <div class="controls" id="revealControls">
+                <button onclick="reveal()">Reveal Name</button>
+            </div>
+            <div class="controls hidden" id="gradeControls">
+                <button class="missed" onclick="grade(false)">Missed</button>
+                <button class="got" onclick="grade(true)">Got it</button>
+            </div>
+            <div class="controls" style="margin-top: 12px;">
+                <button class="secondary" onclick="markNotUsed()">Ignore</button>
+            </div>
+        </div>
+
+        <div id="ignoreBucket"></div>
+
+        <button class="reset-btn" onclick="resetProgress()">Reset all progress</button>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'fameframe_progress_v1';
+
+        // Buckets are plain levels (no time intervals). "Got it" promotes to the next
+        // level; "Missed" sends the card back to bucket 1 (current). Keys are kept stable
+        // so any existing saved progress still maps correctly.
+        const BUCKETS = [
+            { key: 'not_seen', label: '0' },
+            { key: 'current',  label: '1' },
+            { key: 'd1',       label: '2' },
+            { key: 'd3',       label: '3' },
+            { key: 'd7',       label: '4' },
+            { key: 'd21',      label: '5' },
+            { key: 'never',    label: 'Ignore' }
+        ];
+        const ORDER = BUCKETS.map(b => b.key);
+        const LABELS = Object.fromEntries(BUCKETS.map(b => [b.key, b.label]));
+        const MISS_BUCKET = 'current';      // a miss drops the card back to bucket 1
+        const TOP_BUCKET = 'd21';           // bucket 5 is the top of the ladder; 9 is "Not Used"
+
+        let cards = [];
+        let progress = loadProgress();
+        let queue = [];
+        let queueIndex = 0;
+        let studyBucketKey = null;
+
+        function loadProgress() {
+            try {
+                return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+            } catch (e) {
+                return {};
+            }
+        }
+
+        function saveProgress() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+        }
+
+        function getBucket(name) {
+            const s = progress[name];
+            return (s && s.bucket) ? s.bucket : 'not_seen';
+        }
+
+        function setBucket(name, bucket) {
+            progress[name] = { bucket };
+            saveProgress();
+        }
+
+        function cardsInBucket(key) {
+            return cards.filter(c => getBucket(c.name) === key);
+        }
+
+        function renderBuckets() {
+            const counts = Object.fromEntries(ORDER.map(k => [k, 0]));
+            cards.forEach(c => counts[getBucket(c.name)]++);
+
+            const el = document.getElementById('buckets');
+            const ignoreEl = document.getElementById('ignoreBucket');
+            el.innerHTML = '';
+            ignoreEl.innerHTML = '';
+            BUCKETS.forEach(b => {
+                const div = document.createElement('div');
+                const count = counts[b.key];
+                const wide = b.key === 'never';
+                div.className = 'bucket' + (wide ? ' bucket-wide' : '') + (count > 0 ? ' clickable' : ' empty');
+                div.innerHTML =
+                    `<div class="bucket-label">${b.label}</div>` +
+                    `<div class="bucket-count">${count}</div>`;
+                if (count > 0) div.onclick = () => study(b.key);
+                (wide ? ignoreEl : el).appendChild(div);
+            });
+        }
+
+        function shuffle(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function study(bucketKey) {
+            queue = shuffle(cardsInBucket(bucketKey));
+            queueIndex = 0;
+            if (queue.length === 0) return;
+
+            studyBucketKey = bucketKey;
+            document.getElementById('studyingLabel').textContent = 'Bucket ' + LABELS[bucketKey];
+            document.getElementById('pickView').classList.add('hidden');
+            document.getElementById('studyView').classList.remove('hidden');
+            showCard();
+        }
+
+        function showCard() {
+            const card = queue[queueIndex];
+
+            document.getElementById('studyProgress').textContent =
+                `Card ${queueIndex + 1} of ${queue.length}`;
+
+            // Hide the image until the new one loads so the previous face never lingers
+            const img = document.getElementById('cardImage');
+            img.style.visibility = 'hidden';
+            img.onload = () => { img.style.visibility = 'visible'; };
+            img.alt = 'Guess who';
+            img.src = card.image_url;
+
+            const nameEl = document.getElementById('cardName');
+            nameEl.textContent = card.name;
+            nameEl.classList.add('hidden');
+
+            const bucketEl = document.getElementById('cardBucket');
+            bucketEl.textContent = 'Bucket ' + LABELS[getBucket(card.name)];
+            bucketEl.classList.add('hidden');
+
+            document.getElementById('revealControls').classList.remove('hidden');
+            document.getElementById('gradeControls').classList.add('hidden');
+        }
+
+        function reveal() {
+            document.getElementById('cardName').classList.remove('hidden');
+            document.getElementById('cardBucket').classList.remove('hidden');
+            document.getElementById('revealControls').classList.add('hidden');
+            document.getElementById('gradeControls').classList.remove('hidden');
+        }
+
+        function grade(gotIt) {
+            const card = queue[queueIndex];
+            const current = getBucket(card.name);
+
+            if (gotIt) {
+                // Promote one level, but never past the top bucket (5). Cards already at or
+                // beyond it (including "Not Used") stay put.
+                const curIdx = ORDER.indexOf(current);
+                const cap = ORDER.indexOf(TOP_BUCKET);
+                const idx = curIdx >= cap ? curIdx : curIdx + 1;
+                setBucket(card.name, ORDER[idx]);
+            } else {
+                setBucket(card.name, MISS_BUCKET);
+            }
+
+            advance();
+        }
+
+        function markNotUsed() {
+            setBucket(queue[queueIndex].name, 'never');
+            advance();
+        }
+
+        function advance() {
+            renderBuckets();
+            queueIndex++;
+            if (queueIndex >= queue.length) {
+                backToBuckets();
+            } else {
+                showCard();
+            }
+        }
+
+        function backToBuckets() {
+            document.getElementById('studyView').classList.add('hidden');
+            document.getElementById('pickView').classList.remove('hidden');
+            renderBuckets();
+        }
+
+        function resetProgress() {
+            if (!confirm('Reset all bucket assignments? This cannot be undone.')) return;
+            progress = {};
+            saveProgress();
+            backToBuckets();
+        }
+
+        async function loadCards() {
+            const status = document.getElementById('pickStatus');
+            try {
+                const res = await fetch('/fameframe');
+                const data = await res.json();
+                cards = (data && data.cards) ? data.cards : [];
+            } catch (e) {
+                console.error('Failed to load cards:', e);
+                cards = [];
+            }
+
+            if (cards.length === 0) {
+                status.textContent = 'No cards found. Add rows (name + image URL) to the fameframe table.';
+            } else {
+                status.textContent = 'Pick a bucket to study.';
+            }
+            renderBuckets();
+        }
+
+        loadCards();
+    </script>
+</body>
+</html>

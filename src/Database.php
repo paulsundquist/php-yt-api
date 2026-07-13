@@ -55,6 +55,36 @@ class Database
         return $stmt->fetchAll();
     }
 
+    public function getFameFrames()
+    {
+        $stmt = $this->connection->prepare(
+            "SELECT id, name, image_url, tags FROM fameframe WHERE is_active = 1 ORDER BY name ASC"
+        );
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    public function addFameFrame($name, $imageUrl, $tags = null)
+    {
+        $stmt = $this->connection->prepare(
+            "INSERT INTO fameframe (name, image_url, tags, is_active) VALUES (:name, :image_url, :tags, 1)"
+        );
+        $stmt->execute([':name' => $name, ':image_url' => $imageUrl, ':tags' => $tags]);
+        return (int)$this->connection->lastInsertId();
+    }
+
+    public function updateFameFrameTags($id, $tags)
+    {
+        $stmt = $this->connection->prepare("UPDATE fameframe SET tags = :tags WHERE id = :id");
+        return $stmt->execute([':tags' => $tags, ':id' => $id]);
+    }
+
+    public function deleteFameFrame($id)
+    {
+        $stmt = $this->connection->prepare("DELETE FROM fameframe WHERE id = :id");
+        return $stmt->execute([':id' => $id]);
+    }
+
     public function getActiveChannelsBySchedule($schedule)
     {
         $stmt = $this->connection->prepare(
