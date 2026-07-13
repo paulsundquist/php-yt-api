@@ -27,9 +27,16 @@
             width: 100%;
         }
 
+        .title-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
         .home-btn {
-            display: inline-block;
-            margin-bottom: 15px;
+            display: inline-flex;
         }
 
         .home-btn img {
@@ -46,7 +53,6 @@
         h1 {
             color: white;
             font-size: 40px;
-            margin-bottom: 8px;
             text-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
 
@@ -85,36 +91,25 @@
         }
         .bucket.empty { opacity: 0.45; }
 
-        .bucket-label {
-            font-size: 26px;
-            font-weight: 700;
-            color: #1e3a8a;
-            background: #dbeafe;
-            border-radius: 6px;
-            padding: 6px 0;
-            margin-bottom: 8px;
+        .bucket-svg {
+            display: block;
+            width: 62px;
+            height: 66px;
+            margin: 0 auto 6px;
         }
+        .bucket-svg .bucket-num {
+            font-size: 30px;
+            font-weight: 700;
+            fill: #1e3a8a;
+            text-anchor: middle;
+            font-family: inherit;
+        }
+        .bucket.clickable:hover .bucket-svg .body { fill: #bfdbfe; }
 
         .bucket-count {
-            font-size: 22px;
+            font-size: 24px;
             font-weight: 700;
-            color: #1f2937;
-        }
-
-        .bucket-wide {
-            grid-column: 1 / -1;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-        }
-        .bucket-wide .bucket-label {
-            margin-bottom: 0;
-            padding: 5px 12px;
-            font-size: 16px;
-        }
-        .bucket-wide .bucket-count {
-            font-size: 16px;
+            color: #1e3a8a;
         }
 
         .study-head {
@@ -137,7 +132,7 @@
         .study-status {
             text-align: center;
             color: #6b7280;
-            font-size: 15px;
+            font-size: 20px;
             margin-bottom: 15px;
         }
 
@@ -231,20 +226,31 @@
             max-width: none;
         }
         .reset-btn:hover { background: #4b5563; }
+        .reset-btn:disabled { opacity: 0.5; cursor: default; transform: none; }
+
+        .footer-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            align-items: center;
+            margin-top: 15px;
+        }
+        .footer-actions .reset-btn { margin: 0; }
     </style>
 </head>
 <body>
     <div class="container">
-        <a href="/" class="home-btn" title="Home" aria-label="Home"><img src="/favicon.svg" alt="MyTubie Home"></a>
-
         <header>
-            <h1>FameFrame</h1>
-            <p class="subtitle">Face flashcards — study by level</p>
+            <div class="title-row">
+                <a href="/" class="home-btn" title="Home" aria-label="Home"><img src="/favicon.svg" alt="MyTubie Home"></a>
+                <h1>FameFrame</h1>
+            </div>
+            <p class="subtitle">Famous faces flashcards with review buckets</p>
         </header>
 
         <!-- Bucket picker -->
         <div class="card" id="pickView">
-            <div class="study-status" id="pickStatus">Pick a bucket to study.</div>
+            <div class="study-status" id="pickStatus">Pick a bucket.</div>
             <div class="buckets" id="buckets"></div>
         </div>
 
@@ -265,17 +271,18 @@
                 <button onclick="reveal()">Reveal Name</button>
             </div>
             <div class="controls hidden" id="gradeControls">
-                <button class="missed" onclick="grade(false)">Missed</button>
                 <button class="got" onclick="grade(true)">Got it</button>
+                <button class="missed" onclick="grade(false)">Missed</button>
             </div>
-            <div class="controls" style="margin-top: 12px;">
+            <div class="controls hidden" id="ignoreRow" style="margin-top: 12px;">
                 <button class="secondary" onclick="markNotUsed()">Ignore</button>
             </div>
         </div>
 
-        <div id="ignoreBucket"></div>
-
-        <button class="reset-btn" onclick="resetProgress()">Reset all progress</button>
+        <div class="footer-actions">
+            <button class="reset-btn" id="ignoreBtn" onclick="study('never')">Ignore</button>
+            <button class="reset-btn" onclick="resetProgress()">Reset all progress</button>
+        </div>
     </div>
 
     <script>
@@ -330,25 +337,39 @@
             return cards.filter(c => getBucket(c.name) === key);
         }
 
+        // A little pail: handle arc, elliptical rim, tapered body, with the level number on it.
+        function bucketSVG(label) {
+            return `<svg class="bucket-svg" viewBox="0 0 100 108" xmlns="http://www.w3.org/2000/svg">
+                <path d="M26 34 Q50 4 74 34" fill="none" stroke="#60a5fa" stroke-width="5" stroke-linecap="round"/>
+                <path class="body" d="M20 34 L80 34 L69 96 Q68 102 62 102 L38 102 Q32 102 31 96 Z" fill="#dbeafe" stroke="#93c5fd" stroke-width="2.5"/>
+                <ellipse cx="50" cy="34" rx="30" ry="8" fill="#eff6ff" stroke="#93c5fd" stroke-width="2.5"/>
+                <text class="bucket-num" x="50" y="80">${label}</text>
+            </svg>`;
+        }
+
         function renderBuckets() {
             const counts = Object.fromEntries(ORDER.map(k => [k, 0]));
             cards.forEach(c => counts[getBucket(c.name)]++);
 
             const el = document.getElementById('buckets');
-            const ignoreEl = document.getElementById('ignoreBucket');
             el.innerHTML = '';
-            ignoreEl.innerHTML = '';
             BUCKETS.forEach(b => {
+                if (b.key === 'never') return; // shown as the Ignore button below
                 const div = document.createElement('div');
                 const count = counts[b.key];
-                const wide = b.key === 'never';
-                div.className = 'bucket' + (wide ? ' bucket-wide' : '') + (count > 0 ? ' clickable' : ' empty');
+                div.className = 'bucket' + (count > 0 ? ' clickable' : ' empty');
                 div.innerHTML =
-                    `<div class="bucket-label">${b.label}</div>` +
+                    bucketSVG(b.label) +
                     `<div class="bucket-count">${count}</div>`;
                 if (count > 0) div.onclick = () => study(b.key);
-                (wide ? ignoreEl : el).appendChild(div);
+                el.appendChild(div);
             });
+
+            // The Ignore bucket lives as a button next to Reset
+            const ignoreCount = counts['never'];
+            const ignoreBtn = document.getElementById('ignoreBtn');
+            ignoreBtn.textContent = `Ignored (${ignoreCount})`;
+            ignoreBtn.disabled = ignoreCount === 0;
         }
 
         function shuffle(arr) {
@@ -394,13 +415,14 @@
 
             document.getElementById('revealControls').classList.remove('hidden');
             document.getElementById('gradeControls').classList.add('hidden');
+            document.getElementById('ignoreRow').classList.add('hidden');
         }
 
         function reveal() {
             document.getElementById('cardName').classList.remove('hidden');
-            document.getElementById('cardBucket').classList.remove('hidden');
             document.getElementById('revealControls').classList.add('hidden');
             document.getElementById('gradeControls').classList.remove('hidden');
+            document.getElementById('ignoreRow').classList.remove('hidden');
         }
 
         function grade(gotIt) {
@@ -420,6 +442,25 @@
 
             advance();
         }
+
+        // Keyboard shortcuts while studying:
+        //   Space          -> Reveal Name, then Got it (repeat to fly through the deck)
+        //   m / Left arrow -> Missed
+        document.addEventListener('keydown', (e) => {
+            if (document.getElementById('studyView').classList.contains('hidden')) return;
+
+            const revealing = !document.getElementById('revealControls').classList.contains('hidden');
+            const grading = !document.getElementById('gradeControls').classList.contains('hidden');
+
+            if (e.code === 'Space') {
+                e.preventDefault(); // stop the page from scrolling
+                if (revealing) reveal();
+                else if (grading) grade(true);
+            } else if ((e.key === 'm' || e.key === 'M' || e.key === 'ArrowLeft') && grading) {
+                e.preventDefault();
+                grade(false);
+            }
+        });
 
         function markNotUsed() {
             setBucket(queue[queueIndex].name, 'never');
@@ -463,7 +504,7 @@
             if (cards.length === 0) {
                 status.textContent = 'No cards found. Add rows (name + image URL) to the fameframe table.';
             } else {
-                status.textContent = 'Pick a bucket to study.';
+                status.textContent = 'Buckets';
             }
             renderBuckets();
         }
