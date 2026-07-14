@@ -253,7 +253,7 @@
             setMsg('Saving…', '');
 
             try {
-                const res = await fetch('/fameframe', {
+                const res = await fetch('/fameframe_api', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, image_url: imageUrl, tags })
@@ -278,7 +278,7 @@
         async function deleteEntry(id, name) {
             if (!confirm(`Delete "${name}"?`)) return;
             try {
-                const res = await fetch('/fameframe', {
+                const res = await fetch('/fameframe_api', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'delete', id })
@@ -300,7 +300,7 @@
             msg.textContent = 'Saving…';
             msg.className = 'tags-msg';
             try {
-                const res = await fetch('/fameframe', {
+                const res = await fetch('/fameframe_api', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'update_tags', id, tags: input.value.trim() })
@@ -330,7 +330,7 @@
         async function loadList() {
             const list = document.getElementById('list');
             try {
-                const res = await fetch('/fameframe');
+                const res = await fetch('/fameframe_api');
                 const data = await res.json();
                 const cards = data.cards || [];
                 document.getElementById('countBadge').textContent =

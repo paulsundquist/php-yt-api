@@ -493,7 +493,7 @@
         async function loadCards() {
             const status = document.getElementById('pickStatus');
             try {
-                const res = await fetch('/fameframe');
+                const res = await fetch('/fameframe_api');
                 const data = await res.json();
                 cards = (data && data.cards) ? data.cards : [];
             } catch (e) {

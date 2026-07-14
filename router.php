@@ -48,7 +48,7 @@ if (preg_match('#^/2v/([A-Z0-9]{8})$#', $uri, $matches)) {
 // The trailing (/|$) boundary keeps the endpoint from swallowing look-alike static
 // files such as /fameframe.html — only the bare endpoint (optionally with a sub-path)
 // is treated as an API call.
-if (preg_match('#^/(channels|videos|fetch|categories|groups|tours|tour-steps|votes|tvdb|chains|api|fit-videos|fit-channels|movietrivia_api|weather|fameframe)(/|$)#', $uri)) {
+if (preg_match('#^/(channels|videos|fetch|categories|groups|tours|tour-steps|votes|tvdb|chains|api|fit-videos|fit-channels|movietrivia_api|weather|fameframe_api)(/|$)#', $uri)) {
     require __DIR__ . '/index.php';
     return true;
 }

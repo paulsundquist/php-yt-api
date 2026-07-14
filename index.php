@@ -76,7 +76,7 @@ try {
             ]);
             break;
 
-        case '/fameframe':
+        case '/fameframe_api':
             if ($method === 'GET') {
                 $cards = $db->getFameFrames();
                 echo json_encode([
