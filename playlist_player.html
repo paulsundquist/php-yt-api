@@ -419,6 +419,10 @@
                     <label for="muteCheckbox">Mute</label>
                 </div>
                 <div class="checkbox-wrapper">
+                    <input type="checkbox" id="repeatCheckbox">
+                    <label for="repeatCheckbox">Repeat Playlist</label>
+                </div>
+                <div class="checkbox-wrapper">
                     <input type="checkbox" id="showTimeCheckbox">
                     <label for="showTimeCheckbox">Show Current Time</label>
                 </div>
@@ -555,6 +559,7 @@
         const autostartCheckbox = document.getElementById('autostartCheckbox');
         const fullscreenCheckbox = document.getElementById('fullscreenCheckbox');
         const muteCheckbox = document.getElementById('muteCheckbox');
+        const repeatCheckbox = document.getElementById('repeatCheckbox');
         const showTimeCheckbox = document.getElementById('showTimeCheckbox');
         const showDateCheckbox = document.getElementById('showDateCheckbox');
         const showTempCheckbox = document.getElementById('showTempCheckbox');
@@ -573,6 +578,7 @@
                 autostart: autostartCheckbox.checked,
                 fullscreen: fullscreenCheckbox.checked,
                 mute: muteCheckbox.checked,
+                repeat: repeatCheckbox.checked,
                 showtime: showTimeCheckbox.checked,
                 showdate: showDateCheckbox.checked,
                 showtemp: showTempCheckbox.checked,
@@ -587,6 +593,7 @@
                 autostartCheckbox.checked = prefs.autostart ?? true;
                 fullscreenCheckbox.checked = prefs.fullscreen ?? true;
                 muteCheckbox.checked = prefs.mute ?? false;
+                repeatCheckbox.checked = prefs.repeat ?? false;
                 showTimeCheckbox.checked = prefs.showtime ?? false;
                 showDateCheckbox.checked = prefs.showdate ?? false;
                 showTempCheckbox.checked = prefs.showtemp ?? false;
@@ -610,6 +617,9 @@
             }
             if (muteCheckbox.checked) {
                 params.set('mute', '1');
+            }
+            if (repeatCheckbox.checked) {
+                params.set('repeat', '1');
             }
             if (showTimeCheckbox.checked) {
                 params.set('showtime', '1');
@@ -737,6 +747,7 @@
         autostartCheckbox.addEventListener('change', function() { updateURL(); savePrefs(); });
         fullscreenCheckbox.addEventListener('change', function() { updateURL(); savePrefs(); });
         muteCheckbox.addEventListener('change', function() { updateURL(); savePrefs(); });
+        repeatCheckbox.addEventListener('change', function() { updateURL(); savePrefs(); });
         input.addEventListener('change', updateURL);
 
         function extractPlaylistId(input) {
@@ -764,13 +775,16 @@
         }
 
         function loadPlaylist(playlistId, options = {}) {
-            const { autostart = true, fullscreen = true, muted = false, showTime = false, showDate = false, showTemp = false, zipCode = '' } = options;
+            const { autostart = true, fullscreen = true, muted = false, repeat = false, showTime = false, showDate = false, showTemp = false, zipCode = '' } = options;
             let embedUrl = `https://www.youtube.com/embed/videoseries?list=${playlistId}`;
             if (autostart) {
                 embedUrl += '&autoplay=1';
             }
             if (muted) {
                 embedUrl += '&mute=1';
+            }
+            if (repeat) {
+                embedUrl += '&loop=1';
             }
             youtubePlayer.src = embedUrl;
             playerContainer.classList.add('active');
@@ -807,6 +821,7 @@
                     autostart: autostartCheckbox.checked,
                     fullscreen: fullscreenCheckbox.checked,
                     muted: muteCheckbox.checked,
+                    repeat: repeatCheckbox.checked,
                     showTime: showTimeCheckbox.checked,
                     showDate: showDateCheckbox.checked,
                     showTemp: showTempCheckbox.checked,
@@ -824,6 +839,7 @@
             const autostartParam = urlParams.get('autostart') !== '0';
             const fullscreenParam = urlParams.get('fullscreen') !== '0';
             const muteParam = urlParams.get('mute') === '1';
+            const repeatParam = urlParams.get('repeat') === '1';
             const showTimeParam = urlParams.get('showtime') === '1';
             const showDateParam = urlParams.get('showdate') === '1';
             const showTempParam = urlParams.get('showtemp') === '1';
@@ -833,11 +849,12 @@
             autostartCheckbox.checked = autostartParam;
             fullscreenCheckbox.checked = fullscreenParam;
             muteCheckbox.checked = muteParam;
+            repeatCheckbox.checked = repeatParam;
             showTimeCheckbox.checked = showTimeParam;
             showDateCheckbox.checked = showDateParam;
             showTempCheckbox.checked = showTempParam;
             zipCodeInput.value = zipCodeParam;
-            loadPlaylist(listParam, { autostart: autostartParam, fullscreen: fullscreenParam, muted: muteParam, showTime: showTimeParam, showDate: showDateParam, showTemp: showTempParam, zipCode: zipCodeParam });
+            loadPlaylist(listParam, { autostart: autostartParam, fullscreen: fullscreenParam, muted: muteParam, repeat: repeatParam, showTime: showTimeParam, showDate: showDateParam, showTemp: showTempParam, zipCode: zipCodeParam });
         }
     </script>
 </body>
