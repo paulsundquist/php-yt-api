@@ -27,3 +27,5 @@ Allow: /favicon.png
 
 # Crawl-delay (optional - prevents aggressive crawling)
 # Crawl-delay: 10
+
+Sitemap: https://mytubie.com/sitemap.xml
