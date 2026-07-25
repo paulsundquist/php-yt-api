@@ -8,7 +8,7 @@ via POST /fameframe_api (--post), skipping anyone already in the database.
 
 Sources:
   movies / tv / celebrity  -> TMDB (needs TMDB_API_KEY from .env or env)
-  sports / politics / music -> Wikidata (no key needed)
+  sports / politics / music / history -> Wikidata (no key needed)
 
 Examples:
   python3 tools/fameframe_gen.py --category movies --count 25 --json movies.json
@@ -28,7 +28,7 @@ from pathlib import Path
 
 USER_AGENT = "FameFrameCardGen/1.0 (personal flashcard project)"
 TMDB_CATEGORIES = ("movies", "tv", "celebrity")
-WIKIDATA_CATEGORIES = ("sports", "politics", "music")
+WIKIDATA_CATEGORIES = ("sports", "politics", "music", "history")
 ALL_CATEGORIES = TMDB_CATEGORIES + WIKIDATA_CATEGORIES
 
 # Wikidata occupation QIDs per category, with the sub-tag each one implies.
@@ -54,6 +54,11 @@ WIKIDATA_OCCUPATIONS = {
         "Q2252262": "rapper",
         "Q488205": "singer",
     },
+    "history": {
+        "Q116": "monarch",
+        "Q47064": "military",
+        "Q11900058": "explorer",
+    },
 }
 
 # People famous for these occupations shouldn't appear in the category, even if
@@ -64,6 +69,7 @@ WIKIDATA_EXCLUDE = {
                "Q2526255", "Q639669"],  # politician, writer, philosopher, actor(x2), singer, director, musician
     "politics": [],
     "music": ["Q82955", "Q10800557", "Q2526255"],  # politician, film actor, film director
+    "history": [],
 }
 
 TMDB_DEPARTMENT_TAGS = {
