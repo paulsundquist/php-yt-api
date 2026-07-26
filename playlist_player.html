@@ -822,6 +822,7 @@
 
         form.addEventListener('submit', function(e) {
             e.preventDefault();
+            savePrefs();
 
             const playlistId = extractPlaylistId(input.value.trim());
 
@@ -841,29 +842,33 @@
             }
         });
 
-        // Check for playlist in URL params on page load
+        // Prefill the form with last-saved defaults, then let any URL params
+        // override individual fields on top of them.
+        loadPrefs();
+
         const urlParams = new URLSearchParams(window.location.search);
         const listParam = urlParams.get('list');
         if (listParam) {
-            const autostartParam = urlParams.get('autostart') !== '0';
-            const fullscreenParam = urlParams.get('fullscreen') !== '0';
-            const muteParam = urlParams.get('mute') === '1';
-            const repeatParam = urlParams.get('repeat') === '1';
-            const showTimeParam = urlParams.get('showtime') === '1';
-            const showDateParam = urlParams.get('showdate') === '1';
-            const showTempParam = urlParams.get('showtemp') === '1';
-            const savedZip = (() => { try { return JSON.parse(localStorage.getItem(PREFS_KEY))?.zip || ''; } catch(e) { return ''; } })();
-            const zipCodeParam = urlParams.get('zip') || savedZip;
+            if (urlParams.has('autostart')) autostartCheckbox.checked = urlParams.get('autostart') !== '0';
+            if (urlParams.has('fullscreen')) fullscreenCheckbox.checked = urlParams.get('fullscreen') !== '0';
+            if (urlParams.has('mute')) muteCheckbox.checked = urlParams.get('mute') === '1';
+            if (urlParams.has('repeat')) repeatCheckbox.checked = urlParams.get('repeat') === '1';
+            if (urlParams.has('showtime')) showTimeCheckbox.checked = urlParams.get('showtime') === '1';
+            if (urlParams.has('showdate')) showDateCheckbox.checked = urlParams.get('showdate') === '1';
+            if (urlParams.has('showtemp')) showTempCheckbox.checked = urlParams.get('showtemp') === '1';
+            if (urlParams.has('zip')) zipCodeInput.value = urlParams.get('zip');
+
             input.value = listParam;
-            autostartCheckbox.checked = autostartParam;
-            fullscreenCheckbox.checked = fullscreenParam;
-            muteCheckbox.checked = muteParam;
-            repeatCheckbox.checked = repeatParam;
-            showTimeCheckbox.checked = showTimeParam;
-            showDateCheckbox.checked = showDateParam;
-            showTempCheckbox.checked = showTempParam;
-            zipCodeInput.value = zipCodeParam;
-            loadPlaylist(listParam, { autostart: autostartParam, fullscreen: fullscreenParam, muted: muteParam, repeat: repeatParam, showTime: showTimeParam, showDate: showDateParam, showTemp: showTempParam, zipCode: zipCodeParam });
+            loadPlaylist(listParam, {
+                autostart: autostartCheckbox.checked,
+                fullscreen: fullscreenCheckbox.checked,
+                muted: muteCheckbox.checked,
+                repeat: repeatCheckbox.checked,
+                showTime: showTimeCheckbox.checked,
+                showDate: showDateCheckbox.checked,
+                showTemp: showTempCheckbox.checked,
+                zipCode: zipCodeInput.value.trim()
+            });
         }
     </script>
 </body>
