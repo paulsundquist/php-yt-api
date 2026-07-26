@@ -84,6 +84,14 @@
             margin-bottom: 25px;
         }
 
+        .quick-links {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
         .open-btn {
             display: inline-flex;
             align-items: center;
@@ -98,7 +106,6 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
-            margin-bottom: 20px;
         }
 
         .open-btn:hover {
@@ -108,6 +115,24 @@
 
         .open-btn:active {
             transform: translateY(0);
+        }
+
+        .pill-link {
+            display: inline-flex;
+            align-items: center;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            padding: 16px 22px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .pill-link:hover {
+            background: #5a6fd6;
+            transform: translateY(-2px);
         }
 
         .note {
@@ -229,9 +254,11 @@
         </header>
 
         <div class="card">
-            <a class="open-btn" href="https://www.youtube.com/playlist?list=WL">
-                Watch Later
-            </a>
+            <div class="quick-links" id="quickLinks">
+                <a class="open-btn" href="https://www.youtube.com/playlist?list=WL">
+                    Watch Later
+                </a>
+            </div>
             <p>Your Watch Later playlist lives on your YouTube account, so it can only be opened through YouTube itself. Tap below to open it in the YouTube app (or youtube.com if you're not on your phone).</p>
             <p class="note">You'll need to be signed in to YouTube for this to show your saved videos.</p>
         </div>
@@ -255,6 +282,7 @@
         const labelInput = document.getElementById('labelInput');
         const playlistList = document.getElementById('playlistList');
         const emptyNote = document.getElementById('emptyNote');
+        const quickLinks = document.getElementById('quickLinks');
 
         function extractPlaylistId(value) {
             value = value.trim();
@@ -286,6 +314,20 @@
 
         function renderPlaylists() {
             const playlists = loadPlaylists();
+
+            // Quick-access pill next to the Watch Later button
+            quickLinks.querySelectorAll('.pill-link').forEach(el => el.remove());
+            playlists.forEach(pl => {
+                const pill = document.createElement('a');
+                pill.className = 'pill-link';
+                pill.href = `https://www.youtube.com/playlist?list=${encodeURIComponent(pl.id)}`;
+                pill.target = '_blank';
+                pill.rel = 'noopener';
+                pill.textContent = pl.label || pl.id;
+                quickLinks.appendChild(pill);
+            });
+
+            // Manageable list with remove buttons
             playlistList.innerHTML = '';
             emptyNote.style.display = playlists.length ? 'none' : 'block';
 
