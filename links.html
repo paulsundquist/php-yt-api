@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Watch Later – Open Your YouTube Queue | MyTubie</title>
+    <title>Links – Open Your YouTube Queue | MyTubie</title>
     <meta name="description" content="Jump straight to your YouTube Watch Later playlist in one tap.">
     <link rel="canonical" href="https://mytubie.com/links.html">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="MyTubie">
-    <meta property="og:title" content="Watch Later – Open Your YouTube Queue | MyTubie">
+    <meta property="og:title" content="Links – Open Your YouTube Queue | MyTubie">
     <meta property="og:description" content="Jump straight to your YouTube Watch Later playlist in one tap.">
     <meta property="og:url" content="https://mytubie.com/links.html">
     <meta name="twitter:card" content="summary">
@@ -77,12 +77,6 @@
             text-align: center;
         }
 
-        .icon {
-            font-size: 56px;
-            line-height: 1;
-            margin-bottom: 15px;
-        }
-
         .card p {
             color: #4b5563;
             font-size: 15px;
@@ -104,6 +98,7 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
+            margin-bottom: 20px;
         }
 
         .open-btn:hover {
@@ -121,6 +116,106 @@
             font-size: 13px;
             line-height: 1.5;
         }
+
+        .card + .card {
+            margin-top: 20px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 15px;
+        }
+
+        .add-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .add-form input[type="text"] {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .add-form input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .add-form button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .add-form button:hover {
+            background: #5a6fd6;
+        }
+
+        .playlist-list {
+            list-style: none;
+            text-align: left;
+        }
+
+        .playlist-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .playlist-item:last-child {
+            border-bottom: none;
+        }
+
+        .playlist-item a {
+            color: #1f2937;
+            text-decoration: none;
+            font-weight: 500;
+            flex: 1;
+            overflow-wrap: anywhere;
+        }
+
+        .playlist-item a:hover {
+            color: #667eea;
+            text-decoration: underline;
+        }
+
+        .remove-btn {
+            background: none;
+            border: none;
+            color: #9ca3af;
+            cursor: pointer;
+            font-size: 20px;
+            line-height: 1;
+            padding: 4px 6px;
+            flex: none;
+        }
+
+        .remove-btn:hover {
+            color: #ef4444;
+        }
+
+        .empty-note {
+            color: #9ca3af;
+            font-size: 14px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -128,19 +223,116 @@
         <header>
             <div class="title-row">
                 <a href="/" class="home-btn" title="Home" aria-label="Home"><img src="/favicon.svg" alt="MyTubie Home"></a>
-                <h1>Watch Later</h1>
+                <h1>Links</h1>
             </div>
-            <p class="subtitle">Jump straight to your YouTube queue</p>
+
         </header>
 
         <div class="card">
-            <div class="icon">▶️</div>
-            <p>Your Watch Later playlist lives on your YouTube account, so it can only be opened through YouTube itself. Tap below to open it in the YouTube app (or youtube.com if you're not on your phone).</p>
             <a class="open-btn" href="https://www.youtube.com/playlist?list=WL">
-                Open Watch Later
+                Watch Later
             </a>
+            <p>Your Watch Later playlist lives on your YouTube account, so it can only be opened through YouTube itself. Tap below to open it in the YouTube app (or youtube.com if you're not on your phone).</p>
             <p class="note">You'll need to be signed in to YouTube for this to show your saved videos.</p>
         </div>
+
+        <div class="card">
+            <h2 class="section-title">My Playlists</h2>
+            <form id="addPlaylistForm" class="add-form">
+                <input type="text" id="playlistInput" placeholder="YouTube playlist URL or ID" required>
+                <input type="text" id="labelInput" placeholder="Label (optional)">
+                <button type="submit">Add</button>
+            </form>
+            <p class="empty-note" id="emptyNote">No playlists added yet.</p>
+            <ul class="playlist-list" id="playlistList"></ul>
+        </div>
     </div>
+
+    <script>
+        const PLAYLISTS_KEY = 'links_playlists';
+        const addForm = document.getElementById('addPlaylistForm');
+        const playlistInput = document.getElementById('playlistInput');
+        const labelInput = document.getElementById('labelInput');
+        const playlistList = document.getElementById('playlistList');
+        const emptyNote = document.getElementById('emptyNote');
+
+        function extractPlaylistId(value) {
+            value = value.trim();
+            if (value.startsWith('PL') && !value.includes('/') && !value.includes('?')) {
+                return value;
+            }
+            try {
+                const url = new URL(value);
+                const listParam = url.searchParams.get('list');
+                if (listParam) return listParam;
+            } catch (e) {
+                const match = value.match(/(?:list=)?([A-Za-z0-9_-]{10,})/);
+                if (match) return match[1];
+            }
+            return null;
+        }
+
+        function loadPlaylists() {
+            try {
+                return JSON.parse(localStorage.getItem(PLAYLISTS_KEY)) || [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function savePlaylists(playlists) {
+            localStorage.setItem(PLAYLISTS_KEY, JSON.stringify(playlists));
+        }
+
+        function renderPlaylists() {
+            const playlists = loadPlaylists();
+            playlistList.innerHTML = '';
+            emptyNote.style.display = playlists.length ? 'none' : 'block';
+
+            playlists.forEach((pl, index) => {
+                const li = document.createElement('li');
+                li.className = 'playlist-item';
+
+                const a = document.createElement('a');
+                a.href = `https://www.youtube.com/playlist?list=${encodeURIComponent(pl.id)}`;
+                a.target = '_blank';
+                a.rel = 'noopener';
+                a.textContent = pl.label || pl.id;
+
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'remove-btn';
+                removeBtn.setAttribute('aria-label', 'Remove playlist');
+                removeBtn.textContent = '×';
+                removeBtn.addEventListener('click', () => {
+                    const updated = loadPlaylists();
+                    updated.splice(index, 1);
+                    savePlaylists(updated);
+                    renderPlaylists();
+                });
+
+                li.appendChild(a);
+                li.appendChild(removeBtn);
+                playlistList.appendChild(li);
+            });
+        }
+
+        addForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const id = extractPlaylistId(playlistInput.value);
+            if (!id) {
+                alert('Please enter a valid YouTube playlist URL or ID');
+                return;
+            }
+            const playlists = loadPlaylists();
+            playlists.push({ id, label: labelInput.value.trim() });
+            savePlaylists(playlists);
+            playlistInput.value = '';
+            labelInput.value = '';
+            renderPlaylists();
+        });
+
+        renderPlaylists();
+    </script>
 </body>
 </html>
