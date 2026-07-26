@@ -259,16 +259,18 @@
                     Watch Later
                 </a>
             </div>
+        </div>
+        <div class="card">
 
-            <p class="note">You'll need to be signed in to YouTube
-            <br/>You may need to make your playlist shareable to get the URL</p>
+            <p class="note">You'll need to be signed in to YouTube for Watch Later
+            <br/>On a phone, if you make the playlist shareable it is easier to copy/paste the URL</p>
         </div>
 
         <div class="card">
             <h2 class="section-title">My Playlists</h2>
             <form id="addPlaylistForm" class="add-form">
                 <input type="text" id="playlistInput" placeholder="YouTube playlist URL or ID" required>
-                <input type="text" id="labelInput" placeholder="Label (optional)">
+                <input type="text" id="labelInput" placeholder="Label" required>
                 <button type="submit">Add</button>
             </form>
             <p class="empty-note" id="emptyNote">No playlists added yet.</p>
@@ -367,8 +369,13 @@
                 alert('Please enter a valid YouTube playlist URL or ID');
                 return;
             }
+            const label = labelInput.value.trim();
+            if (!label) {
+                alert('Please enter a label');
+                return;
+            }
             const playlists = loadPlaylists();
-            playlists.push({ id, label: labelInput.value.trim() });
+            playlists.push({ id, label });
             savePlaylists(playlists);
             playlistInput.value = '';
             labelInput.value = '';
