@@ -248,7 +248,7 @@
 </head>
 <body>
     <div class="container">
-        <a href="/runpacer_guide.html" class="back-link">← Back to Guides</a>
+        <a href="/rp_distance_guide.html" class="back-link">← Back to Guides</a>
 
         <header>
             <h1 id="guideName">Run Pacer Guide</h1>
@@ -358,7 +358,7 @@
 
             if (!guideId) {
                 alert('No guide ID provided');
-                window.location.href = '/runpacer_guide.html';
+                window.location.href = '/rp_distance_guide.html';
                 return;
             }
 
@@ -368,7 +368,7 @@
 
                 if (!guide || guide.error) {
                     alert('Guide not found');
-                    window.location.href = '/runpacer_guide.html';
+                    window.location.href = '/rp_distance_guide.html';
                     return;
                 }
 
@@ -391,7 +391,7 @@
             } catch (error) {
                 console.error('Error loading guide:', error);
                 alert('Failed to load guide: ' + error.message);
-                window.location.href = '/runpacer_guide.html';
+                window.location.href = '/rp_distance_guide.html';
             }
         }
 
