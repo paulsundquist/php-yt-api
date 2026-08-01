@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyTubie RunPacer Program</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        h1 {
+            color: white;
+            font-size: 36px;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .back-button {
+            display: inline-block;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateX(-5px);
+        }
+
+        .create-button {
+            display: inline-block;
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            background: #10b981;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .create-button:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+
+        .programs-list {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .program-row {
+            display: grid;
+            grid-template-columns: auto 2fr 3fr 1fr 1.5fr;
+            gap: 20px;
+            align-items: center;
+            padding: 20px 25px;
+            border-bottom: 1px solid #e5e7eb;
+            transition: background 0.2s ease;
+        }
+
+        .program-row:last-child {
+            border-bottom: none;
+        }
+
+        .program-row:hover {
+            background: #f9fafb;
+        }
+
+        .program-play-btn {
+            width: 48px;
+            height: 48px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .program-play-btn:hover {
+            background: #1d4ed8;
+            transform: scale(1.1);
+        }
+
+        .program-name {
+            color: #1f2937;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .program-description {
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.5;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .program-steps {
+            color: #6b7280;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .program-date {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .program-map-link {
+            margin-top: 8px;
+        }
+
+        .map-link-small {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            background: #f3f4f6;
+            color: #374151;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .map-link-small:hover {
+            background: #e5e7eb;
+        }
+
+        .empty-state {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 60px 40px;
+            text-align: center;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            color: #d1d5db;
+            margin-bottom: 20px;
+        }
+
+        .empty-state-title {
+            color: #1f2937;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .empty-state-description {
+            color: #6b7280;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 28px;
+            }
+
+            .program-row {
+                grid-template-columns: auto 1fr;
+                gap: 15px;
+                padding: 15px;
+            }
+
+            .program-name {
+                font-size: 16px;
+                grid-column: 2;
+            }
+
+            .program-description {
+                grid-column: 1 / -1;
+                font-size: 13px;
+            }
+
+            .program-steps {
+                grid-column: 1 / -1;
+                text-align: left;
+                font-size: 13px;
+            }
+
+            .program-date {
+                grid-column: 1 / -1;
+                font-size: 13px;
+            }
+
+            .program-play-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="/runpacer.html" class="back-button">&larr; Back to Run Pacer</a>
+            <h1>Programs</h1>
+            <a href="/rp_program_edit.html" class="create-button">
+                <i class="fa-solid fa-plus"></i> Create New Program
+            </a>
+        </div>
+
+        <div id="programsContainer"></div>
+
+    <script>
+        async function loadPrograms() {
+            const container = document.getElementById('programsContainer');
+
+            try {
+                const response = await fetch('/api_rp_program.php?action=list');
+                const programArray = await response.json();
+
+                if (!Array.isArray(programArray) || programArray.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">
+                                <i class="fa-solid fa-route"></i>
+                            </div>
+                            <h2 class="empty-state-title">No Programs Yet</h2>
+                            <p class="empty-state-description">
+                                Create your first running program to get started!
+                            </p>
+                            <a href="/rp_program_edit.html" class="create-button">
+                                <i class="fa-solid fa-plus"></i> Create Your First Program
+                            </a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = `
+                    <div class="programs-list">
+                        ${programArray.map(program => {
+                            const date = new Date(program.created_at);
+                            const dateStr = date.toLocaleDateString();
+                            const stepCount = parseInt(program.step_count) || 0;
+
+                            return `
+                                <div class="program-row">
+                                    <a href="/rp_program_play.html?id=${program.id}" class="program-play-btn">
+                                        <i class="fa-solid fa-play"></i>
+                                    </a>
+                                    <div class="program-name">
+                                        ${escapeHtml(program.name)}
+                                        
+                                    </div>
+                                    <div class="program-description">${escapeHtml(program.description || 'No description')}</div>
+                                    <div class="program-steps">${stepCount} step${stepCount !== 1 ? 's' : ''}</div>
+                                    <div class="program-date">${dateStr}</div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading programs:', error);
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i class="fa-solid fa-exclamation-triangle"></i>
+                        </div>
+                        <h2 class="empty-state-title">Error Loading Programs</h2>
+                        <p class="empty-state-description">
+                            ${error.message}
+                        </p>
+                    </div>
+                `;
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Load programs on page load
+        loadPrograms();
+    </script>
+</body>
+</html>

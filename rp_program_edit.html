@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Run Pacer Program Editor</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        h1 {
+            color: white;
+            font-size: 36px;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            margin: 0;
+            flex: 1;
+            text-align: center;
+        }
+
+        .back-button {
+            display: inline-block;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateX(-5px);
+        }
+
+        .header-spacer {
+            width: 120px;
+        }
+
+        .input-section {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            color: #374151;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .input-group input,
+        .input-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+            font-family: inherit;
+        }
+
+        .input-group textarea {
+            resize: vertical;
+        }
+
+        .step-form textarea {
+            min-height: auto;
+            height: 46px;
+        }
+
+        .input-group input:focus,
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        .load-button {
+            background: #2563eb;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .load-button:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+        }
+
+        .btn-add-step {
+            background: #10b981;
+            color: white;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+        }
+
+        .btn-add-step:hover {
+            background: #059669;
+            transform: scale(1.1);
+        }
+
+        .program-section {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+        }
+
+        .program-section h2 {
+            color: #1f2937;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .program-section h3 {
+            color: #374151;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .step-form {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 140px 100px 1fr auto;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: flex-end;
+        }
+
+        .form-row .input-group {
+            margin-bottom: 0;
+        }
+
+        .step-list {
+            margin-bottom: 30px;
+        }
+
+        #stepListContainer {
+            overflow-x: auto;
+        }
+
+        .step-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .step-table thead {
+            background: #f9fafb;
+        }
+
+        .step-table th {
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .step-table td {
+            padding: 12px 15px;
+            color: #1f2937;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .step-table tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .step-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .step-table .order-col {
+            width: 80px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .step-table .command-col {
+            width: 120px;
+        }
+
+        .step-table .seconds-col {
+            width: 100px;
+            text-align: center;
+        }
+
+        .step-table .comment-col {
+            max-width: 400px;
+        }
+
+        .step-table .actions-col {
+            width: 100px;
+            text-align: right;
+        }
+
+        .step-item-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .editable-cell {
+            cursor: text;
+            position: relative;
+        }
+
+        .editable-cell:hover {
+            background: #f3f4f6;
+            outline: 1px solid #d1d5db;
+        }
+
+        .editable-cell input,
+        .editable-cell textarea {
+            width: 100%;
+            padding: 4px 8px;
+            border: 2px solid #2563eb;
+            border-radius: 4px;
+            font-size: inherit;
+            font-family: inherit;
+            background: white;
+        }
+
+        .editable-cell input:focus,
+        .editable-cell textarea:focus {
+            outline: none;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn-edit {
+            background: transparent;
+            color: #374151;
+            font-size: 16px;
+            padding: 6px 10px;
+        }
+
+        .btn-edit:hover {
+            background: #f3f4f6;
+            color: #1f2937;
+        }
+
+        .btn-edit i {
+            pointer-events: none;
+        }
+
+        .btn-delete {
+            background: transparent;
+            color: #dc2626;
+            font-size: 16px;
+            padding: 6px 10px;
+        }
+
+        .btn-delete:hover {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .btn-delete i {
+            pointer-events: none;
+        }
+
+        .save-load-section {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .saved-programs {
+            margin-top: 20px;
+        }
+
+        .program-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #10b981;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .program-item-info {
+            flex: 1;
+        }
+
+        .program-item-name {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 5px;
+        }
+
+        .program-item-details {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .program-item-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-load {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-load:hover {
+            background: #059669;
+        }
+
+        .empty-message {
+            color: #9ca3af;
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            h1 {
+                font-size: 28px;
+                order: -1;
+            }
+
+            .back-button {
+                align-self: flex-start;
+            }
+
+            .header-spacer {
+                display: none;
+            }
+
+            .input-section, .program-section {
+                padding: 20px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .step-table {
+                font-size: 14px;
+            }
+
+            .step-table th,
+            .step-table td {
+                padding: 8px 10px;
+            }
+
+            .step-table .comment-col {
+                max-width: 150px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .program-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .program-item-actions {
+                width: 100%;
+            }
+
+            .program-item-actions .btn-small {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="/rp_program.html" class="back-button">&larr; Back to Programs</a>
+            <h1>Run Pacer Program Editor</h1>
+            <div class="header-spacer"></div>
+        </div>
+
+        <!-- Input Section -->
+        <div class="input-section" id="inputSection">
+            <div class="input-group">
+                <label for="program-name-input">Program Name:</label>
+                <input
+                    type="text"
+                    id="program-name-input"
+                    placeholder="Enter program name (e.g., 5K Training Plan)"
+                    autofocus
+                >
+            </div>
+           
+            <div class="input-group">
+                <label for="program-description-input">Program Description:</label>
+                <textarea
+                    id="program-description-input"
+                    placeholder="Enter program description"
+                ></textarea>
+            </div>
+            <button class="load-button" onclick="createProgram()">Create Program</button>
+        </div>
+
+        <!-- Program Section -->
+        <div class="program-section" id="programSection" style="display: none;">
+            <h2 id="currentProgramName">Program Steps</h2>
+
+           
+
+            <!-- Step List -->
+            <div class="step-list">
+                <h3>Steps</h3>
+                <div id="stepListContainer">
+                    <p class="empty-message">No steps yet. Add one below!</p>
+                </div>
+            </div>
+
+            <!-- Add Step Form -->
+            <div class="step-form">
+                <div class="form-row">
+                    <div class="input-group">
+                        <label for="step-command">Command:</label>
+                        <input type="text" id="step-command" placeholder="Run">
+                    </div>
+                    <div class="input-group">
+                        <label for="step-seconds">Seconds:</label>
+                        <input type="number" id="step-seconds" placeholder="60" min="1" step="1">
+                    </div>
+                    <div class="input-group">
+                        <label for="step-comment">Say:</label>
+                        <textarea id="step-comment" placeholder="Enter step comment" rows="1"></textarea>
+                    </div>
+                    <button class="btn-add-step" onclick="addStep()" title="Add Step">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Save/Load Section -->
+            <div class="save-load-section">
+                <h3>Save & Load Programs</h3>
+                <div class="input-group">
+                    <label for="save-program-name">Program Name:</label>
+                    <input type="text" id="save-program-name" placeholder="Program name">
+                </div>
+                <button class="load-button" onclick="saveProgram()">Save Program</button>
+                <div class="saved-programs" id="savedProgramsContainer">
+                    <p class="empty-message">No saved programs</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var steps = [];
+        var stepIdCounter = 0;
+        var editingStepId = null;
+        var currentProgramId = null;
+
+        function generateUniqueId() {
+            const characters = '0123456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+            let id = '';
+            for (let i = 0; i < 8; i++) {
+                id += characters.charAt(Math.floor(Math.random() * characters.length));
+            }
+            return id;
+        }
+
+        function createProgram() {
+            const programName = document.getElementById('program-name-input').value.trim();
+            const programDescription = document.getElementById('program-description-input').value.trim();
+
+            if (!programName) {
+                alert('Please enter a program name');
+                return;
+            }
+
+            // Hide input section, show program section
+            document.getElementById('inputSection').style.display = 'none';
+            document.getElementById('programSection').style.display = 'block';
+
+            // Set current program name
+            document.getElementById('currentProgramName').textContent = programName;
+            document.getElementById('save-program-name').value = programName;
+
+            // Don't set currentProgramId here - it will be set after first successful save
+            // currentProgramId will remain null for new programs until saved
+
+            console.log('Program created:', programName, programDescription);
+        }
+
+        function addStep() {
+            const command = document.getElementById('step-command').value.trim();
+            const seconds = parseInt(document.getElementById('step-seconds').value);
+            const comment = document.getElementById('step-comment').value.trim();
+
+            if (!command) {
+                alert('Please enter a step command');
+                return;
+            }
+
+            if (isNaN(seconds) || seconds < 1) {
+                alert('Please enter a valid number of seconds');
+                return;
+            }
+
+            if (editingStepId !== null) {
+                // Edit existing step
+                const stepIndex = steps.findIndex(s => s.id === editingStepId);
+                if (stepIndex !== -1) {
+                    steps[stepIndex] = {
+                        id: editingStepId,
+                        command: command,
+                        seconds: seconds,
+                        comment: comment
+                    };
+                }
+                editingStepId = null;
+            } else {
+                // Add new step
+                const step = {
+                    id: stepIdCounter++,
+                    command: command,
+                    seconds: seconds,
+                    comment: comment
+                };
+                steps.push(step);
+            }
+
+            // Clear form
+            document.getElementById('step-command').value = '';
+            document.getElementById('step-seconds').value = '';
+            document.getElementById('step-comment').value = '';
+
+            // Focus on command field
+            document.getElementById('step-command').focus();
+
+            // Update button state
+            updateAddButtonState();
+
+            renderStepList();
+            console.log('Current steps:', steps);
+        }
+
+        function editStep(id) {
+            const step = steps.find(s => s.id === id);
+            if (!step) return;
+
+            document.getElementById('step-command').value = step.command;
+            document.getElementById('step-seconds').value = step.seconds;
+            document.getElementById('step-comment').value = step.comment;
+
+            editingStepId = id;
+
+            // Scroll to form
+            document.querySelector('.step-form').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function deleteStep(id) {
+            if (confirm('Are you sure you want to delete this step?')) {
+                steps = steps.filter(s => s.id !== id);
+                renderStepList();
+                console.log('Step deleted. Current steps:', steps);
+            }
+        }
+
+        function renderStepList() {
+            const container = document.getElementById('stepListContainer');
+
+            if (steps.length === 0) {
+                container.innerHTML = '<p class="empty-message">No steps yet. Add one below!</p>';
+                return;
+            }
+
+            // Steps run in the order they were added
+            const tableRows = steps.map((step, index) => `
+                <tr>
+                    <td class="order-col">${index + 1}</td>
+                    <td class="command-col editable-cell" data-step-id="${step.id}" data-field="command" onclick="makeEditable(this, 'text')">${step.command}</td>
+                    <td class="seconds-col editable-cell" data-step-id="${step.id}" data-field="seconds" onclick="makeEditable(this, 'number')">${step.seconds}s</td>
+                    <td class="comment-col editable-cell" data-step-id="${step.id}" data-field="comment" onclick="makeEditable(this, 'text')">${step.comment}</td>
+                    <td class="actions-col">
+                        <div class="step-item-actions">
+                            <button class="btn-small btn-edit" onclick="editStep(${step.id})"><i class="fa-solid fa-pen"></i></button>
+                            <button class="btn-small btn-delete" onclick="deleteStep(${step.id})"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+
+            container.innerHTML = `
+                <table class="step-table">
+                    <thead>
+                        <tr>
+                            <th>Order</th>
+                            <th>Command</th>
+                            <th>Seconds</th>
+                            <th>Comment</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tableRows}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // Inline Editing Functions
+        function makeEditable(cell, type) {
+            // Prevent double-editing
+            if (cell.querySelector('input') || cell.querySelector('textarea')) return;
+
+            const stepId = parseInt(cell.dataset.stepId);
+            const field = cell.dataset.field;
+            const step = steps.find(s => s.id === stepId);
+            if (!step) return;
+
+            // Get current value (remove suffix like 'mi')
+            let currentValue = step[field];
+
+            // Create input element
+            let input;
+            if (type === 'text') {
+                input = document.createElement('textarea');
+                input.rows = 2;
+            } else {
+                input = document.createElement('input');
+                input.type = type;
+                if (type === 'number') {
+                    input.step = '1';
+                    input.min = '1';
+                }
+            }
+            input.value = currentValue;
+
+            // Replace cell content with input
+            const originalContent = cell.innerHTML;
+            cell.innerHTML = '';
+            cell.appendChild(input);
+            input.focus();
+            if (type !== 'text') {
+                input.select();
+            }
+
+            // Save on Enter or blur
+            const saveEdit = () => {
+                let newValue = input.value.trim();
+
+                if (type === 'number') {
+                    newValue = parseInt(newValue);
+                    if (isNaN(newValue) || newValue < 1) {
+                        cell.innerHTML = originalContent;
+                        return;
+                    }
+                } else if (newValue === '') {
+                    cell.innerHTML = originalContent;
+                    return;
+                }
+
+                // Update step
+                step[field] = newValue;
+
+                // Re-render the list to show updated value and re-sort
+                renderStepList();
+
+                console.log('Updated step:', step);
+            };
+
+            input.addEventListener('blur', saveEdit);
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && type !== 'text') {
+                    e.preventDefault();
+                    input.blur();
+                }
+            });
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    cell.innerHTML = originalContent;
+                }
+            });
+        }
+
+        async function saveProgram() {
+            const programName = document.getElementById('save-program-name').value.trim();
+
+            if (!programName) {
+                alert('Please enter a program name');
+                return;
+            }
+
+            if (steps.length === 0) {
+                alert('Please add at least one step before saving');
+                return;
+            }
+
+            const programData = {
+                id: currentProgramId || generateUniqueId(),
+                name: programName,
+                description: document.getElementById('program-description-input').value.trim(),
+                steps: JSON.parse(JSON.stringify(steps)) // Deep copy
+            };
+
+            try {
+                let response;
+                if (currentProgramId) {
+                    // Update existing program
+                    response = await fetch('/api_rp_program.php', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(programData)
+                    });
+                } else {
+                    // Create new program
+                    response = await fetch('/api_rp_program.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(programData)
+                    });
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    currentProgramId = result.id;
+                    alert(`Program "${programName}" saved successfully! (ID: ${result.id})`);
+                    renderSavedPrograms();
+                    console.log('Program saved:', result);
+                } else {
+                    alert('Failed to save program: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error saving program:', error);
+                alert('Failed to save program: ' + error.message);
+            }
+        }
+
+        async function loadProgram(id) {
+            try {
+                const response = await fetch(`/api_rp_program.php?action=get&id=${id}`);
+                const program = await response.json();
+
+                if (!program || program.error) {
+                    alert('Program not found');
+                    return;
+                }
+
+                // Load program data
+                document.getElementById('program-name-input').value = program.name;
+                document.getElementById('program-description-input').value = program.description || '';
+                document.getElementById('save-program-name').value = program.name;
+
+                // Load steps - convert database fields to frontend format
+                steps = program.steps.map(step => ({
+                    id: step.id,
+                    command: step.command,
+                    seconds: parseInt(step.seconds),
+                    comment: step.comment
+                }));
+                stepIdCounter = Math.max(...steps.map(s => s.id), 0) + 1;
+
+                // Set current program ID
+                currentProgramId = program.id;
+
+                // Show program section
+                document.getElementById('inputSection').style.display = 'none';
+                document.getElementById('programSection').style.display = 'block';
+                document.getElementById('currentProgramName').textContent = program.name;
+
+                // Render step list
+                renderStepList();
+
+                alert(`Program "${program.name}" loaded successfully!`);
+                console.log('Program loaded:', program);
+            } catch (error) {
+                console.error('Error loading program:', error);
+                alert('Failed to load program: ' + error.message);
+            }
+        }
+
+        async function deleteProgram(id, name) {
+            if (!confirm(`Are you sure you want to delete program "${name}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api_rp_program.php?id=${id}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('Program deleted successfully!');
+                    renderSavedPrograms();
+                    console.log('Program deleted:', id);
+                } else {
+                    alert('Failed to delete program: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error deleting program:', error);
+                alert('Failed to delete program: ' + error.message);
+            }
+        }
+
+        async function renderSavedPrograms() {
+            const container = document.getElementById('savedProgramsContainer');
+
+            try {
+                const response = await fetch('/api_rp_program.php?action=list');
+                const programArray = await response.json();
+
+                if (!Array.isArray(programArray) || programArray.length === 0) {
+                    container.innerHTML = '<p class="empty-message">No saved programs</p>';
+                    return;
+                }
+
+                container.innerHTML = programArray.map(program => {
+                    const date = new Date(program.created_at);
+                    const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+                    const stepCount = parseInt(program.step_count) || 0;
+
+                    return `
+                        <div class="program-item">
+                            <div class="program-item-info">
+                                <div class="program-item-name">${escapeHtml(program.name)}</div>
+                                <div class="program-item-details">
+                                    ID: ${program.id} | Steps: ${stepCount} | Created: ${dateStr}
+                                </div>
+                            </div>
+                            <div class="program-item-actions">
+                                <button class="btn-small btn-load" onclick="loadProgram('${program.id}')">Load</button>
+                                <button class="btn-small btn-delete" onclick="deleteProgram('${program.id}', '${escapeHtml(program.name)}')"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Error loading programs:', error);
+                container.innerHTML = '<p class="empty-message">Error loading programs</p>';
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Update add button state based on comment field
+        function updateAddButtonState() {
+            const commandValue = document.getElementById('step-command').value.trim();
+            const addButton = document.querySelector('.btn-add-step');
+
+            if (commandValue === '') {
+                addButton.disabled = true;
+                addButton.style.opacity = '0.5';
+                addButton.style.cursor = 'not-allowed';
+            } else {
+                addButton.disabled = false;
+                addButton.style.opacity = '1';
+                addButton.style.cursor = 'pointer';
+            }
+        }
+
+        // Add event listeners for step form
+        document.addEventListener('DOMContentLoaded', function() {
+            const stepCommand = document.getElementById('step-command');
+            const stepSeconds = document.getElementById('step-seconds');
+            const stepComment = document.getElementById('step-comment');
+            const addButton = document.querySelector('.btn-add-step');
+
+            // Update button state when command field changes
+            stepCommand.addEventListener('input', updateAddButtonState);
+
+            // Handle Enter key on command field
+            stepCommand.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    stepSeconds.focus();
+                }
+            });
+
+            // Handle Enter key on seconds field
+            stepSeconds.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    stepComment.focus();
+                }
+            });
+
+            // Handle Enter key on comment field
+            stepComment.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (stepCommand.value.trim() !== '') {
+                        addStep();
+                    }
+                }
+            });
+
+            // Initialize button state
+            updateAddButtonState();
+        });
+
+        // Initialize: Load saved programs on page load
+        renderSavedPrograms();
+    </script>
+</body>
+</html>
