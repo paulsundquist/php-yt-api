@@ -224,7 +224,7 @@
         <a href="/runpacer.html" class="back-link">← Back to Run Pacer</a>
 
         <header>
-            <h1>🏃 Run Pacer Timer</h1>
+            <h1>🏃 Simple Interval Timer</h1>
             <p class="subtitle">Audio Timing Companion for Runners</p>
         </header>
 
@@ -320,6 +320,28 @@
             "Keep pushing!",
             "You're crushing it!"
         ];
+
+        const INTERVAL_STORAGE_KEY = 'runpacerTimer_interval';
+
+        function loadSavedInterval() {
+            const saved = localStorage.getItem(INTERVAL_STORAGE_KEY);
+            if (!saved) return;
+            try {
+                const { minutes, seconds } = JSON.parse(saved);
+                if (minutes !== undefined) document.getElementById('intervalMinutes').value = minutes;
+                if (seconds !== undefined) document.getElementById('intervalSeconds').value = seconds;
+            } catch (e) {}
+        }
+
+        function saveInterval() {
+            const minutes = document.getElementById('intervalMinutes').value;
+            const seconds = document.getElementById('intervalSeconds').value;
+            localStorage.setItem(INTERVAL_STORAGE_KEY, JSON.stringify({ minutes, seconds }));
+        }
+
+        loadSavedInterval();
+        document.getElementById('intervalMinutes').addEventListener('input', saveInterval);
+        document.getElementById('intervalSeconds').addEventListener('input', saveInterval);
 
         // Load available voices
         function loadVoices() {
