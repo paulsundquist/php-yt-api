@@ -536,7 +536,7 @@
                 announceStep(steps[idx]);
 
                 document.getElementById('currentCommand').textContent = steps[idx].command;
-                document.getElementById('status').textContent = 'Running...';
+                document.getElementById('status').textContent = 'Program in Progress';
                 document.getElementById('status').classList.add('running');
                 document.getElementById('stepsCompleted').innerHTML = `${idx + 1}/<span id="totalSteps">${steps.length}</span>`;
 
@@ -593,10 +593,8 @@
 
                 document.getElementById('startBtn').disabled = true;
                 document.getElementById('pauseBtn').disabled = false;
-                document.getElementById('status').textContent = 'Running...';
+                document.getElementById('status').textContent = 'Program in Progress';
                 document.getElementById('status').classList.add('running');
-
-                speak("Starting now");
             }
         }
 
