@@ -191,6 +191,28 @@
             transform: translateY(-2px);
         }
 
+        .copy-numbers-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            justify-content: center;
+            background: #f3f4f6;
+            color: #374151;
+            border: none;
+            padding: 10px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .copy-numbers-btn:hover {
+            background: #e5e7eb;
+        }
+
         .empty-state {
             background: white;
             border-radius: 12px;
@@ -372,8 +394,8 @@
             Groups are saved on this device only (browser storage), not on a server.
             Tapping "Message Group" hands off to your phone's messaging app with all
             numbers filled in. Multi-recipient support varies by phone/app &mdash;
-            it works most reliably on iPhone; some Android messaging apps may only
-            pick up the first number.
+            if your messaging app only picks up one number, use "Copy Numbers" and
+            paste the rest into the recipients field yourself.
         </div>
 
         <div id="groupsContainer"></div>
@@ -444,12 +466,28 @@
             const cleaned = numbers
                 .map(n => n.replace(/[^\d+]/g, ''))
                 .filter(n => n.length > 0);
-            const sep = isIOS() ? ',' : ';';
-            let href = 'sms:' + cleaned.join(sep);
+            // RFC 5724 uses commas for multiple recipients; this is also what
+            // both iOS Messages and modern Google Messages parse. The older
+            // semicolon convention causes some Android apps to silently fall
+            // back to just the first number.
+            let href = 'sms:' + cleaned.join(',');
             if (body) {
                 href += (isIOS() ? '&' : '?') + 'body=' + encodeURIComponent(body);
             }
             return href;
+        }
+
+        async function copyNumbers(numbers, btn) {
+            const text = numbers.join(', ');
+            try {
+                await navigator.clipboard.writeText(text);
+            } catch (e) {
+                window.prompt('Copy these numbers:', text);
+                return;
+            }
+            const original = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied';
+            setTimeout(() => { btn.innerHTML = original; }, 1500);
         }
 
         function renderGroups() {
@@ -504,6 +542,9 @@
                                     <i class="fa-solid fa-paper-plane"></i>
                                     Message Group (${numbers.length})
                                 </a>
+                                <button class="copy-numbers-btn" onclick="copyNumbers(${JSON.stringify(numbers.map(n => n.phone)).replace(/"/g, '&quot;')}, this)">
+                                    <i class="fa-regular fa-copy"></i> Copy Numbers
+                                </button>
                             </div>
                         `;
                     }).join('')}
