@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyTubie Message Groups</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        h1 {
+            color: white;
+            font-size: 36px;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .back-button {
+            display: inline-block;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateX(-5px);
+        }
+
+        .create-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            background: #10b981;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .create-button:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+
+        .info-note {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            padding: 14px 18px;
+            border-radius: 10px;
+            font-size: 13px;
+            line-height: 1.5;
+            margin-bottom: 25px;
+        }
+
+        .groups-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .group-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 22px 25px;
+        }
+
+        .group-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 15px;
+            margin-bottom: 12px;
+        }
+
+        .group-name {
+            color: #1f2937;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .group-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 8px;
+            background: #f3f4f6;
+            color: #4b5563;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .icon-btn:hover {
+            background: #e5e7eb;
+        }
+
+        .icon-btn.delete:hover {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .group-message {
+            color: #6b7280;
+            font-size: 14px;
+            font-style: italic;
+            margin-bottom: 14px;
+        }
+
+        .group-numbers {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 18px;
+        }
+
+        .number-chip {
+            background: #f3f4f6;
+            color: #374151;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+        }
+
+        .number-chip .chip-name {
+            font-weight: 600;
+            margin-right: 4px;
+        }
+
+        .message-group-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            justify-content: center;
+            background: #2563eb;
+            color: white;
+            text-decoration: none;
+            padding: 14px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .message-group-btn:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+        }
+
+        .empty-state {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 60px 40px;
+            text-align: center;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            color: #d1d5db;
+            margin-bottom: 20px;
+        }
+
+        .empty-state-title {
+            color: #1f2937;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .empty-state-description {
+            color: #6b7280;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 100;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 28px;
+        }
+
+        .modal h2 {
+            color: #1f2937;
+            font-size: 22px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 70px;
+        }
+
+        .number-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .number-row input.name-input {
+            flex: 1;
+        }
+
+        .number-row input.phone-input {
+            flex: 1.4;
+        }
+
+        .number-row .remove-number-btn {
+            width: 38px;
+            flex-shrink: 0;
+            border: none;
+            background: #fee2e2;
+            color: #dc2626;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .add-number-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: none;
+            border: 1px dashed #9ca3af;
+            color: #4b5563;
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        .add-number-btn:hover {
+            background: #f9fafb;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 24px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .btn-cancel {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .btn-save {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-save:hover {
+            background: #059669;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="/index.html" class="back-button">&larr; Back</a>
+            <h1>Message Groups</h1>
+            <button class="create-button" id="newGroupBtn">
+                <i class="fa-solid fa-plus"></i> New Group
+            </button>
+        </div>
+
+        <div class="info-note">
+            <i class="fa-solid fa-circle-info"></i>
+            Groups are saved on this device only (browser storage), not on a server.
+            Tapping "Message Group" hands off to your phone's messaging app with all
+            numbers filled in. Multi-recipient support varies by phone/app &mdash;
+            it works most reliably on iPhone; some Android messaging apps may only
+            pick up the first number.
+        </div>
+
+        <div id="groupsContainer"></div>
+    </div>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <h2 id="modalTitle">New Group</h2>
+            <input type="hidden" id="editGroupId">
+
+            <div class="form-group">
+                <label for="groupNameInput">Group Name</label>
+                <input type="text" id="groupNameInput" placeholder="e.g. Family, Book Club">
+            </div>
+
+            <div class="form-group">
+                <label for="groupMessageInput">Default Message (optional)</label>
+                <textarea id="groupMessageInput" placeholder="Pre-filled text for this group's messages"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Phone Numbers</label>
+                <div id="numbersList"></div>
+                <button type="button" class="add-number-btn" id="addNumberBtn">
+                    <i class="fa-solid fa-plus"></i> Add Number
+                </button>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-cancel" id="cancelBtn">Cancel</button>
+                <button class="btn btn-save" id="saveBtn">Save Group</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'mytubie_msg_groups';
+
+        function loadGroups() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                return raw ? JSON.parse(raw) : [];
+            } catch (e) {
+                console.error('Error reading groups from storage:', e);
+                return [];
+            }
+        }
+
+        function saveGroups(groups) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(groups));
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text ?? '';
+            return div.innerHTML;
+        }
+
+        function makeId() {
+            return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+        }
+
+        function isIOS() {
+            return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        }
+
+        function buildSmsHref(numbers, body) {
+            const cleaned = numbers
+                .map(n => n.replace(/[^\d+]/g, ''))
+                .filter(n => n.length > 0);
+            const sep = isIOS() ? ',' : ';';
+            let href = 'sms:' + cleaned.join(sep);
+            if (body) {
+                href += (isIOS() ? '&' : '?') + 'body=' + encodeURIComponent(body);
+            }
+            return href;
+        }
+
+        function renderGroups() {
+            const container = document.getElementById('groupsContainer');
+            const groups = loadGroups();
+
+            if (groups.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i class="fa-solid fa-comment-sms"></i>
+                        </div>
+                        <h2 class="empty-state-title">No Message Groups Yet</h2>
+                        <p class="empty-state-description">
+                            Create a group of phone numbers to text everyone at once.
+                        </p>
+                        <button class="create-button" onclick="openModal()">
+                            <i class="fa-solid fa-plus"></i> Create Your First Group
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="groups-list">
+                    ${groups.map(group => {
+                        const numbers = group.numbers || [];
+                        const smsHref = buildSmsHref(numbers.map(n => n.phone), group.message || '');
+                        return `
+                            <div class="group-card">
+                                <div class="group-card-header">
+                                    <div class="group-name">${escapeHtml(group.name)}</div>
+                                    <div class="group-actions">
+                                        <button class="icon-btn" onclick="openModal('${group.id}')" title="Edit">
+                                            <i class="fa-solid fa-pen"></i>
+                                        </button>
+                                        <button class="icon-btn delete" onclick="deleteGroup('${group.id}')" title="Delete">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                ${group.message ? `<div class="group-message">"${escapeHtml(group.message)}"</div>` : ''}
+                                <div class="group-numbers">
+                                    ${numbers.map(n => `
+                                        <span class="number-chip">
+                                            ${n.name ? `<span class="chip-name">${escapeHtml(n.name)}</span>` : ''}${escapeHtml(n.phone)}
+                                        </span>
+                                    `).join('') || '<span class="number-chip">No numbers added</span>'}
+                                </div>
+                                <a class="message-group-btn" href="${smsHref}">
+                                    <i class="fa-solid fa-paper-plane"></i>
+                                    Message Group (${numbers.length})
+                                </a>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        function deleteGroup(id) {
+            if (!confirm('Delete this message group?')) return;
+            const groups = loadGroups().filter(g => g.id !== id);
+            saveGroups(groups);
+            renderGroups();
+        }
+
+        function addNumberRow(name = '', phone = '') {
+            const list = document.getElementById('numbersList');
+            const row = document.createElement('div');
+            row.className = 'number-row';
+            row.innerHTML = `
+                <input type="text" class="name-input" placeholder="Name (optional)" value="${escapeHtml(name)}">
+                <input type="tel" class="phone-input" placeholder="Phone number" value="${escapeHtml(phone)}">
+                <button type="button" class="remove-number-btn" title="Remove">&times;</button>
+            `;
+            row.querySelector('.remove-number-btn').addEventListener('click', () => row.remove());
+            list.appendChild(row);
+        }
+
+        function openModal(groupId) {
+            document.getElementById('numbersList').innerHTML = '';
+            document.getElementById('editGroupId').value = '';
+            document.getElementById('groupNameInput').value = '';
+            document.getElementById('groupMessageInput').value = '';
+
+            if (groupId) {
+                const group = loadGroups().find(g => g.id === groupId);
+                if (group) {
+                    document.getElementById('modalTitle').textContent = 'Edit Group';
+                    document.getElementById('editGroupId').value = group.id;
+                    document.getElementById('groupNameInput').value = group.name;
+                    document.getElementById('groupMessageInput').value = group.message || '';
+                    (group.numbers || []).forEach(n => addNumberRow(n.name, n.phone));
+                }
+            } else {
+                document.getElementById('modalTitle').textContent = 'New Group';
+            }
+
+            if (document.getElementById('numbersList').children.length === 0) {
+                addNumberRow();
+            }
+
+            document.getElementById('modalOverlay').classList.add('open');
+            document.getElementById('groupNameInput').focus();
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('open');
+        }
+
+        function saveGroup() {
+            const name = document.getElementById('groupNameInput').value.trim();
+            if (!name) {
+                alert('Please enter a group name.');
+                return;
+            }
+
+            const numbers = Array.from(document.querySelectorAll('#numbersList .number-row'))
+                .map(row => ({
+                    name: row.querySelector('.name-input').value.trim(),
+                    phone: row.querySelector('.phone-input').value.trim()
+                }))
+                .filter(n => n.phone.length > 0);
+
+            if (numbers.length === 0) {
+                alert('Please add at least one phone number.');
+                return;
+            }
+
+            const message = document.getElementById('groupMessageInput').value.trim();
+            const editId = document.getElementById('editGroupId').value;
+            const groups = loadGroups();
+
+            if (editId) {
+                const idx = groups.findIndex(g => g.id === editId);
+                if (idx !== -1) {
+                    groups[idx] = { ...groups[idx], name, message, numbers };
+                }
+            } else {
+                groups.push({ id: makeId(), name, message, numbers });
+            }
+
+            saveGroups(groups);
+            closeModal();
+            renderGroups();
+        }
+
+        document.getElementById('newGroupBtn').addEventListener('click', () => openModal());
+        document.getElementById('addNumberBtn').addEventListener('click', () => addNumberRow());
+        document.getElementById('cancelBtn').addEventListener('click', closeModal);
+        document.getElementById('saveBtn').addEventListener('click', saveGroup);
+        document.getElementById('modalOverlay').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('modalOverlay')) closeModal();
+        });
+
+        renderGroups();
+    </script>
+</body>
+</html>
