@@ -466,13 +466,24 @@
             const cleaned = numbers
                 .map(n => n.replace(/[^\d+]/g, ''))
                 .filter(n => n.length > 0);
-            // RFC 5724 uses commas for multiple recipients; this is also what
-            // both iOS Messages and modern Google Messages parse. The older
-            // semicolon convention causes some Android apps to silently fall
-            // back to just the first number.
+
+            // iOS Messages doesn't follow RFC 5724 for multiple recipients:
+            // "sms:num1,num2?body=..." silently collapses to just the first
+            // number. The only combination that reliably keeps all
+            // recipients AND a pre-filled body on iOS is the proprietary
+            // "sms://open?addresses=...&body=..." form. Android follows the
+            // RFC 5724 comma-separated form.
+            if (isIOS()) {
+                let href = 'sms://open?addresses=' + cleaned.join(',');
+                if (body) {
+                    href += '&body=' + encodeURIComponent(body);
+                }
+                return href;
+            }
+
             let href = 'sms:' + cleaned.join(',');
             if (body) {
-                href += (isIOS() ? '&' : '?') + 'body=' + encodeURIComponent(body);
+                href += '?body=' + encodeURIComponent(body);
             }
             return href;
         }
